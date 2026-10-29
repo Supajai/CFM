@@ -1,16 +1,19 @@
-// prisma/seed.ts - Database Seeder with Auth & RBAC
+// prisma/seed.ts - Database Seeder for Single Department Scope
 import { PrismaClient, Role, Category, Priority, TicketStatus, AttachmentType } from '@prisma/client'
 import bcrypt from 'bcryptjs'
+import { DEPARTMENT_BUILDING_NAME, DEPARTMENT_FLOORS_DATA, getAllDepartmentRooms } from '../lib/constants/department-locations'
 
 const prisma = new PrismaClient()
 
 async function main() {
-  console.log('🌱 Starting database seed with Auth & RBAC...')
+  console.log('🌱 Starting database seed for อาคารแผนกวิชาช่างเทคนิคคอมพิวเตอร์ (Single Department Scope)...')
 
   // ล้างข้อมูลเก่า
   await prisma.attachment.deleteMany()
   await prisma.ticketHistory.deleteMany()
   await prisma.ticket.deleteMany()
+  await prisma.departmentRoom.deleteMany()
+  await prisma.building.deleteMany()
   await prisma.user.deleteMany()
 
   console.log('🧹 Cleaned existing records.')
@@ -18,7 +21,7 @@ async function main() {
   // แฮชรหัสผ่านมาตรฐาน "123456" สำหรับบัญชีทดสอบทุกคน
   const defaultPasswordHash = await bcrypt.hash('123456', 10)
 
-  // 1. สร้างบัญชีหลักตามโจทย์ RBAC 4 ระดับ (รหัสผ่าน: 123456)
+  // 1. สร้างบัญชีผู้ใช้ RBAC 4 บทบาท
   
   // 1.1 SUPER_ADMIN
   const superAdmin = await prisma.user.create({
@@ -28,143 +31,148 @@ async function main() {
       password: defaultPasswordHash,
       role: Role.SUPER_ADMIN,
       phone: '02-555-1001',
-      position: 'ผู้อำนวยการสำนักบริหารอาคารและเทคโนโลยี',
+      position: 'หัวหน้างานบริหารเทคโนโลยีสารสนเทศและอาคาร',
       avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80',
-      department: 'สำนักอธิการบดี',
+      department: 'แผนกวิชาช่างเทคนิคคอมพิวเตอร์',
     },
   })
 
-  // 1.2 ADMIN
-  const facilityAdmin = await prisma.user.create({
+  // 1.2 ADMIN (หัวหน้างานอาคารสถานที่และห้องแล็บประจำแผนก)
+  const departmentAdmin = await prisma.user.create({
     data: {
-      name: 'สมศักดิ์ บริหารทรัพย์ (Admin งานอาคาร)',
+      name: 'สมศักดิ์ บริหารทรัพย์ (Admin ประจำแผนก)',
       email: 'admin@campus.ac.th',
       password: defaultPasswordHash,
       role: Role.ADMIN,
       phone: '02-555-1044',
-      position: 'หัวหน้างานซ่อมบำรุงและกายภาพ',
+      position: 'หัวหน้างานอาคารสถานที่และห้องปฏิบัติการประจำแผนก',
       avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150&auto=format&fit=crop&q=80',
-      department: 'ฝ่ายอาคารและสถานที่ วิทยาเขตหลัก',
+      department: 'แผนกวิชาช่างเทคนิคคอมพิวเตอร์',
     },
   })
 
-  // 1.3 TECHNICIAN (ช่างหลัก Alex Morgan #04)
-  const alexTechnician = await prisma.user.create({
+  // 1.3 TECHNICIANS ประจำแผนก (แบ่งตามสายงานความเชี่ยวชาญ)
+  const techAlex = await prisma.user.create({
     data: {
       name: 'Alex Morgan (อเล็กซ์ มอร์แกน)',
       email: 'tech.alex@campus.ac.th',
       password: defaultPasswordHash,
       role: Role.TECHNICIAN,
-      phone: '(+66) 81-555-4921 (ต่อ 248)',
-      technicianCode: '#04',
-      position: 'หัวหน้าทีมช่างเทคนิค • ระบบปรับอากาศและความเย็น',
+      phone: '081-555-4921 (ต่อ 101)',
+      technicianCode: 'TECH-01',
+      position: 'ช่างเทคนิคประจำห้องปฏิบัติการคอมพิวเตอร์และฮาร์ดแวร์',
+      specialty: 'ระบบคอมพิวเตอร์ ฮาร์ดแวร์ และห้องปฏิบัติการ',
       avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-      department: 'ฝ่ายอาคารและสถานที่ วิทยาเขตฝั่งตะวันออก',
+      department: 'แผนกวิชาช่างเทคนิคคอมพิวเตอร์',
     },
   })
 
-  // 1.4 USER (นักศึกษา ศุภวิชญ์ #65-0482)
-  const supawitStudent = await prisma.user.create({
+  const techPrasert = await prisma.user.create({
     data: {
-      name: 'ศุภวิชญ์ ไตรภาคี',
+      name: 'ก. ประเสริฐ (ช่างเน็ตเวิร์ก)',
+      email: 'tech.prasert@campus.ac.th',
+      password: defaultPasswordHash,
+      role: Role.TECHNICIAN,
+      phone: '082-333-7890 (ต่อ 401)',
+      technicianCode: 'TECH-02',
+      position: 'ช่างเทคนิคระบบเครือข่ายและศูนย์ข้อมูลเซิร์ฟเวอร์',
+      specialty: 'ระบบเครือข่าย อินเทอร์เน็ต และเซิร์ฟเวอร์',
+      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
+      department: 'แผนกวิชาช่างเทคนิคคอมพิวเตอร์',
+    },
+  })
+
+  const techWichai = await prisma.user.create({
+    data: {
+      name: 'วิชัย ช่างไฟและแอร์',
+      email: 'tech.wichai@campus.ac.th',
+      password: defaultPasswordHash,
+      role: Role.TECHNICIAN,
+      phone: '083-777-1234 (ต่อ 102)',
+      technicianCode: 'TECH-03',
+      position: 'นายช่างเทคนิคระบบไฟฟ้าและปรับอากาศประจำอาคาร',
+      specialty: 'ระบบเครื่องปรับอากาศและการทำความเย็น',
+      avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80',
+      department: 'แผนกวิชาช่างเทคนิคคอมพิวเตอร์',
+    },
+  })
+
+  // 1.4 USER (นักศึกษา และ คณาจารย์ ประจำแผนก)
+  const studentSupawit = await prisma.user.create({
+    data: {
+      name: 'ศุภวิชญ์ ไตรภาคี (นักศึกษา)',
       email: 'student.supawit@campus.ac.th',
       password: defaultPasswordHash,
       role: Role.USER,
-      phone: '(+66) 81-987-4921',
-      studentId: '#65-0482',
-      department: 'สาขาวิชาช่างเทคนิคคอมพิวเตอร์',
+      phone: '081-987-4921',
+      studentId: '65-0482',
+      classLevel: 'ปวส. 2',
+      major: 'สาขาวิชาการพัฒนาซอฟต์แวร์และแอปพลิเคชัน',
+      department: 'แผนกวิชาช่างเทคนิคคอมพิวเตอร์',
       avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80',
     },
   })
 
-  // ช่างเทคนิคคนที่ 2 (ก. ประเสริฐ #07)
-  const prasertTechnician = await prisma.user.create({
+  const profSomchai = await prisma.user.create({
     data: {
-      name: 'ก. ประเสริฐ',
-      email: 'tech.prasert@campus.ac.th',
-      password: defaultPasswordHash,
-      role: Role.TECHNICIAN,
-      phone: '082-333-7890 (ต่อ 250)',
-      technicianCode: '#07',
-      position: 'ช่างเทคนิคไฟฟ้าและโสตทัศนูปกรณ์',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
-      department: 'ฝ่ายอาคารและสถานที่',
-    },
-  })
-
-  // บุคลากร / อาจารย์ / นักศึกษาเพิ่มเติม
-  const somchaiProf = await prisma.user.create({
-    data: {
-      name: 'อ.สมชาย (อาจารย์)',
+      name: 'อ.สมชาย วงศ์วิชา (อาจารย์ประจำแผนก)',
       email: 'somchai.t@faculty.campus.ac.th',
       password: defaultPasswordHash,
       role: Role.USER,
       phone: '089-112-2334',
-      department: 'ภาควิชาวิศวกรรมคอมพิวเตอร์',
+      position: 'อาจารย์ผู้ดูแลห้องปฏิบัติการคอมพิวเตอร์กราฟิก',
+      department: 'แผนกวิชาช่างเทคนิคคอมพิวเตอร์',
     },
   })
 
-  const libraryStaff = await prisma.user.create({
+  console.log('✅ Created RBAC Users for single department scope.')
+
+  // 2. สร้าง Master Data ห้องและพื้นที่ 4 ชั้น ในฐานข้อมูล DepartmentRoom
+  const allDefaultRooms = getAllDepartmentRooms()
+  for (const r of allDefaultRooms) {
+    await prisma.departmentRoom.create({
+      data: {
+        code: r.id,
+        name: r.name,
+        floor: r.floor,
+        type: r.type.toUpperCase(),
+        description: r.description || null,
+        isActive: true,
+      },
+    })
+  }
+  console.log(`✅ Seeded ${allDefaultRooms.length} department rooms across 4 floors.`)
+
+  // 3. ผูกข้อมูลอาคารเดี่ยว
+  const deptBuilding = await prisma.building.create({
     data: {
-      name: 'เจ้าหน้าที่เคาน์เตอร์หอสมุด',
-      email: 'library.staff@campus.ac.th',
-      password: defaultPasswordHash,
-      role: Role.USER,
-      phone: '02-555-1200',
-      department: 'หอสมุดกลาง',
+      code: 'BLD-COMPTECH',
+      name: DEPARTMENT_BUILDING_NAME,
+      zone: 'โซนวิชาชีพช่างเทคนิค',
+      totalFloors: 4,
+      latitude: 15.2284,
+      longitude: 104.8592,
+      adminId: departmentAdmin.id,
     },
   })
 
-  const kittisakTA = await prisma.user.create({
-    data: {
-      name: 'ผู้ช่วยสอน กิตติศักดิ์',
-      email: 'kittisak.ta@campus.ac.th',
-      password: defaultPasswordHash,
-      role: Role.USER,
-      phone: '084-556-7891',
-      department: 'งานบริการการสอนและโสตทัศนูปกรณ์',
-    },
-  })
+  // 4. สร้างตั๋วตัวอย่างครอบคลุม 7 หมวดหมู่ และ 4 ชั้น
 
-  const securityStaff = await prisma.user.create({
-    data: {
-      name: 'รปภ. ประจำวิทยาเขต',
-      email: 'security.east@campus.ac.th',
-      password: defaultPasswordHash,
-      role: Role.USER,
-      phone: '02-555-1999',
-      department: 'งานรักษาความปลอดภัย',
-    },
-  })
-
-  const nattapornStudent = await prisma.user.create({
-    data: {
-      name: 'ณัฐพร (นักศึกษา)',
-      email: 'nattaporn.k@student.campus.ac.th',
-      password: defaultPasswordHash,
-      role: Role.USER,
-      phone: '083-445-6677',
-      studentId: '#66-1029',
-      department: 'สาขามัลติมีเดียและแอนิเมชัน',
-    },
-  })
-
-  console.log('✅ Created 10 mock users with bcrypt-hashed passwords.')
-
-  // 2. สร้างตั๋วตัวอย่างตาม Mockup ทั้ง 3 หน้า
-
-  // ตั๋วหลัก #REP-089
-  const rep089 = await prisma.ticket.create({
+  // ตั๋ว 1: ชั้น 4 (Server Room) - หมวด AIR_CONDITIONING (ด่วนวิกฤต)
+  const ticket1 = await prisma.ticket.create({
     data: {
       ticketNumber: '#REP-089',
-      incidentCode: 'INC-2024-E',
-      title: 'เครื่องปรับอากาศมีน้ำรั่วซึมหยดลงบนตู้เซิร์ฟเวอร์โดยตรง',
-      description:
-        'เครื่องปรับอากาศเครื่องที่ #AC-04 มีน้ำหยดลงมาอย่างต่อเนื่องบริเวณโต๊ะเซิร์ฟเวอร์สำรองและโต๊ะปฏิบัติการนักศึกษาโต๊ะที่ 6 เสี่ยงต่อการลัดวงจร',
+      incidentCode: 'INC-2024-001',
+      title: 'ระบบเครื่องปรับอากาศมีน้ำรั่วซึมหยดลงบนตู้เซิร์ฟเวอร์โดยตรง',
+      description: 'เครื่องปรับอากาศเครื่องที่ #AC-04 มีน้ำหยดลงมาอย่างต่อเนื่องบริเวณตู้เซิร์ฟเวอร์หลักและสวิตช์เครือข่าย เสี่ยงต่อการลัดวงจร',
       category: Category.AIR_CONDITIONING,
-      building: 'อาคาร 3 - สาขาวิชาช่างเทคนิคคอมพิวเตอร์',
-      room: 'ห้องปฏิบัติการ 402 ชั้น 4 (ฝั่งทิศตะวันตก)',
-      specificLocation: 'แร็คเซิร์ฟเวอร์ตู้ที่ #04 (ห้องเซิร์ฟเวอร์และเครือข่าย)',
+      building: DEPARTMENT_BUILDING_NAME,
+      buildingId: deptBuilding.id,
+      floor: 4,
+      room: 'ห้องศูนย์ควบคุมเซิร์ฟเวอร์ประจำแผนก (Server Room)',
+      roomName: 'ห้องศูนย์ควบคุมเซิร์ฟเวอร์ประจำแผนก (Server Room)',
+      specificPoint: 'แร็คเซิร์ฟเวอร์ตู้ที่ #04',
+      specificLocation: 'ห้อง Server Room ชั้น 4 • แร็คเซิร์ฟเวอร์ตู้ที่ #04',
       latitude: 15.2284,
       longitude: 104.8592,
       gpsAccuracy: 2.0,
@@ -173,273 +181,212 @@ async function main() {
       slaTargetMinutes: 15,
       status: TicketStatus.ASSIGNED,
       currentStep: 2,
-      stepNote:
-        'ช่างเทคนิคอาวุโส อเล็กซ์ มอร์แกน กำลังเดินทางจากศูนย์ซ่อมบำรุง อาคาร 1 คาดว่าจะถึงในอีก ~12 นาที',
-      etaMinutes: 12,
-      reporterId: supawitStudent.id,
-      technicianId: alexTechnician.id,
-      createdAt: new Date(Date.now() - 15 * 60 * 1000), // 15 นาทีที่แล้ว
+      stepNote: 'ช่างวิชัย กำลังเดินทางขึ้นชั้น 4 พร้อมอุปกรณ์ซ่อมท่อระบายน้ำแอร์',
+      etaMinutes: 10,
+      reporterId: studentSupawit.id,
+      technicianId: techWichai.id,
+      beforeImageUrl: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800&auto=format&fit=crop&q=80',
+      createdAt: new Date(Date.now() - 25 * 60 * 1000),
     },
   })
 
-  await prisma.attachment.createMany({
-    data: [
-      {
-        fileName: 'vent_leak.jpg',
-        fileSize: '1.8 MB',
-        fileType: 'image/jpeg',
-        url: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800&auto=format&fit=crop&q=80',
-        type: AttachmentType.BEFORE,
-        ticketId: rep089.id,
-      },
-      {
-        fileName: 'floor_puddle.jpg',
-        fileSize: '2.4 MB',
-        fileType: 'image/jpeg',
-        url: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=800&auto=format&fit=crop&q=80',
-        type: AttachmentType.BEFORE,
-        ticketId: rep089.id,
-      },
-    ],
+  await prisma.attachment.create({
+    data: {
+      fileName: 'น้ำแอร์รั่วตู้เซิร์ฟเวอร์.jpg',
+      fileSize: '1.8 MB',
+      fileType: 'image/jpeg',
+      url: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800&auto=format&fit=crop&q=80',
+      type: AttachmentType.BEFORE,
+      ticketId: ticket1.id,
+    },
   })
 
   await prisma.ticketHistory.createMany({
     data: [
       {
-        ticketId: rep089.id,
+        ticketId: ticket1.id,
         status: TicketStatus.PENDING,
         step: 1,
         title: 'รับเรื่องและตรวจสอบข้อมูลแล้ว',
-        note: 'ระบบคัดกรองอัตโนมัติตรวจพบอุปกรณ์รหัส (#SRV-R04) กำหนดเป็นงานเร่งด่วนระดับ 1 (ระบบปรับอากาศ)',
-        timestamp: new Date(Date.now() - 15 * 60 * 1000),
+        note: 'ระบบตรวจพบตำแหน่งห้อง Server Room ชั้น 4 ตั้งค่าเป็นงานเร่งด่วนระดับ 1 ทันที',
+        timestamp: new Date(Date.now() - 25 * 60 * 1000),
       },
       {
-        ticketId: rep089.id,
+        ticketId: ticket1.id,
         status: TicketStatus.ASSIGNED,
         step: 2,
-        title: 'มอบหมายช่างแล้ว • กำลังเดินทาง',
-        note: 'ช่างเทคนิคอาวุโส อเล็กซ์ มอร์แกน กำลังเดินทางจากศูนย์ซ่อมบำรุง อาคาร 1 คาดว่าจะถึงในอีก ~12 นาที',
-        changedById: alexTechnician.id,
-        timestamp: new Date(Date.now() - 12 * 60 * 1000),
+        title: 'มอบหมายช่างแล้ว: วิชัย ช่างไฟและแอร์',
+        note: 'หัวหน้างานอาคารจ่ายงานให้ช่างวิชัยเข้าตัดไฟชั่วคราวและซ่อมท่อระบายน้ำทิ้ง',
+        changedById: departmentAdmin.id,
+        timestamp: new Date(Date.now() - 15 * 60 * 1000),
       },
     ],
   })
 
-  // #REP-088
-  await prisma.ticket.create({
+  // ตั๋ว 2: ชั้น 3 (Lab 301) - หมวด PC_HARDWARE (กำลังซ่อมแซม)
+  const ticket2 = await prisma.ticket.create({
     data: {
-      ticketNumber: '#REP-088',
-      incidentCode: 'INC-2024-F',
-      title: 'หลอดฟลูออเรสเซนต์กระพริบต่อเนื่องในห้องเขียนแบบ',
-      description: 'หลอดไฟแถวกลางกระพริบตลอดเวลา ทำให้ปวดตาขณะเรียนวิชาดรอว์อิ้ง',
-      category: Category.ELECTRICAL,
-      building: 'อาคาร 1 - อาคารเรียนรวมและปฏิบัติการวิศวกรรม',
-      room: 'ห้อง 204 ชั้น 2',
-      latitude: 15.2291,
-      longitude: 104.8585,
+      ticketNumber: '#REP-090',
+      incidentCode: 'INC-2024-002',
+      title: 'อุปกรณ์คอมพิวเตอร์และฮาร์ดแวร์ประจำแล็บ - Lab 301 (เครื่องที่ 12 เปิดไม่ติด)',
+      description: 'คอมพิวเตอร์โต๊ะที่ 12 เปิดเครื่องไม่ติด พาวเวอร์ซัพพลายมีเสียงดังและมีกลิ่นไหม้ขณะนักศึกษากำลังทำปฏิบัติการ',
+      category: Category.PC_HARDWARE,
+      building: DEPARTMENT_BUILDING_NAME,
+      buildingId: deptBuilding.id,
+      floor: 3,
+      room: 'ห้องปฏิบัติการพัฒนาซอฟต์แวร์และแอปพลิเคชัน (Lab 301)',
+      roomName: 'ห้องปฏิบัติการพัฒนาซอฟต์แวร์และแอปพลิเคชัน (Lab 301)',
+      specificPoint: 'โต๊ะคอมเครื่องที่ 12',
+      specificLocation: 'Lab 301 ชั้น 3 • โต๊ะคอมเครื่องที่ 12',
       isUrgent: false,
       priority: Priority.NORMAL,
-      status: TicketStatus.ASSIGNED,
-      currentStep: 2,
-      stepNote: 'จัดคิวช่างเข้าตรวจสอบรอบบ่าย',
-      reporterId: somchaiProf.id,
-      technicianId: prasertTechnician.id,
-      createdAt: new Date(Date.now() - 42 * 60 * 1000),
-    },
-  })
-
-  // #REP-085
-  await prisma.ticket.create({
-    data: {
-      ticketNumber: '#REP-085',
-      incidentCode: 'INC-2024-G',
-      title: 'โช้คอัพประตูปิดไม่สนิททำใหแอร์รั่วไหลสูญเสียความเย็น',
-      description: 'ประตูกระจกทางเข้าด้านหน้าไม่สวิงกลับตำแหน่งเดิม แอร์ออกตลอดเวลา',
-      category: Category.FURNITURE,
-      building: 'หอสมุดกลาง วิทยาเขตหลัก',
-      room: 'ทางเข้าหอสมุดกลาง (ทิศเหนือ)',
-      latitude: 15.2275,
-      longitude: 104.8598,
-      isUrgent: false,
-      priority: Priority.NORMAL,
-      status: TicketStatus.ASSIGNED,
-      currentStep: 2,
-      stepNote: 'เตรียมอุปกรณ์ไขควงและน้ำมันหล่อลื่นไฮดรอลิก',
-      reporterId: libraryStaff.id,
-      createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
-    },
-  })
-
-  // #REP-082
-  await prisma.ticket.create({
-    data: {
-      ticketNumber: '#REP-082',
-      incidentCode: 'INC-2024-H',
-      title: 'เต้ารับพอร์ต HDMI ติดผนังหลวม สัญญาณภาพหลุดระหว่างสอน',
-      description: 'เมื่อขยับสายสัญญาณภาพบนโปรเจกเตอร์จะดับ ขั้วเต้ารับด้านในน่าจะหลวมหรือชำรุด',
-      category: Category.IT_EQUIPMENT,
-      building: 'อาคาร 2 - อาคารบรรยายรวม',
-      room: 'ห้องบรรยาย B',
-      latitude: 15.228,
-      longitude: 104.86,
-      isUrgent: false,
-      priority: Priority.LOW,
-      status: TicketStatus.ASSIGNED,
-      currentStep: 2,
-      stepNote: 'รอบำรุงรักษาตามรอบอาคาร',
-      reporterId: kittisakTA.id,
-      createdAt: new Date(Date.now() - 3 * 60 * 60 * 1000),
-    },
-  })
-
-  // Column 2: In Progress
-  const rep076 = await prisma.ticket.create({
-    data: {
-      ticketNumber: '#REP-076',
-      incidentCode: 'INC-2024-D',
-      title: 'วาล์วท่อส่งน้ำหลักแรงดันตกและมีน้ำซึมเล็กน้อย',
-      description: 'พบน้ำซึมบริเวณข้อต่อเกลียววาล์วหลักห้องใต้ดิน เกจวัดแรงดันลดลงต่ำกว่า 2 บาร์',
-      category: Category.PLUMBING,
-      building: 'เวิร์กช็อป 4 - อาคารซ่อมบำรุงกลาง',
-      room: 'อุโมงค์ชั้นใต้ดิน ช่องงานระบบท่อ',
-      latitude: 15.2268,
-      longitude: 104.8579,
-      isUrgent: true,
-      priority: Priority.URGENT,
+      slaTargetMinutes: 60,
       status: TicketStatus.IN_PROGRESS,
       currentStep: 3,
-      stepNote: 'เบิกอะไหล่จากคลังเรียบร้อย • กำหนดเสร็จ ~30 นาที',
-      partsOrdered: true,
-      etaMinutes: 30,
-      reporterId: securityStaff.id,
-      technicianId: alexTechnician.id,
-      createdAt: new Date(Date.now() - 80 * 60 * 1000),
+      stepNote: 'ช่างอเล็กซ์ กำลังเปลี่ยน Power Supply ขนาด 650W ตัวใหม่',
+      reporterId: studentSupawit.id,
+      technicianId: techAlex.id,
+      beforeImageUrl: 'https://images.unsplash.com/photo-1588702547919-26089e690ecc?w=800&auto=format&fit=crop&q=80',
+      createdAt: new Date(Date.now() - 50 * 60 * 1000),
     },
   })
 
   await prisma.attachment.create({
     data: {
-      fileName: 'valve_leak.jpg',
-      fileSize: '3.1 MB',
+      fileName: 'คอมเครื่องที่12ดับ.jpg',
+      fileSize: '1.4 MB',
       fileType: 'image/jpeg',
-      url: 'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?w=800&auto=format&fit=crop&q=80',
+      url: 'https://images.unsplash.com/photo-1588702547919-26089e690ecc?w=800&auto=format&fit=crop&q=80',
       type: AttachmentType.BEFORE,
-      ticketId: rep076.id,
+      ticketId: ticket2.id,
     },
   })
 
-  // #REP-074
-  await prisma.ticket.create({
+  // ตั๋ว 3: ชั้น 4 (Lab 401) - หมวด NETWORK (ซ่อมเสร็จแล้ว มี Proof of Work)
+  const ticket3 = await prisma.ticket.create({
     data: {
-      ticketNumber: '#REP-074',
-      incidentCode: 'INC-2024-C',
-      title: 'บัลลาสต์โปรเจกเตอร์เพดานเสียและทำความสะอาดแผ่นกรอง',
-      description: 'โปรเจกเตอร์เพดานห้องแล็บตัดดับหลังเปิด 5 นาที ไฟสถานะขึ้นสีส้มกระพริบ',
-      category: Category.IT_EQUIPMENT,
-      building: 'อาคาร 3 - สาขาวิชาช่างเทคนิคคอมพิวเตอร์',
-      room: 'ห้องมัลติมีเดีย 101 ชั้น 1',
-      latitude: 15.2284,
-      longitude: 104.8592,
-      isUrgent: false,
-      priority: Priority.NORMAL,
-      status: TicketStatus.IN_PROGRESS,
-      currentStep: 3,
-      stepNote: 'แยกชิ้นส่วนทดสอบบนโต๊ะช่าง • กำลังวัดแรงดันไฟ 240V',
-      reporterId: nattapornStudent.id,
-      technicianId: prasertTechnician.id,
-      createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
-    },
-  })
-
-  // Column 3: Resolved / Closed
-  const rep071 = await prisma.ticket.create({
-    data: {
-      ticketNumber: '#REP-071',
-      incidentCode: 'INC-2024-B',
-      title: 'ปรับจูนเซ็นเซอร์โถสุขภัณฑ์อัตโนมัติและเคลียร์สิ่งอุดตัน',
-      description: 'เซ็นเซอร์อินฟราเรดไม่สั่งฟลัชน้ำ และมีน้ำเอ่อระบายช้า',
-      category: Category.PLUMBING,
-      building: 'อาคาร 5 - อาคารเรียนและวิทยบริการ',
-      room: 'ห้องน้ำชั้น 2 (ฝั่งตะวันตก)',
-      latitude: 15.23,
-      longitude: 104.861,
+      ticketNumber: '#REP-091',
+      incidentCode: 'INC-2024-003',
+      title: 'ระบบเครือข่ายและอินเทอร์เน็ต - Lab 401 (สวิตช์ฮับพอร์ต 1-8 สัญญาณหลุด)',
+      description: 'Managed Switch ประจำแถวหน้าห้องหลุดการเชื่อมต่อ ทำให้นักศึกษา 8 เครื่องไม่สามารถดึง IP Address จาก DHCP ได้',
+      category: Category.NETWORK,
+      building: DEPARTMENT_BUILDING_NAME,
+      buildingId: deptBuilding.id,
+      floor: 4,
+      room: 'ห้องปฏิบัติการระบบเครือข่ายและความปลอดภัย Network Lab (Lab 401)',
+      roomName: 'ห้องปฏิบัติการระบบเครือข่ายและความปลอดภัย Network Lab (Lab 401)',
+      specificPoint: 'Cisco Switch Rack A แถวหน้าห้อง',
+      specificLocation: 'Lab 401 ชั้น 4 • Cisco Switch Rack A',
       isUrgent: false,
       priority: Priority.NORMAL,
       status: TicketStatus.RESOLVED,
       currentStep: 4,
-      stepNote: 'รอนักศึกษาลงนามตรวจรับงานผ่านระบบดิจิทัล',
-      reporterId: nattapornStudent.id,
-      technicianId: alexTechnician.id,
-      resolvedAt: new Date(Date.now() - 25 * 60 * 1000),
-      createdAt: new Date(Date.now() - 4 * 60 * 60 * 1000),
+      stepNote: 'เข้าหัวสาย Uplink Cat6 ใหม่ และทดสอบ Link Speed 1Gbps ผ่านทุกพอร์ต',
+      resolutionDetail: 'ตรวจสอบพบสาย Patch Cord หักงอ ทำการเปลี่ยนสาย Cat6 ใหม่ความยาว 2 เมตร ทดสอบ Ping Gateway และ DHCP ได้รับ IP ครบ 8 เครื่อง',
+      afterImageUrl: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=800&auto=format&fit=crop&q=80',
+      resolvedAt: new Date(Date.now() - 10 * 60 * 1000),
+      reporterId: profSomchai.id,
+      technicianId: techPrasert.id,
+      createdAt: new Date(Date.now() - 120 * 60 * 1000),
     },
   })
 
   await prisma.attachment.create({
     data: {
-      fileName: 'toilet_sensor_fixed.jpg',
+      fileName: 'ผลการซ่อมสวิตช์และสายแล็บ.jpg',
       fileSize: '1.5 MB',
       fileType: 'image/jpeg',
-      url: 'https://images.unsplash.com/photo-1584622781564-1d987f7333c1?w=800&auto=format&fit=crop&q=80',
+      url: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=800&auto=format&fit=crop&q=80',
       type: AttachmentType.AFTER,
-      ticketId: rep071.id,
+      ticketId: ticket3.id,
     },
   })
 
-  // #REP-068
+  // ตั๋ว 4: ชั้น 1 (Lab 101) - หมวด ELECTRICAL (รอมอบหมาย Triage)
   await prisma.ticket.create({
     data: {
-      ticketNumber: '#REP-068',
-      incidentCode: 'INC-2024-A',
-      title: 'เปลี่ยนแบตเตอรี่ไฟฉุกเฉินทางหนีไฟเสร็จสมบูรณ์',
-      description: 'ไฟสัญญาณเตือนแบตเตอรี่เสื่อมสภาพบริเวณทางออกบันไดหนีไฟฝั่งใต้',
+      ticketNumber: '#REP-092',
+      incidentCode: 'INC-2024-004',
+      title: 'ระบบไฟฟ้า แสงสว่าง และปลั๊กไฟ - Lab 101 (ปลั๊กไฟโต๊ะประกอบคอมมีรอยอาร์ก)',
+      description: 'เต้ารับปลั๊กไฟใต้โต๊ะปฏิบัติการแถวที่ 3 มีประกายไฟและรอยอาร์กไหม้ ขอให้ช่างเข้าตรวจสอบเพื่อความปลอดภัย',
       category: Category.ELECTRICAL,
-      building: 'อาคาร 2 - อาคารบรรยายรวม',
-      room: 'ประตูทางออกโรงอาหารทิศใต้',
-      latitude: 15.2282,
-      longitude: 104.8601,
-      isUrgent: false,
-      priority: Priority.NORMAL,
-      status: TicketStatus.CLOSED,
-      currentStep: 4,
-      stepNote: 'ตรวจสอบและปิดงานแล้ว',
-      technicianId: prasertTechnician.id,
-      resolvedAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
-      closedAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
-      createdAt: new Date(Date.now() - 6 * 60 * 60 * 1000),
+      building: DEPARTMENT_BUILDING_NAME,
+      buildingId: deptBuilding.id,
+      floor: 1,
+      room: 'ห้องปฏิบัติการฮาร์ดแวร์และซ่อมบำรุงคอมพิวเตอร์ (Lab 101)',
+      roomName: 'ห้องปฏิบัติการฮาร์ดแวร์และซ่อมบำรุงคอมพิวเตอร์ (Lab 101)',
+      specificPoint: 'เต้ารับแถวที่ 3 ใต้โต๊ะ',
+      isUrgent: true,
+      priority: Priority.CRITICAL,
+      slaTargetMinutes: 15,
+      status: TicketStatus.PENDING,
+      currentStep: 1,
+      stepNote: 'รับเรื่องแล้ว รอมอบหมายช่างไฟฟ้าเข้าตัดระบบ',
+      reporterId: studentSupawit.id,
+      createdAt: new Date(Date.now() - 8 * 60 * 1000),
     },
   })
 
-  // #REP-065
+  // ตั๋ว 5: ชั้น 2 (Room 201) - หมวด AV_EQUIPMENT (รอมอบหมาย Triage)
   await prisma.ticket.create({
     data: {
-      ticketNumber: '#REP-065',
-      incidentCode: 'INC-2023-Z',
-      title: 'ติดตั้งโครงยึดกระดานไวท์บอร์ดห้อง 302 ใหม่ให้แน่นหนา',
-      description: 'มุมขวาบนของกระดานเริ่มหลุดจากพุกพลาสติก เสี่ยงต่อการตกลงมาทับนักศึกษา',
-      category: Category.FURNITURE,
-      building: 'อาคาร 1 - อาคารเรียนรวมและปฏิบัติการวิศวกรรม',
-      room: 'อาคาร 1, ชั้น 3 ห้อง 302',
-      latitude: 15.2291,
-      longitude: 104.8585,
+      ticketNumber: '#REP-093',
+      incidentCode: 'INC-2024-005',
+      title: 'โสตทัศนูปกรณ์และสื่อการสอน - ห้อง 201 (โปรเจกเตอร์สีเพี้ยนและภาพสั่น)',
+      description: 'สายต่อ HDMI เพดานหลวม ภาพขึ้นหน้าจอโปรเจกเตอร์เป็นสีชมพูและกระพริบขณะอาจารย์กำลังสอนบรรยาย',
+      category: Category.AV_EQUIPMENT,
+      building: DEPARTMENT_BUILDING_NAME,
+      buildingId: deptBuilding.id,
+      floor: 2,
+      room: 'ห้อง 201 ห้องเรียนบรรยายทฤษฎี',
+      roomName: 'ห้อง 201 ห้องเรียนบรรยายทฤษฎี',
+      specificPoint: 'สายต่อโปรเจกเตอร์หน้าห้อง',
+      isUrgent: false,
+      priority: Priority.NORMAL,
+      status: TicketStatus.PENDING,
+      currentStep: 1,
+      stepNote: 'รับเรื่องแล้ว รอจ่ายงานช่างโสตทัศนูปกรณ์',
+      reporterId: profSomchai.id,
+      createdAt: new Date(Date.now() - 18 * 60 * 1000),
+    },
+  })
+
+  // ตั๋ว 6: ชั้น 1 (Restroom 103) - หมวด PLUMBING (ปิดงานและตรวจรับแล้ว)
+  await prisma.ticket.create({
+    data: {
+      ticketNumber: '#REP-094',
+      incidentCode: 'INC-2024-006',
+      title: 'ระบบประปา สุขภัณฑ์ และห้องน้ำ - ห้องน้ำรวม ชั้น 1 (ก๊อกน้ำอ่างล้างมือรั่วซึม)',
+      description: 'ก๊อกน้ำอ่างล้างมืออ่างที่ 2 น้ำไหลไม่หยุด ปิดไม่สนิท',
+      category: Category.PLUMBING,
+      building: DEPARTMENT_BUILDING_NAME,
+      buildingId: deptBuilding.id,
+      floor: 1,
+      room: 'ห้องน้ำรวม ชั้น 1',
+      roomName: 'ห้องน้ำรวม ชั้น 1',
+      specificPoint: 'อ่างล้างมืออ่างที่ 2',
       isUrgent: false,
       priority: Priority.NORMAL,
       status: TicketStatus.CLOSED,
       currentStep: 4,
-      stepNote: 'ปิดงานแล้ว',
-      technicianId: alexTechnician.id,
-      resolvedAt: new Date(Date.now() - 5 * 60 * 60 * 1000),
-      closedAt: new Date(Date.now() - 5 * 60 * 60 * 1000),
-      createdAt: new Date(Date.now() - 12 * 60 * 60 * 1000),
+      stepNote: 'เปลี่ยนซีลยางวาล์วก๊อกน้ำใหม่เรียบร้อยแล้ว',
+      resolutionDetail: 'เปลี่ยนวาล์วเปิด-ปิดและซีลยางกันซึม ทดสอบเปิด-ปิด 10 ครั้ง ไม่พบน้ำรั่ว',
+      resolvedAt: new Date(Date.now() - 300 * 60 * 1000),
+      closedAt: new Date(Date.now() - 240 * 60 * 1000),
+      rating: 5,
+      feedback: 'ช่างมาไวมาก ซ่อมเสร็จเรียบร้อยและสะอาด ขอบคุณครับ',
+      reporterId: studentSupawit.id,
+      technicianId: techWichai.id,
+      createdAt: new Date(Date.now() - 360 * 60 * 1000),
     },
   })
 
-  console.log('✅ Seeded tickets and attachments successfully!')
+  console.log('✅ Seeded sample tickets covering all 7 categories and 4 floors!')
 }
 
 main()
   .catch((e) => {
-    console.error('❌ Error during seeding:', e)
+    console.error(e)
     process.exit(1)
   })
   .finally(async () => {

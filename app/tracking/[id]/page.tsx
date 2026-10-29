@@ -2,7 +2,7 @@
 import { getTicketByIdOrNumberAction } from "@/actions/ticket";
 import TrackingView from "@/components/tracking/TrackingView";
 import Link from "next/link";
-import { ArrowLeft, AlertCircle } from "lucide-react";
+import { ArrowLeft, AlertCircle, Search, Sparkles } from "lucide-react";
 import { Metadata } from "next";
 import { getSession } from "@/lib/auth";
 
@@ -13,45 +13,56 @@ interface PageProps {
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const cleanId = params.id.startsWith("#") ? params.id : `#${params.id}`;
-  return {
-    title: `ติดตามสถานะการแจ้งซ่อม ${cleanId} | CampusOps`,
-    description: `ตรวจสอบความคืบหน้าการซ่อมบำรุงและตำแหน่งช่างสำหรับตั๋ว ${cleanId}`,
-  };
+  try {
+    const rawId = decodeURIComponent(params?.id || "");
+    const cleanId = rawId.startsWith("#") ? rawId : `#${rawId}`;
+    return {
+      title: `ติดตามสถานะการแจ้งซ่อม ${cleanId} | CampusOps`,
+      description: `ตรวจสอบความคืบหน้าการซ่อมบำรุงและตำแหน่งช่างสำหรับตั๋ว ${cleanId}`,
+    };
+  } catch {
+    return {
+      title: "ติดตามการแจ้งซ่อม | CampusOps",
+    };
+  }
 }
 
 export default async function TrackingPage({ params }: PageProps) {
-  const [res, session] = await Promise.all([
-    getTicketByIdOrNumberAction(params.id),
-    getSession(),
-  ]);
+  try {
+    const rawId = decodeURIComponent(params?.id || "");
+    const [res, session] = await Promise.all([
+      getTicketByIdOrNumberAction(rawId),
+      getSession(),
+    ]);
 
   if (!res.success || !res.ticket) {
     return (
-      <main className="min-h-screen bg-slate-100 flex items-center justify-center p-4">
-        <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl text-center">
-          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-rose-50 text-rose-500">
-            <AlertCircle className="h-6 w-6" />
+      <main className="min-h-screen flex items-center justify-center p-4">
+        <div className="w-full max-w-md card-elevated p-8 text-center space-y-4">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-50 text-rose-600 border border-rose-200/90 shadow-xs">
+            <AlertCircle className="h-6 w-6 stroke-[1.75]" />
           </div>
-          <h2 className="text-base font-bold text-slate-900">
-            ไม่พบข้อมูลใบงาน #{params.id}
-          </h2>
-          <p className="mt-1 text-xs text-slate-500">
-            รหัสตั๋วอาจไม่ถูกต้อง หรือใบงานยังไม่ได้ถูกบันทึกในระบบ
-          </p>
+          <div>
+            <h2 className="text-base sm:text-lg font-bold text-slate-900">
+              ไม่พบข้อมูลใบงาน <span className="chip-tech text-rose-700 bg-rose-50 border-rose-200 font-mono">#{params.id}</span>
+            </h2>
+            <p className="mt-1.5 text-xs text-slate-500 font-medium">
+              รหัสตั๋วอาจไม่ถูกต้อง หรือใบงานยังไม่ได้ถูกบันทึกในระบบของอาคารแผนก
+            </p>
+          </div>
 
-          <div className="mt-6 flex flex-col space-y-2">
+          <div className="pt-4 flex flex-col space-y-2.5">
             <Link
               href="/tracking/REP-089"
-              className="rounded-xl bg-slate-900 py-2.5 text-xs font-semibold text-white shadow hover:bg-slate-800 transition"
+              className="btn-primary-gradient py-2.5 text-xs font-semibold"
             >
               ดูตั๋วตัวอย่าง #REP-089
             </Link>
             <Link
               href={session?.role === "USER" ? "/student/dashboard" : session?.role === "TECHNICIAN" ? "/technician/kanban" : session?.role === "ADMIN" ? "/admin/dashboard" : "/"}
-              className="flex items-center justify-center space-x-1.5 rounded-xl border border-slate-200 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition"
+              className="flex items-center justify-center space-x-2 rounded-xl border border-slate-200/90 bg-white py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition shadow-xs"
             >
-              <ArrowLeft className="h-4 w-4" />
+              <ArrowLeft className="h-4 w-4 stroke-[1.75]" />
               <span>กลับสู่หน้าหลัก</span>
             </Link>
           </div>
@@ -61,8 +72,23 @@ export default async function TrackingPage({ params }: PageProps) {
   }
 
   return (
-    <main className="min-h-screen bg-slate-100/60 py-0 sm:py-6">
+    <main className="min-h-screen py-0 sm:py-6">
       <TrackingView ticket={res.ticket} currentUser={session} />
     </main>
   );
+  } catch (error: any) {
+    console.error("TrackingPage error:", error);
+    return (
+      <main className="min-h-screen flex items-center justify-center p-4">
+        <div className="w-full max-w-md card-elevated p-8 text-center space-y-4">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-50 text-rose-600 border border-rose-200/90 shadow-xs">
+            <AlertCircle className="h-6 w-6 stroke-[1.75]" />
+          </div>
+          <h2 className="text-base sm:text-lg font-bold text-slate-900">เกิดข้อผิดพลาดในการโหลดข้อมูล</h2>
+          <p className="text-xs text-slate-500">{error?.message || "ไม่สามารถแสดงผลตั๋วได้ในขณะนี้"}</p>
+        </div>
+      </main>
+    );
+  }
 }
+

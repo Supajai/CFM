@@ -1,6 +1,7 @@
 // app/technician/kanban/page.tsx
 import { getKanbanTicketsAction } from "@/actions/ticket";
-import KanbanBoard from "@/components/kanban/KanbanBoard";
+import { getSession } from "@/lib/auth";
+import TechnicianKanbanBoard from "@/components/technician/TechnicianKanbanBoard";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -9,7 +10,10 @@ export const metadata: Metadata = {
 };
 
 export default async function TechnicianKanbanPage() {
-  const res = await getKanbanTicketsAction();
+  const [res, session] = await Promise.all([
+    getKanbanTicketsAction(),
+    getSession(),
+  ]);
 
   const defaultColumns = {
     todo: [],
@@ -29,8 +33,12 @@ export default async function TechnicianKanbanPage() {
   const stats = res.success && res.stats ? res.stats : defaultStats;
 
   return (
-    <div className="h-[calc(100vh-4rem)] lg:h-screen overflow-hidden">
-      <KanbanBoard initialColumns={columns} initialStats={stats} />
+    <div className="w-full min-h-[calc(100vh-140px)]">
+      <TechnicianKanbanBoard
+        initialColumns={columns}
+        initialStats={stats}
+        currentUser={session}
+      />
     </div>
   );
 }

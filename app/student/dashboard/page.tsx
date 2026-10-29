@@ -22,6 +22,9 @@ import {
   User,
 } from "lucide-react";
 import { formatDateThai, timeAgoThai } from "@/lib/utils";
+import BuildingFloorMap, { TicketSummary } from "@/components/building/BuildingFloorMap";
+import DashboardViewContainer from "@/components/dashboard/DashboardViewContainer";
+import { getRoomHeatmapStatsAction } from "@/actions/room";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -45,21 +48,77 @@ export default async function StudentDashboardPage() {
     redirect("/login");
   }
 
-  // ดึงเฉพาะตั๋วที่นักศึกษาคนนี้เป็นผู้แจ้ง (หรือค้นหาตามชื่อ/อีเมลเพื่อความยืดหยุ่น)
-  const myTickets = await prisma.ticket.findMany({
-    where: {
-      OR: [
-        { reporterId: user.id },
-        { reporter: { email: user.email } },
-        { reporter: { name: user.name } },
-      ],
-    },
-    orderBy: { createdAt: "desc" },
-    include: {
-      attachments: true,
-      technician: true,
-    },
-  });
+  // ดึงข้อมูลตั๋วของฉัน, ตั๋วทั้งหมดในอาคารสำหรับแผนผัง 2.5D, และสถานะห้อง
+  const [myTickets, buildingTickets, heatmapRes] = await Promise.all([
+    prisma.ticket.findMany({
+      where: {
+        OR: [
+          { reporterId: user.id },
+          { reporter: { email: user.email } },
+          { reporter: { name: user.name } },
+        ],
+      },
+      orderBy: { createdAt: "desc" },
+      include: {
+        attachments: true,
+        technician: true,
+      },
+    }),
+    prisma.ticket.findMany({
+      where: {
+        status: { notIn: ["CLOSED", "CANCELLED"] },
+      },
+      select: {
+        id: true,
+        ticketNumber: true,
+        title: true,
+        category: true,
+        priority: true,
+        isUrgent: true,
+        status: true,
+        floor: true,
+        room: true,
+        roomName: true,
+        specificPoint: true,
+        createdAt: true,
+        beforeImageUrl: true,
+        afterImageUrl: true,
+        reporterId: true,
+        technicianId: true,
+        technician: {
+          select: { name: true },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    }),
+    getRoomHeatmapStatsAction(),
+  ]);
+
+  const heatmapStats = heatmapRes.success ? heatmapRes.data : [];
+
+  // Format tickets for 2.5D Building Floor Map
+  const formattedTickets: TicketSummary[] = buildingTickets.map((t) => ({
+    id: t.id,
+    ticketNumber: t.ticketNumber,
+    title: t.title,
+    category: t.category,
+    priority: t.priority,
+    isUrgent: t.isUrgent || t.priority === "URGENT",
+    status: t.status,
+    floor: t.floor,
+    room: t.room,
+    roomName: t.roomName || t.room,
+    roomId: t.room,
+    roomCode: t.room,
+    location: t.specificPoint ? `${t.roomName || t.room} • ${t.specificPoint}` : t.roomName || t.room,
+    specificPoint: t.specificPoint,
+    createdAt: t.createdAt.toISOString(),
+    beforeImageUrl: t.beforeImageUrl,
+    afterImageUrl: t.afterImageUrl,
+    reporterId: t.reporterId,
+    technicianId: t.technicianId,
+    technicianName: t.technician?.name,
+  }));
 
   // คำนวณ KPI Mini Cards
   const totalCount = myTickets.length;
@@ -100,7 +159,7 @@ export default async function StudentDashboardPage() {
         return (
           <span className="inline-flex items-center space-x-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-700 border border-emerald-200">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
-            <span>ซ่อมเสร็จ / รอตรวจรับ</span>
+            <span>ซ่อมเสร็จสิ้น (RESOLVED)</span>
           </span>
         );
       case "CLOSED":
@@ -120,29 +179,29 @@ export default async function StudentDashboardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans">
+    <div className="min-h-screen bg-transparent text-slate-900 flex flex-col font-sans">
       <MainNavbar currentUser={session} />
 
-      <main className="flex-1 mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8 py-8 space-y-8 pb-28">
+      <main className="flex-1 mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8 py-8 space-y-6 pb-28">
         {/* 1. Header: Student Profile Card */}
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="rounded-2xl border border-slate-200/90 bg-white/95 backdrop-blur-md p-6 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] hover:border-emerald-500/40 transition-all flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
           <div className="flex items-center space-x-4">
-            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-slate-900 text-xl font-bold text-white shadow-md">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-b from-emerald-500 to-emerald-600 text-xl font-bold text-white shadow-[0_2px_10px_rgba(16,185,129,0.35)]">
               {user.name.charAt(0)}
             </div>
             <div className="space-y-1">
               <div className="flex items-center space-x-2">
-                <h1 className="text-xl font-bold text-slate-900">{user.name}</h1>
-                <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-bold text-emerald-700 border border-emerald-100">
+                <h1 className="text-xl font-bold tracking-tight text-slate-900">{user.name}</h1>
+                <span className="rounded-xl bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-800 border border-emerald-200/80 shadow-2xs">
                   นักศึกษา / บุคลากร
                 </span>
               </div>
               <p className="text-xs text-slate-500">
                 {user.studentId ? `รหัสประจำตัว: ${user.studentId}` : user.email}{" "}
-                • {user.department || "คณะเทคโนโลยีและวิศวกรรม"}
+                • {user.department || "แผนกวิชาช่างเทคนิคคอมพิวเตอร์"}
               </p>
               {user.phone && (
-                <p className="text-[11px] text-slate-400 font-mono">
+                <p className="text-xs text-slate-400 font-mono">
                   เบอร์โทรติดต่อ: {user.phone}
                 </p>
               )}
@@ -151,211 +210,233 @@ export default async function StudentDashboardPage() {
 
           <Link
             href="/report"
-            className="flex items-center justify-center space-x-2 rounded-2xl bg-slate-950 px-5 py-3 text-xs font-bold text-white shadow-md hover:bg-slate-800 transition active:scale-95"
+            className="flex items-center justify-center space-x-2 h-10 rounded-xl bg-gradient-to-b from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 px-5 text-xs font-semibold text-white shadow-[0_2px_10px_rgba(16,185,129,0.35)] transition-all active:scale-[0.98]"
           >
-            <Plus className="h-4 w-4" />
+            <Plus className="h-4 w-4 stroke-[1.75]" />
             <span>แจ้งปัญหา / ส่งคำร้องซ่อมใหม่</span>
           </Link>
         </div>
 
         {/* 2. KPI Mini Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm flex items-center justify-between">
+          <div className="rounded-2xl border border-slate-200/90 bg-white/90 backdrop-blur-md p-5 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.06)] hover:border-emerald-500/40 hover:shadow-md transition-all flex items-center justify-between">
             <div>
-              <p className="text-xs font-semibold text-slate-500">
+              <p className="text-xs font-medium text-slate-500">
                 งานของฉันทั้งหมด
               </p>
-              <h3 className="mt-1 text-2xl font-bold text-slate-900">
+              <h3 className="mt-1 font-mono text-3xl font-bold tracking-tight text-slate-900">
                 {totalCount}
               </h3>
             </div>
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-100 text-slate-600">
-              <Activity className="h-5 w-5" />
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-100 text-slate-700 border border-slate-200/80 shadow-2xs">
+              <Activity className="h-5 w-5 stroke-[1.75]" />
             </div>
           </div>
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm flex items-center justify-between">
+          <div className="rounded-2xl border border-slate-200/90 bg-white/90 backdrop-blur-md p-5 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.06)] hover:border-amber-500/40 hover:shadow-md transition-all flex items-center justify-between">
             <div>
-              <p className="text-xs font-semibold text-slate-500">
+              <p className="text-xs font-medium text-slate-500">
                 รอดำเนินการ
               </p>
-              <h3 className="mt-1 text-2xl font-bold text-amber-600">
+              <h3 className="mt-1 font-mono text-3xl font-bold tracking-tight text-amber-600">
                 {pendingCount}
               </h3>
             </div>
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
-              <Clock className="h-5 w-5" />
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-50 text-amber-700 border border-amber-200/80 shadow-2xs">
+              <Clock className="h-5 w-5 stroke-[1.75]" />
             </div>
           </div>
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm flex items-center justify-between">
+          <div className="rounded-2xl border border-slate-200/90 bg-white/90 backdrop-blur-md p-5 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.06)] hover:border-blue-500/40 hover:shadow-md transition-all flex items-center justify-between">
             <div>
-              <p className="text-xs font-semibold text-slate-500">
+              <p className="text-xs font-medium text-slate-500">
                 กำลังดำเนินการซ่อม
               </p>
-              <h3 className="mt-1 text-2xl font-bold text-blue-600">
+              <h3 className="mt-1 font-mono text-3xl font-bold tracking-tight text-blue-600">
                 {inProgressCount}
               </h3>
             </div>
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
-              <Wrench className="h-5 w-5" />
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-50 text-blue-700 border border-blue-200/80 shadow-2xs">
+              <Wrench className="h-5 w-5 stroke-[1.75]" />
             </div>
           </div>
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm flex items-center justify-between">
+          <div className="rounded-2xl border border-slate-200/90 bg-white/90 backdrop-blur-md p-5 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.06)] hover:border-emerald-500/40 hover:shadow-md transition-all flex items-center justify-between">
             <div>
-              <p className="text-xs font-semibold text-slate-500">
+              <p className="text-xs font-medium text-slate-500">
                 ซ่อมเสร็จสิ้น / ปิดงาน
               </p>
-              <h3 className="mt-1 text-2xl font-bold text-emerald-600">
+              <h3 className="mt-1 font-mono text-3xl font-bold tracking-tight text-emerald-600">
                 {resolvedCount}
               </h3>
             </div>
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
-              <CheckCircle2 className="h-5 w-5" />
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700 border border-emerald-200/80 shadow-2xs">
+              <CheckCircle2 className="h-5 w-5 stroke-[1.75]" />
             </div>
           </div>
         </div>
 
-        {/* 3. My Ticket History Table */}
-        <div id="history" className="rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden scroll-mt-6">
-          <div className="border-b border-slate-100 p-6 flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <h2 className="text-base font-bold text-slate-900">
-                ประวัติการแจ้งซ่อมของฉัน (My Service Tickets)
-              </h2>
-              <p className="text-xs text-slate-500 mt-0.5">
-                คลิกที่รายการใบงานเพื่อเปิดหน้าติดตามสถานะแบบเรียลไทม์
-              </p>
+        {/* 3. Operational Mode Canvas: สลับระหว่างแผนผังอาคาร 2.5D และตารางรายการ */}
+        <DashboardViewContainer
+          roleLabel="USER (นักศึกษา / บุคลากร)"
+          defaultView="map"
+          mapView={
+            <div className="space-y-4">
+              <BuildingFloorMap
+                initialFloor={1}
+                tickets={formattedTickets}
+                currentUserRole="USER"
+                currentUserId={user.id}
+                currentUserName={user.name}
+                heatmapStats={heatmapStats}
+                standalone={true}
+              />
             </div>
+          }
+          listView={
+            /* My Ticket History Table */
+            <div id="history" className="rounded-2xl border border-slate-200/90 bg-white/95 backdrop-blur-md shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] overflow-hidden scroll-mt-6">
+              <div className="border-b border-slate-200/80 p-5 flex flex-wrap items-center justify-between gap-4 bg-slate-50/60">
+                <div>
+                  <h2 className="text-xs font-bold uppercase tracking-wider text-slate-700">
+                    ประวัติการแจ้งซ่อมของฉัน (My Service Tickets)
+                  </h2>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    คลิกที่รายการใบงานเพื่อเปิดหน้าติดตามสถานะแบบเรียลไทม์
+                  </p>
+                </div>
 
-            <span className="rounded-xl bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600 font-mono">
-              ทั้งหมด {totalCount} รายการ
-            </span>
-          </div>
+                <span className="rounded-xl bg-white border border-slate-200/80 px-3 py-1 text-xs font-semibold text-slate-800 font-mono shadow-2xs">
+                  ทั้งหมด {totalCount} รายการ
+                </span>
+              </div>
 
-          {myTickets.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs text-slate-700">
-                <thead className="border-b border-slate-100 bg-slate-50/70 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                  <tr>
-                    <th className="px-6 py-3.5">รหัสตั๋ว</th>
-                    <th className="px-4 py-3.5">หัวข้อ / อาการชำรุด</th>
-                    <th className="px-4 py-3.5">สถานที่เกิดเหตุ</th>
-                    <th className="px-4 py-3.5">สถานะงาน</th>
-                    <th className="px-4 py-3.5">ช่างผู้รับผิดชอบ</th>
-                    <th className="px-6 py-3.5 text-right">การจัดการ</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {myTickets.map((t) => {
-                    const cleanNumber = t.ticketNumber.replace("#", "");
-                    return (
-                      <tr
-                        key={t.id}
-                        className="hover:bg-slate-50/80 transition group"
-                      >
-                        {/* 1. Ticket Number */}
-                        <td className="px-6 py-4">
-                          <span className="font-mono font-bold text-slate-900 bg-slate-100 px-2 py-0.5 rounded text-[11px]">
-                            {t.ticketNumber}
-                          </span>
-                          {t.isUrgent && (
-                            <span className="block mt-1 text-[10px] text-rose-600 font-bold">
-                              • เร่งด่วนวิกฤต
-                            </span>
-                          )}
-                        </td>
-
-                        {/* 2. Issue Title */}
-                        <td className="px-4 py-4 max-w-xs">
-                          <p className="font-bold text-slate-900 truncate group-hover:text-blue-600 transition">
-                            {t.title}
-                          </p>
-                          <p className="text-[11px] text-slate-500 truncate mt-0.5">
-                            {t.description}
-                          </p>
-                          <span className="text-[10px] text-slate-400 mt-1 flex items-center space-x-1">
-                            <Calendar className="h-3 w-3" />
-                            <span>{timeAgoThai(t.createdAt)}</span>
-                          </span>
-                        </td>
-
-                        {/* 3. Location */}
-                        <td className="px-4 py-4">
-                          <div className="flex items-start space-x-1">
-                            <MapPin className="h-3.5 w-3.5 text-slate-400 mt-0.5 shrink-0" />
-                            <div>
-                              <p className="font-medium text-slate-800">
-                                {t.room}
-                              </p>
-                              <p className="text-[10px] text-slate-400 truncate max-w-[160px]">
-                                {t.building}
-                              </p>
-                            </div>
-                          </div>
-                        </td>
-
-                        {/* 4. Status Badge */}
-                        <td className="px-4 py-4">{getStatusBadge(t.status)}</td>
-
-                        {/* 5. Technician */}
-                        <td className="px-4 py-4">
-                          {t.technician ? (
-                            <div className="flex items-center space-x-2">
-                              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-900 text-[10px] font-bold text-white">
-                                {t.technician.name.charAt(0)}
-                              </div>
-                              <span className="font-medium text-slate-800 truncate">
-                                {t.technician.name.split(" ")[0]}
-                              </span>
-                            </div>
-                          ) : (
-                            <span className="text-slate-400 text-[11px]">
-                              รอมอบหมาย
-                            </span>
-                          )}
-                        </td>
-
-                        {/* 6. Action Button */}
-                        <td className="px-6 py-4 text-right">
-                          <Link
-                            href={`/tracking/${cleanNumber}`}
-                            className="inline-flex items-center space-x-1 rounded-xl bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white shadow hover:bg-slate-800 transition"
-                          >
-                            <span>ติดตามงาน</span>
-                            <ArrowRight className="h-3.5 w-3.5" />
-                          </Link>
-                        </td>
+              {myTickets.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs text-slate-700">
+                    <thead className="border-b border-slate-200/80 bg-slate-50/90 text-[11px] font-semibold text-slate-600 uppercase tracking-wider">
+                      <tr>
+                        <th className="px-6 py-3.5">รหัสตั๋ว</th>
+                        <th className="px-4 py-3.5">หัวข้อ / อาการชำรุด</th>
+                        <th className="px-4 py-3.5">สถานที่เกิดเหตุ</th>
+                        <th className="px-4 py-3.5">สถานะงาน</th>
+                        <th className="px-4 py-3.5">ช่างผู้รับผิดชอบ</th>
+                        <th className="px-6 py-3.5 text-right">การจัดการ</th>
                       </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {myTickets.map((t, idx) => {
+                        const cleanNumber = t.ticketNumber.replace("#", "");
+                        return (
+                          <tr
+                            key={t.id}
+                            className={`transition-colors group hover:bg-slate-50/80 ${
+                              idx % 2 === 1 ? "bg-slate-50/30" : "bg-white/40"
+                            }`}
+                          >
+                            {/* 1. Ticket Number */}
+                            <td className="px-6 py-4 font-mono">
+                              <span className="font-mono text-xs font-semibold bg-slate-100 border border-slate-200/80 text-slate-800 px-2.5 py-1 rounded-md shadow-2xs">
+                                {t.ticketNumber}
+                              </span>
+                              {t.isUrgent && (
+                                <span className="block mt-1 font-sans text-[10px] text-rose-600 font-bold">
+                                  • เร่งด่วนวิกฤต
+                                </span>
+                              )}
+                            </td>
+
+                            {/* 2. Issue Title */}
+                            <td className="px-4 py-4 max-w-xs">
+                              <p className="font-semibold text-slate-900 truncate group-hover:text-emerald-700 transition">
+                                {t.title}
+                              </p>
+                              <p className="text-[11px] text-slate-500 truncate mt-0.5">
+                                {t.description}
+                              </p>
+                              <span className="text-[10px] text-slate-400 mt-1 flex items-center space-x-1 font-mono">
+                                <Calendar className="h-3 w-3 stroke-[1.75]" />
+                                <span>{timeAgoThai(t.createdAt)}</span>
+                              </span>
+                            </td>
+
+                            {/* 3. Location */}
+                            <td className="px-4 py-4">
+                              <div className="flex items-start space-x-1.5">
+                                <MapPin className="h-3.5 w-3.5 text-emerald-600 mt-0.5 shrink-0 stroke-[1.75]" />
+                                <div>
+                                  <p className="font-mono font-semibold text-slate-800">
+                                    {t.room}
+                                  </p>
+                                  <p className="text-[10px] text-slate-400 truncate max-w-[160px]">
+                                    {t.building}
+                                  </p>
+                                </div>
+                              </div>
+                            </td>
+
+                            {/* 4. Status Badge */}
+                            <td className="px-4 py-4">{getStatusBadge(t.status)}</td>
+
+                            {/* 5. Technician */}
+                            <td className="px-4 py-4">
+                              {t.technician ? (
+                                <div className="flex items-center space-x-2">
+                                  <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-gradient-to-b from-emerald-500 to-emerald-600 text-xs font-bold text-white shadow-2xs">
+                                    {t.technician.name.charAt(0)}
+                                  </div>
+                                  <span className="font-semibold text-slate-800 truncate">
+                                    {t.technician.name.split(" ")[0]}
+                                  </span>
+                                </div>
+                              ) : (
+                                <span className="text-slate-400 text-xs">
+                                  รอมอบหมาย
+                                </span>
+                              )}
+                            </td>
+
+                            {/* 6. Action Button */}
+                            <td className="px-6 py-4 text-right">
+                              <Link
+                                href={`/tracking/${cleanNumber}`}
+                                className="inline-flex items-center space-x-1.5 rounded-xl bg-gradient-to-b from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 px-3.5 py-1.5 text-xs font-semibold text-white shadow-[0_2px_8px_rgba(16,185,129,0.35)] transition-all active:scale-[0.98]"
+                              >
+                                <span>ติดตามงาน</span>
+                                <ArrowRight className="h-3.5 w-3.5 stroke-[1.75]" />
+                              </Link>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="p-12 text-center space-y-3">
+                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 border border-slate-200/80 shadow-2xs">
+                    <Wrench className="h-6 w-6 stroke-[1.75]" />
+                  </div>
+                  <div className="space-y-1">
+                    <h3 className="text-sm font-semibold text-slate-900">
+                      คุณยังไม่มีประวัติการส่งคำร้องแจ้งซ่อม
+                    </h3>
+                    <p className="text-xs text-slate-500">
+                      เมื่อคุณแจ้งปัญหาในสถานศึกษา รายการคำร้องจะปรากฏที่นี่เพื่อติดตามสถานะ
+                    </p>
+                  </div>
+                  <Link
+                    href="/report"
+                    className="inline-flex items-center space-x-1.5 rounded-xl bg-gradient-to-b from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 px-4 py-2 text-xs font-semibold text-white shadow-[0_2px_10px_rgba(16,185,129,0.35)] transition-all active:scale-[0.98]"
+                  >
+                    <Plus className="h-4 w-4 stroke-[1.75]" />
+                    <span>ส่งคำร้องแจ้งซ่อมแรกของคุณ</span>
+                  </Link>
+                </div>
+              )}
             </div>
-          ) : (
-            <div className="p-12 text-center space-y-4">
-              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
-                <Wrench className="h-7 w-7" />
-              </div>
-              <div className="space-y-1">
-                <h3 className="text-sm font-bold text-slate-800">
-                  คุณยังไม่มีประวัติการส่งคำร้องแจ้งซ่อม
-                </h3>
-                <p className="text-xs text-slate-400">
-                  เมื่อคุณแจ้งปัญหาในสถานศึกษา รายการคำร้องจะปรากฏที่นี่เพื่อติดตามสถานะ
-                </p>
-              </div>
-              <Link
-                href="/report"
-                className="inline-flex items-center space-x-1.5 rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white shadow hover:bg-slate-800"
-              >
-                <Plus className="h-4 w-4" />
-                <span>ส่งคำร้องแจ้งซ่อมแรกของคุณ</span>
-              </Link>
-            </div>
-          )}
-        </div>
+          }
+        />
       </main>
 
       {/* 4. Mobile Bottom Navigation Shell */}

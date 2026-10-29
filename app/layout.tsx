@@ -22,7 +22,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="th" className={`${inter.variable} ${prompt.variable}`}>
-      <body className="min-h-screen bg-slate-50 font-sans text-slate-900 antialiased">
+      <body className="min-h-screen bg-slate-50/75 font-sans text-slate-900 antialiased relative selection:bg-emerald-600 selection:text-white">
+        {/* Atmospheric Engineering Dot Grid Background */}
+        <div className="fixed inset-0 -z-10 h-full w-full bg-[radial-gradient(#94a3b8_1px,transparent_1px)] [background-size:20px_20px] opacity-40 pointer-events-none" />
         {children}
       </body>
     </html>

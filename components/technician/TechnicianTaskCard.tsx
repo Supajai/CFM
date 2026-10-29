@@ -6,15 +6,11 @@ import Link from "next/link";
 import {
   MapPin,
   Clock,
-  Wrench,
   CheckCircle2,
-  AlertTriangle,
   Play,
-  ArrowRight,
-  Flame,
   Camera,
   ExternalLink,
-  ChevronRight,
+  Flame,
 } from "lucide-react";
 import { updateTicketStatusAction } from "@/actions/ticket";
 import { TicketStatus } from "@prisma/client";
@@ -50,34 +46,41 @@ export default function TechnicianTaskCard({ ticket }: TechnicianTaskCardProps) 
     switch (ticket.status) {
       case "ASSIGNED":
         return (
-          <span className="inline-flex items-center space-x-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-[11px] font-bold text-amber-700 border border-amber-200">
+          <span className="inline-flex items-center space-x-1 rounded-md bg-amber-50 px-2.5 py-0.5 text-[11px] font-medium text-amber-700 border border-amber-200">
             <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
             <span>รอดำเนินการซ่อม</span>
           </span>
         );
       case "IN_PROGRESS":
         return (
-          <span className="inline-flex items-center space-x-1 rounded-full bg-blue-50 px-2.5 py-0.5 text-[11px] font-bold text-blue-700 border border-blue-200">
+          <span className="inline-flex items-center space-x-1 rounded-md bg-blue-50 px-2.5 py-0.5 text-[11px] font-medium text-blue-700 border border-blue-200">
             <span className="h-1.5 w-1.5 rounded-full bg-blue-500 animate-pulse" />
             <span>กำลังซ่อมแซม</span>
           </span>
         );
+      case "ON_HOLD":
+        return (
+          <span className="inline-flex items-center space-x-1 rounded-md bg-amber-50 px-2.5 py-0.5 text-[11px] font-medium text-amber-800 border border-amber-300">
+            <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
+            <span>⏸️ ยกกลับศูนย์ซ่อม</span>
+          </span>
+        );
       case "RESOLVED":
         return (
-          <span className="inline-flex items-center space-x-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-bold text-emerald-700 border border-emerald-200">
-            <CheckCircle2 className="h-3 w-3" />
-            <span>ซ่อมเสร็จ / รอตรวจรับ</span>
+          <span className="inline-flex items-center space-x-1 rounded-md bg-emerald-50 px-2.5 py-0.5 text-[11px] font-medium text-emerald-700 border border-emerald-200">
+            <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+            <span>ซ่อมเสร็จแล้ว (RESOLVED)</span>
           </span>
         );
       case "CLOSED":
         return (
-          <span className="inline-flex items-center space-x-1 rounded-full bg-slate-100 px-2.5 py-0.5 text-[11px] font-bold text-slate-600">
-            <span>ปิดงานสมบูรณ์</span>
+          <span className="inline-flex items-center space-x-1 rounded-md bg-zinc-100 px-2.5 py-0.5 text-[11px] font-medium text-zinc-700 border border-zinc-200">
+            <span>ปิดงานสมบูรณ์ (CLOSED)</span>
           </span>
         );
       default:
         return (
-          <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] text-slate-600">
+          <span className="rounded-md bg-zinc-100 px-2 py-0.5 text-[11px] font-medium text-zinc-600 border border-zinc-200">
             {ticket.status}
           </span>
         );
@@ -87,22 +90,22 @@ export default function TechnicianTaskCard({ ticket }: TechnicianTaskCardProps) 
   return (
     <>
       <div
-        className={`rounded-3xl border bg-white p-5 shadow-sm transition hover:shadow-md ${
+        className={`rounded-2xl border bg-white/95 backdrop-blur-md p-5 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.06)] hover:shadow-[0_8px_24px_-6px_rgba(0,0,0,0.1)] transition-all duration-300 ${
           ticket.isUrgent
-            ? "border-rose-300 ring-1 ring-rose-200"
-            : "border-slate-200"
+            ? "border-l-4 border-l-rose-500 border-slate-200/90 bg-gradient-to-r from-rose-500/5 via-white/95 to-white/95 hover:border-rose-400"
+            : "border-slate-200/90 hover:border-emerald-500/40"
         }`}
       >
         {/* Top Header */}
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center space-x-2">
-            <span className="font-mono text-xs font-bold text-slate-900 bg-slate-100 px-2 py-0.5 rounded">
+            <span className="font-mono text-xs font-semibold text-slate-800 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200/80">
               {ticket.ticketNumber}
             </span>
             {ticket.isUrgent && (
-              <span className="flex items-center space-x-1 rounded-full bg-rose-50 px-2 py-0.5 text-[10px] font-extrabold text-rose-700 border border-rose-200">
+              <span className="flex items-center space-x-1.5 rounded-full bg-rose-50 px-2.5 py-0.5 text-[10px] font-semibold text-rose-700 border border-rose-200 shadow-2xs">
                 <Flame className="h-3 w-3 text-rose-600 animate-pulse" />
-                <span>เร่งด่วน SLA 15 นาที</span>
+                <span className="font-mono">CRITICAL SLA 15m</span>
               </span>
             )}
           </div>
@@ -111,11 +114,11 @@ export default function TechnicianTaskCard({ ticket }: TechnicianTaskCardProps) 
         </div>
 
         {/* Issue Title & Description */}
-        <div className="mt-3 space-y-1">
-          <h3 className="text-sm font-bold text-slate-900 leading-snug">
+        <div className="mt-3.5 space-y-1">
+          <h3 className="text-sm font-semibold text-slate-900 leading-snug">
             {ticket.title}
           </h3>
-          <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">
+          <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed font-normal">
             {ticket.description}
           </p>
         </div>
@@ -123,11 +126,15 @@ export default function TechnicianTaskCard({ ticket }: TechnicianTaskCardProps) 
         {/* Location & Time */}
         <div className="mt-4 pt-3 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-slate-600">
           <div className="flex items-center space-x-1.5">
-            <MapPin className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-            <span className="truncate font-medium">{ticket.room}</span>
-            <span className="text-slate-400 text-[11px] truncate">
-              ({ticket.building?.split("-")[0]})
+            <MapPin className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+            <span className="font-medium text-slate-800">
+              ชั้น {ticket.floor || 1} • {ticket.roomName || ticket.room}
             </span>
+            {ticket.specificPoint && (
+              <span className="text-[11px] text-emerald-700 font-medium truncate font-mono">
+                ({ticket.specificPoint})
+              </span>
+            )}
           </div>
 
           <div className="flex items-center space-x-1.5 sm:justify-end text-[11px] text-slate-400">
@@ -142,7 +149,7 @@ export default function TechnicianTaskCard({ ticket }: TechnicianTaskCardProps) 
             {ticket.attachments.map((att: any, idx: number) => (
               <div
                 key={idx}
-                className="relative h-14 w-16 shrink-0 rounded-xl overflow-hidden border border-slate-200"
+                className="relative h-14 w-16 shrink-0 rounded-xl overflow-hidden border border-slate-200 shadow-2xs"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
@@ -150,7 +157,7 @@ export default function TechnicianTaskCard({ ticket }: TechnicianTaskCardProps) 
                   alt={att.fileName}
                   className="h-full w-full object-cover"
                 />
-                <span className="absolute bottom-0 inset-x-0 bg-black/60 text-[8px] text-white text-center py-0.5 font-bold">
+                <span className="absolute bottom-0 inset-x-0 bg-black/70 text-[8px] text-white text-center py-0.5 font-semibold">
                   {att.type === "AFTER" ? "หลังซ่อม" : "ก่อนซ่อม"}
                 </span>
               </div>
@@ -162,40 +169,29 @@ export default function TechnicianTaskCard({ ticket }: TechnicianTaskCardProps) 
         <div className="mt-4 pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
           <Link
             href={`/tracking/${cleanNumber}`}
-            className="flex items-center space-x-1 text-xs font-semibold text-slate-500 hover:text-slate-900 transition"
+            className="flex items-center space-x-1 text-xs font-medium text-slate-500 hover:text-slate-900 transition"
           >
             <span>ดู Timeline พิกัด</span>
             <ExternalLink className="h-3 w-3" />
           </Link>
 
           <div className="flex items-center space-x-2">
-            {ticket.status === "ASSIGNED" && (
-              <button
-                type="button"
-                onClick={handleStartRepair}
-                disabled={isUpdating}
-                className="flex items-center space-x-1.5 rounded-xl bg-blue-600 px-3.5 py-1.5 text-xs font-bold text-white shadow hover:bg-blue-700 transition active:scale-95 disabled:opacity-50"
+            {(ticket.status === "ASSIGNED" ||
+              ticket.status === "IN_PROGRESS" ||
+              ticket.status === "ON_HOLD") && (
+              <Link
+                href={`/technician/active-task/${ticket.id}`}
+                className="flex items-center space-x-1.5 rounded-xl bg-gradient-to-b from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 px-3.5 py-2 text-xs font-semibold text-white shadow-[0_2px_8px_rgba(37,99,235,0.3)] transition active:scale-[0.98]"
               >
-                <Play className="h-3.5 w-3.5 fill-current" />
-                <span>เริ่มงานซ่อม</span>
-              </button>
-            )}
-
-            {ticket.status === "IN_PROGRESS" && (
-              <button
-                type="button"
-                onClick={() => setIsModalOpen(true)}
-                className="flex items-center space-x-1.5 rounded-xl bg-emerald-600 px-3.5 py-1.5 text-xs font-bold text-white shadow hover:bg-emerald-700 transition active:scale-95"
-              >
-                <Camera className="h-3.5 w-3.5" />
-                <span>แนบรูป & ปิดงาน</span>
-              </button>
+                <span>{ticket.status === "ON_HOLD" ? "⏸️" : "🚀"}</span>
+                <span>{ticket.status === "ON_HOLD" ? "ดูงานพัก / นำกลับศูนย์" : "เข้าสู่หน้างาน (Active Task)"}</span>
+              </Link>
             )}
 
             {ticket.status === "RESOLVED" && (
-              <span className="text-xs font-medium text-emerald-600 flex items-center space-x-1">
-                <CheckCircle2 className="h-3.5 w-3.5" />
-                <span>รอผู้แจ้งตรวจรับ</span>
+              <span className="text-xs font-medium text-emerald-700 flex items-center space-x-1 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200">
+                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                <span>ปิดงานซ่อมแล้ว (RESOLVED)</span>
               </span>
             )}
           </div>

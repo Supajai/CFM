@@ -36,18 +36,19 @@ export default function BuildingFilterDropdown({
         <select
           value={currentBuildingId}
           onChange={handleSelect}
-          className="appearance-none rounded-xl border border-slate-200 bg-white py-1.5 pl-8 pr-8 text-xs font-bold text-slate-800 shadow-sm hover:border-slate-300 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition cursor-pointer"
+          className="appearance-none rounded-xl border border-slate-200/90 bg-white/95 backdrop-blur-md py-2 pl-9 pr-9 text-xs font-semibold text-slate-800 shadow-xs hover:border-emerald-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all cursor-pointer"
         >
-          <option value="ALL">🏢 ทุกอาคารในวิทยาเขต (All Buildings)</option>
+          <option value="ALL">อาคารทั้งหมด (All Buildings)</option>
           {buildings.map((b) => (
             <option key={b.id} value={b.id}>
-              📍 [{b.code}] {b.name}
+              [{b.code}] {b.name}
             </option>
           ))}
         </select>
-        <Building2 className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
-        <Filter className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 h-3 w-3 text-slate-400" />
+        <Building2 className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-emerald-600 stroke-[1.75]" />
+        <Filter className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 stroke-[1.75]" />
       </div>
     </div>
   );
 }
+

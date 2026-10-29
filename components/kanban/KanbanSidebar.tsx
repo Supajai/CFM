@@ -14,7 +14,7 @@ import {
   Shield,
   Smartphone,
   LogOut,
-  User,
+  ChevronRight,
 } from "lucide-react";
 import { logoutAction } from "@/actions/auth";
 
@@ -24,12 +24,12 @@ export default function KanbanSidebar() {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const navItems = [
-    { label: "แดชบอร์ด", href: "/", icon: LayoutDashboard },
+    { label: "แดชบอร์ดจัดการ", href: "/admin/dashboard", icon: LayoutDashboard },
     { label: "กระดานคันบัน", href: "/admin/kanban", icon: KanbanSquare },
-    { label: "จัดการผู้ใช้งาน (RBAC)", href: "/admin/users", icon: Shield },
-    { label: "ประวัติแจ้งซ่อม", href: "/tracking/REP-089", icon: History },
-    { label: "ทะเบียนครุภัณฑ์", href: "#", icon: Package },
-    { label: "รายงานสถิติ", href: "#", icon: BarChart3 },
+    { label: "คิวงานและจ่ายช่าง", href: "/admin/triage", icon: Wrench },
+    { label: "จัดการสิทธิ์ (RBAC)", href: "/admin/users", icon: Shield },
+    { label: "ตั๋วทั้งหมดในระบบ", href: "/admin/tickets", icon: History },
+    { label: "รายงานสถิติ SLA", href: "/admin/reports", icon: BarChart3 },
   ];
 
   const handleLogout = async () => {
@@ -45,19 +45,24 @@ export default function KanbanSidebar() {
   };
 
   return (
-    <aside className="hidden lg:flex w-64 flex-col justify-between border-r border-slate-200 bg-white p-4">
+    <aside className="hidden lg:flex w-64 flex-col justify-between border-r border-slate-200/90 bg-white/95 backdrop-blur-md p-4 shadow-sm">
       <div className="space-y-6">
         {/* Brand / Logo */}
-        <Link href="/" className="flex items-center space-x-3 px-2 py-1">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-950 text-white shadow-sm">
-            <Wrench className="h-5 w-5" />
+        <Link href="/" className="flex items-center space-x-3 px-2 py-1.5 group">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 text-white shadow-md shadow-emerald-500/20 group-hover:scale-105 transition-transform">
+            <Wrench className="h-5 w-5 stroke-[1.75]" />
           </div>
           <div>
-            <h1 className="text-base font-bold text-slate-950 tracking-tight leading-tight">
-              CampusOps
-            </h1>
-            <p className="text-[11px] font-medium text-slate-400">
-              ระบบจัดการงานซ่อมบำรุง
+            <div className="flex items-center space-x-1.5">
+              <h1 className="text-sm font-bold text-slate-900 tracking-tight leading-tight">
+                CampusOps
+              </h1>
+              <span className="chip-tech text-[9px] py-0 px-1 bg-emerald-50 text-emerald-800 border-emerald-200">
+                Hub
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-500 font-medium">
+              แผนกวิชาช่างเทคนิคคอมพิวเตอร์
             </p>
           </div>
         </Link>
@@ -72,73 +77,63 @@ export default function KanbanSidebar() {
               <Link
                 key={item.label}
                 href={item.href}
-                className={`flex items-center space-x-3 rounded-xl px-3.5 py-2.5 text-xs font-semibold transition-all ${
+                className={`relative flex items-center justify-between rounded-xl px-3 py-2.5 text-xs font-semibold transition-all ${
                   isActive
-                    ? "bg-slate-900 text-white shadow-sm"
-                    : "text-slate-600 hover:bg-slate-100 hover:text-slate-950"
+                    ? "bg-emerald-50/90 text-emerald-900 border border-emerald-200/90 shadow-xs"
+                    : "text-slate-600 hover:bg-slate-100/70 hover:text-slate-900"
                 }`}
               >
-                <Icon className={`h-4 w-4 ${isActive ? "text-white" : "text-slate-400"}`} />
-                <span>{item.label}</span>
+                <div className="flex items-center space-x-2.5">
+                  <Icon className={`h-4 w-4 stroke-[1.75] ${isActive ? "text-emerald-600" : "text-slate-400"}`} />
+                  <span>{item.label}</span>
+                </div>
+                {isActive && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                )}
               </Link>
             );
           })}
         </nav>
 
-        {/* Mobile Reporter Link */}
-        <div className="rounded-2xl border border-slate-200/80 bg-slate-50/70 p-3.5">
+        {/* Mobile View Widget */}
+        <div className="card-elevated p-3.5 space-y-2 border-slate-200/90 bg-slate-50/60">
           <div className="flex items-center space-x-2 text-slate-800">
-            <Smartphone className="h-4 w-4 text-blue-600" />
+            <Smartphone className="h-4 w-4 text-emerald-600 stroke-[1.75]" />
             <span className="text-xs font-bold">มุมมองผู้ใช้งาน (มือถือ)</span>
           </div>
-          <p className="mt-1 text-[11px] text-slate-500 leading-relaxed">
-            ทดสอบหน้าฟอร์มแจ้งซ่อมและติดตามสถานะแบบ Mobile
+          <p className="text-[11px] text-slate-500 leading-relaxed font-medium">
+            ทดสอบฟอร์มแจ้งซ่อมและระบบติดตามผลงาน
           </p>
-          <div className="mt-2.5 flex space-x-2">
+          <div className="pt-1 flex space-x-2">
             <Link
               href="/report"
-              className="flex-1 rounded-lg bg-white border border-slate-200 py-1.5 text-center text-[10px] font-semibold text-slate-700 shadow-sm hover:bg-slate-50"
+              className="flex-1 rounded-xl bg-white border border-slate-200/90 py-1.5 text-center text-[11px] font-semibold text-slate-700 shadow-xs hover:border-emerald-400 hover:text-emerald-700 transition"
             >
-              หน้าแจ้งซ่อม
+              แจ้งซ่อม
             </Link>
             <Link
-              href="/tracking/REP-089"
-              className="flex-1 rounded-lg bg-white border border-slate-200 py-1.5 text-center text-[10px] font-semibold text-slate-700 shadow-sm hover:bg-slate-50"
+              href="/"
+              className="flex-1 rounded-xl bg-white border border-slate-200/90 py-1.5 text-center text-[11px] font-semibold text-slate-700 shadow-xs hover:border-emerald-400 hover:text-emerald-700 transition"
             >
-              หน้าติดตาม
+              หน้าแรก
             </Link>
           </div>
         </div>
       </div>
 
-      {/* User Footer with Logout */}
-      <div className="border-t border-slate-100 pt-3 space-y-2">
-        <div className="flex items-center justify-between rounded-xl p-2 bg-slate-50/80">
-          <div className="flex items-center space-x-2.5 min-w-0">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-900 text-xs font-bold text-white shadow-sm ring-2 ring-slate-100">
-              AM
-            </div>
-            <div className="min-w-0">
-              <h4 className="text-xs font-bold text-slate-900 truncate">
-                บัญชีใช้งาน
-              </h4>
-              <p className="text-[10px] font-medium text-slate-400 truncate">
-                สิทธิ์จัดการระบบ
-              </p>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={handleLogout}
-            disabled={isLoggingOut}
-            title="ออกจากระบบ"
-            className="rounded-lg p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition"
-          >
-            <LogOut className="h-4 w-4" />
-          </button>
-        </div>
+      {/* Footer Profile & Logout */}
+      <div className="border-t border-slate-200/80 pt-3">
+        <button
+          type="button"
+          onClick={handleLogout}
+          disabled={isLoggingOut}
+          className="flex w-full items-center justify-center space-x-2 rounded-xl border border-slate-200/90 bg-white py-2 text-xs font-semibold text-slate-600 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 transition-all shadow-xs"
+        >
+          <LogOut className="h-4 w-4 stroke-[1.75]" />
+          <span>{isLoggingOut ? "กำลังออกจากระบบ..." : "ออกจากระบบ"}</span>
+        </button>
       </div>
     </aside>
   );
 }
+

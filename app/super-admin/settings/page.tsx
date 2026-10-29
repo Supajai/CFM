@@ -1,80 +1,94 @@
 // app/super-admin/settings/page.tsx
-import { Sliders } from "lucide-react";
+import { Sliders, DoorClosed, Layers, Building } from "lucide-react";
 import { Metadata } from "next";
-import { getBuildingsAction, getBuildingAdminsAction } from "@/actions/building";
-import BuildingManagementSection from "@/components/admin/BuildingManagementSection";
+import { getDepartmentRoomsAction } from "@/actions/room";
+import RoomManagementSection from "@/components/admin/RoomManagementSection";
+import { REPAIR_CATEGORIES } from "@/lib/constants/campus-master-data";
+import { DEPARTMENT_BUILDING_NAME, TOTAL_FLOORS } from "@/lib/constants/department-locations";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "ตั้งค่าระบบและข้อมูลกายภาพ (Master Data) | Super Admin",
-  description: "จัดการข้อมูลอาคาร หมวดหมู่งานซ่อม และเกณฑ์เวลา SLA",
+  title: "จัดการห้องและพื้นที่ภายในแผนก (Rooms & Facilities) | Super Admin",
+  description: "จัดการข้อมูลห้องและพื้นที่ภายในอาคารแผนกวิชาช่างเทคนิคคอมพิวเตอร์ และเกณฑ์เวลา SLA",
 };
 
 export default async function SuperAdminSettingsPage() {
-  const [buildingsRes, adminsRes] = await Promise.all([
-    getBuildingsAction(),
-    getBuildingAdminsAction(),
-  ]);
-
-  const buildings = buildingsRes.success && buildingsRes.buildings ? buildingsRes.buildings : [];
-  const admins = adminsRes.success && adminsRes.admins ? adminsRes.admins : [];
-
-  const serviceCategories = [
-    { name: "ระบบปรับอากาศและการระบายอากาศ", code: "AIR_CONDITIONING", defaultSLA: "15 นาที (ด่วน) / 120 นาที (ปกติ)" },
-    { name: "ระบบไฟฟ้าและแสงสว่าง", code: "ELECTRICAL", defaultSLA: "15 นาที (ด่วน) / 120 นาที (ปกติ)" },
-    { name: "ระบบประปาและสุขาภิบาล", code: "PLUMBING", defaultSLA: "30 นาที (ด่วน) / 180 นาที (ปกติ)" },
-    { name: "โสตทัศนูปกรณ์และไอที", code: "IT_EQUIPMENT", defaultSLA: "15 นาที (ด่วน) / 60 นาที (ปกติ)" },
-    { name: "ครุภัณฑ์และโครงสร้างกายภาพ", code: "FURNITURE", defaultSLA: "1 วันทำการ" },
-  ];
+  const roomsRes = await getDepartmentRoomsAction();
+  const rooms = roomsRes.success && roomsRes.rooms ? roomsRes.rooms : [];
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-8 max-w-7xl mx-auto">
       <div>
-        <div className="flex items-center space-x-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-purple-600 text-white shadow-sm shadow-purple-200">
-            <Sliders className="h-4 w-4" />
+        <div className="flex items-center space-x-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-b from-emerald-500 to-emerald-600 text-white shadow-[0_2px_8px_rgba(16,185,129,0.35)]">
+            <Sliders className="h-5 w-5 stroke-[1.75]" />
           </div>
-          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
-            ตั้งค่าระบบและข้อมูลกายภาพ (Master Data & Campus Config)
-          </h1>
-        </div>
-        <p className="mt-1 text-xs text-slate-500">
-          กำหนดฐานข้อมูลอาคารสถานที่ ผู้รับผิดชอบดูแลอาคาร หมวดหมู่อาการชำรุด และเป้าหมาย SLA การตอบสนอง
-        </p>
-      </div>
-
-      {/* Buildings Master Data with CRUD & Admin Assignment */}
-      <BuildingManagementSection initialBuildings={buildings} admins={admins} />
-
-      {/* Categories & SLA */}
-      <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
-        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
           <div>
-            <h2 className="text-sm font-bold text-slate-900">
-              หมวดหมู่งานซ่อมและเป้าหมายเวลา SLA (Service Categories & SLA)
-            </h2>
-            <p className="text-xs text-slate-400">
-              เกณฑ์เวลา SLA มาตรฐานสำหรับการประเมิน KPI การปฏิบัติงานของทีมช่าง
+            <h1 className="text-xl font-bold tracking-tight text-slate-900">
+              การจัดการห้องและพื้นที่ภายในแผนก (Rooms & Facilities Management)
+            </h1>
+            <p className="mt-0.5 text-xs text-slate-500">
+              กำหนดฐานข้อมูลห้องปฏิบัติการ พื้นที่ใช้งานประจำชั้น 1-4 ของ {DEPARTMENT_BUILDING_NAME}
             </p>
           </div>
         </div>
+      </div>
+
+      {/* 1. Rooms & Facilities Management Section (Floor 1-4 CRUD) */}
+      <RoomManagementSection initialRooms={rooms} />
+
+      {/* 2. 7 Main Repair Categories & SLA Targets */}
+      <div className="rounded-2xl border border-slate-200/90 bg-white/90 backdrop-blur-md p-6 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.06)] space-y-5">
+        <div className="flex items-center justify-between border-b border-slate-200/80 pb-3.5">
+          <div>
+            <h2 className="text-sm sm:text-base font-bold text-slate-900">
+              หมวดหมู่งานซ่อมบำรุง 7 หมวดหมู่หลัก และเป้าหมายเวลา SLA
+            </h2>
+            <p className="text-xs text-slate-500">
+              เกณฑ์เวลา SLA ตอบสนองงานซ่อมประจำอาคารแผนกวิชาช่างเทคนิคคอมพิวเตอร์
+            </p>
+          </div>
+          <span className="font-mono text-xs font-semibold bg-slate-100 border border-slate-200/80 text-slate-800 px-3 py-1 rounded-xl shadow-2xs">
+            7 หมวดหมู่หลัก
+          </span>
+        </div>
 
         <div className="divide-y divide-slate-100 text-xs">
-          {serviceCategories.map((c, i) => (
-            <div key={i} className="py-3 flex items-center justify-between">
-              <div>
-                <p className="font-bold text-slate-900">{c.name}</p>
-                <p className="text-[11px] text-slate-400 font-mono mt-0.5">{c.code}</p>
+          {REPAIR_CATEGORIES.map((cat) => {
+            const Icon = cat.icon;
+            return (
+              <div key={cat.id} className="py-3.5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 hover:bg-slate-50/50 rounded-xl px-2 transition-colors">
+                <div className="flex items-center space-x-3">
+                  <div
+                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${cat.colorClass.bg} ${cat.colorClass.text} border ${cat.colorClass.border} shadow-2xs`}
+                  >
+                    <Icon className="h-4.5 w-4.5 stroke-[1.75]" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-slate-900">{cat.label}</p>
+                    <p className="text-[11px] text-slate-500 font-mono mt-0.5">
+                      <span className="font-semibold text-slate-700">{cat.id}</span> • {cat.enLabel}
+                    </p>
+                    <p className="text-[11px] text-slate-400 mt-0.5">
+                      {cat.description}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-2 shrink-0">
+                  <span className="font-mono text-xs font-semibold rounded-xl bg-rose-50 px-2.5 py-1 text-rose-700 border border-rose-200 shadow-2xs">
+                    ด่วน: {cat.slaUrgentMinutes} นาที
+                  </span>
+                  <span className="font-mono text-xs font-medium rounded-xl bg-slate-100 px-2.5 py-1 text-slate-700 border border-slate-200/80">
+                    ปกติ: {cat.slaNormalMinutes >= 60 ? `${cat.slaNormalMinutes / 60} ชม.` : `${cat.slaNormalMinutes} นาที`}
+                  </span>
+                </div>
               </div>
-              <span className="rounded-xl bg-emerald-50 px-3 py-1 font-semibold text-emerald-800 border border-emerald-200">
-                SLA: {c.defaultSLA}
-              </span>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>
   );
 }
-

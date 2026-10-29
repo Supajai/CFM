@@ -1,14 +1,9 @@
 // components/report/ReportForm.tsx
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
-  Zap,
-  Snowflake,
-  Droplets,
-  Laptop,
-  Armchair,
   Camera,
   MapPin,
   CheckCircle2,
@@ -18,39 +13,33 @@ import {
   X,
   Upload,
   ChevronDown,
-  ArrowLeft,
-  SlidersHorizontal,
-  Moon,
   Loader2,
   Info,
+  QrCode,
+  Layers,
+  Building,
+  Flame,
+  ShieldAlert,
+  ExternalLink,
+  Laptop,
 } from "lucide-react";
-import { Category } from "@prisma/client";
-import { createTicketAction } from "@/actions/ticket";
+import { Category, Priority } from "@prisma/client";
+import { createTicketAction, checkDuplicateTicketsAction } from "@/actions/ticket";
 import SmartPageHeader from "@/components/navigation/SmartPageHeader";
 import MobileBottomNav from "@/components/navigation/MobileBottomNav";
 import { SessionPayload } from "@/lib/auth";
-
-// ข้อมูลหมวดหมู่ตรงตามชิปใน Mockup 1
-const CATEGORIES = [
-  { id: Category.ELECTRICAL, label: "ระบบไฟฟ้า", icon: Zap },
-  {
-    id: Category.AIR_CONDITIONING,
-    label: "เครื่องปรับอากาศและการระบายอากาศ",
-    icon: Snowflake,
-  },
-  { id: Category.PLUMBING, label: "ประปา", icon: Droplets },
-  { id: Category.IT_EQUIPMENT, label: "ไอที", icon: Laptop },
-  { id: Category.FURNITURE, label: "ครุภัณฑ์", icon: Armchair },
-];
-
-const BUILDINGS = [
-  "อาคาร 3 - สาขาวิชาช่างเทคนิคคอมพิวเตอร์",
-  "อาคาร 1 - อาคารเรียนรวมและปฏิบัติการวิศวกรรม",
-  "อาคาร 2 - อาคารบรรยายรวม",
-  "อาคาร 5 - อาคารเรียนและวิทยบริการ",
-  "หอสมุดกลาง วิทยาเขตหลัก",
-  "เวิร์กช็อป 4 - อาคารซ่อมบำรุงกลาง",
-];
+import {
+  DEPARTMENT_BUILDING_NAME,
+  DEPARTMENT_FLOORS_DATA,
+  getRoomsByFloor,
+  findDepartmentRoom,
+  DepartmentRoom,
+} from "@/lib/constants/department-locations";
+import {
+  REPAIR_CATEGORIES,
+  getRepairCategoryDef,
+  RepairCategoryDef,
+} from "@/lib/constants/campus-master-data";
 
 interface UploadedFile {
   name: string;
@@ -65,20 +54,27 @@ interface ReportFormProps {
 
 export default function ReportForm({ currentUser }: ReportFormProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // 1. อ่านค่า Query Parameters (URL Prefill / QR Code เช่น /report?floor=3&room=Lab301)
+  const floorParam = searchParams.get("floor");
+  const roomParam = searchParams.get("room");
+  const specificPointParam = searchParams.get("specificPoint");
+
+  // ตรวจหาห้องเริ่มต้นจาก Param
+  const prefilledRoom = roomParam ? findDepartmentRoom(roomParam) : undefined;
+  const initialFloor = prefilledRoom ? prefilledRoom.floor : floorParam ? parseInt(floorParam, 10) || 1 : 1;
+  const initialRoomName = prefilledRoom ? prefilledRoom.name : getRoomsByFloor(initialFloor)[0]?.name || "";
+
   // ฟอร์มสเตท
-  const [category, setCategory] = useState<Category>(Category.AIR_CONDITIONING);
-  const [building, setBuilding] = useState(
-    "อาคาร 3 - สาขาวิชาช่างเทคนิคคอมพิวเตอร์"
-  );
-  const [room, setRoom] = useState(
-    "ห้องปฏิบัติการ 402 ชั้น 4 (ฝั่งทิศตะวันตก)"
-  );
-  const [description, setDescription] = useState(
-    "เครื่องปรับอากาศเครื่องที่ #AC-04 มีน้ำหยดลงมาอย่างต่อเนื่องบริเวณโต๊ะเซิร์ฟเวอร์สำรองและโต๊ะปฏิบัติการนักศึกษาโต๊ะที่ 6 เสี่ยงต่อการลัดวงจร"
-  );
-  const [isUrgent, setIsUrgent] = useState(true);
+  const [floor, setFloor] = useState<number>(initialFloor);
+  const [room, setRoom] = useState<string>(initialRoomName);
+  const [specificPoint, setSpecificPoint] = useState<string>(specificPointParam || "");
+  const [category, setCategory] = useState<Category>(Category.PC_HARDWARE);
+  const [description, setDescription] = useState<string>("");
+  const [isUrgent, setIsUrgent] = useState<boolean>(false);
+  const [hasQrPrefill, setHasQrPrefill] = useState<boolean>(Boolean(prefilledRoom || roomParam || specificPointParam));
 
   // พิกัด GPS
   const [coords, setCoords] = useState<{
@@ -92,24 +88,46 @@ export default function ReportForm({ currentUser }: ReportFormProps) {
   });
   const [isLocating, setIsLocating] = useState(false);
 
-  // รายการภาพถ่าย (เริ่มต้นใส่ภาพจำลองตาม Mockup 1 ให้ตรงเป๊ะ)
+  // รายการภาพถ่ายหลักฐานก่อนซ่อม (Before Images)
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([
     {
-      name: "ภาพน้ำแอร์หยด ท่อ.jpg",
-      size: "1.2 MB",
-      url: "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800&auto=format&fit=crop&q=80",
-      fileType: "image/jpeg",
-    },
-    {
-      name: "น้ำขังใต้โต๊ะเซิร์ฟเวอร์.jpg",
-      size: "2.4 MB",
-      url: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=800&auto=format&fit=crop&q=80",
+      name: "ภาพคอมพิวเตอร์_เปิดไม่ติด_จอดับ.jpg",
+      size: "1.4 MB",
+      url: "https://images.unsplash.com/photo-1588702547919-26089e690ecc?w=800&auto=format&fit=crop&q=80",
       fileType: "image/jpeg",
     },
   ]);
 
+  // ระบบตรวจจับงานซ้ำเบื้องต้น (Duplicate Warning System)
+  const [duplicateWarning, setDuplicateWarning] = useState<{
+    hasDuplicate: boolean;
+    count: number;
+    duplicates: Array<{
+      id: string;
+      ticketNumber: string;
+      title: string;
+      status: string;
+      room: string;
+      specificPoint?: string | null;
+      createdAt: Date | string;
+    }>;
+  } | null>(null);
+  const [isCheckingDuplicates, setIsCheckingDuplicates] = useState(false);
+  const [showDuplicateModal, setShowDuplicateModal] = useState(false);
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  // เมื่อเลือกชั้น ให้ปรับตัวเลือกห้องอัตโนมัติ
+  const currentFloorRooms = getRoomsByFloor(floor);
+
+  const handleFloorChange = (newFloor: number) => {
+    setFloor(newFloor);
+    const rooms = getRoomsByFloor(newFloor);
+    if (rooms.length > 0) {
+      setRoom(rooms[0].name);
+    }
+  };
 
   // ดึง Geolocation จากเบราว์เซอร์อัตโนมัติ
   useEffect(() => {
@@ -125,13 +143,47 @@ export default function ReportForm({ currentUser }: ReportFormProps) {
           setIsLocating(false);
         },
         () => {
-          // หากผู้ใช้ปฏิเสธ ให้ใช้ค่าพิกัดภายในวิทยาเขตตาม Mockup
           setIsLocating(false);
         },
         { enableHighAccuracy: true, timeout: 5000 }
       );
     }
   }, []);
+
+  // ฟังก์ชันตรวจจับงานซ้ำเมื่อห้องหรือหมวดหมู่เปลี่ยน
+  const checkDuplicates = useCallback(async () => {
+    if (!room) return;
+    setIsCheckingDuplicates(true);
+    try {
+      const res = await checkDuplicateTicketsAction({
+        floor,
+        room,
+        roomName: room,
+        category,
+      });
+
+      if (res.hasDuplicate && res.duplicates.length > 0) {
+        setDuplicateWarning({
+          hasDuplicate: true,
+          count: res.count,
+          duplicates: res.duplicates as any,
+        });
+      } else {
+        setDuplicateWarning(null);
+      }
+    } catch (e) {
+      console.error("Duplicate check error:", e);
+    } finally {
+      setIsCheckingDuplicates(false);
+    }
+  }, [floor, room, category]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      checkDuplicates();
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [checkDuplicates]);
 
   // จัดการอัปโหลดไฟล์ / ถ่ายภาพ
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -162,24 +214,38 @@ export default function ReportForm({ currentUser }: ReportFormProps) {
     e.preventDefault();
     setErrorMsg(null);
 
-    if (!description.trim()) {
-      setErrorMsg("กรุณากรอกรายละเอียดอาการและปัญหา");
+    if (!room.trim()) {
+      setErrorMsg("กรุณาเลือกห้องหรือพื้นที่เกิดเหตุ");
+      return;
+    }
+
+    if (!description.trim() || description.trim().length < 10) {
+      setErrorMsg("กรุณากรอกรายละเอียดอาการและปัญหาอย่างน้อย 10 ตัวอักษร");
       return;
     }
 
     try {
       setIsSubmitting(true);
 
+      const categoryDef = getRepairCategoryDef(category);
+      const fullTitle = `${categoryDef.label} - ${room}${specificPoint ? ` (${specificPoint})` : ""}`;
+
       const res = await createTicketAction({
         category,
-        building,
+        building: DEPARTMENT_BUILDING_NAME,
+        floor,
         room,
-        specificLocation: "แร็คเซิร์ฟเวอร์ตู้ที่ #04",
+        roomName: room,
+        specificPoint: specificPoint.trim() || undefined,
+        specificLocation: specificPoint.trim() ? `${room} • ${specificPoint.trim()}` : room,
         latitude: coords.lat,
         longitude: coords.lng,
         gpsAccuracy: coords.accuracy,
-        description,
+        description: description.trim(),
         isUrgent,
+        priority: isUrgent ? Priority.CRITICAL : Priority.NORMAL,
+        title: fullTitle,
+        beforeImageUrl: uploadedFiles[0]?.url,
         attachments: uploadedFiles.map((f) => ({
           fileName: f.name,
           fileSize: f.size,
@@ -189,7 +255,6 @@ export default function ReportForm({ currentUser }: ReportFormProps) {
       });
 
       if (res.success && res.ticketNumber) {
-        // Redirect ไปหน้าติดตามสถานะของตั๋วใบนั้น
         const cleanNumber = res.ticketNumber.replace("#", "");
         router.push(`/tracking/${cleanNumber}`);
       } else {
@@ -203,54 +268,201 @@ export default function ReportForm({ currentUser }: ReportFormProps) {
     }
   };
 
+  const selectedCategoryDef = getRepairCategoryDef(category);
+
   return (
-    <div className="mx-auto max-w-md min-h-screen bg-slate-50 text-slate-800 pb-28 shadow-2xl relative">
-      {/* 1. Header บาร์ด้านบนพร้อม Breadcrumbs และปุ่มย้อนกลับอัจฉริยะ */}
+    <div className="mx-auto max-w-lg min-h-screen bg-zinc-50 text-zinc-900 pb-28 border-x border-zinc-200 relative">
+      {/* 1. Header บาร์ด้านบนพร้อม Breadcrumbs */}
       <SmartPageHeader
-        title="แจ้งซ่อม / แจ้งปัญหา"
-        subtitle="ระบบบริหารจัดการอาคาร • งานซ่อมบำรุง"
+        title="แจ้งซ่อมประจำอาคาร"
+        subtitle="แผนกวิชาช่างเทคนิคคอมพิวเตอร์"
         currentUser={currentUser}
-        breadcrumbs={[{ label: "แจ้งซ่อมบำรุง" }]}
+        breadcrumbs={[{ label: "แจ้งซ่อมประจำอาคาร" }]}
       />
 
-      {/* 2. Status Banner แจ้งเตือนสถานะศูนย์ซ่อม */}
-      <div className="mx-4 mt-3 flex items-center justify-between rounded-xl bg-slate-100/90 px-3 py-2 text-xs text-slate-600">
-        <div className="flex items-center space-x-2">
+      {/* 2. QR Code Prefill Info Banner */}
+      {hasQrPrefill && (
+        <div className="mx-4 mt-3 flex items-center justify-between rounded-xl bg-emerald-50/90 border border-emerald-200 p-3 text-xs text-emerald-950 shadow-2xs animate-in fade-in duration-300">
+          <div className="flex items-center space-x-2.5">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-[0_2px_8px_rgba(16,185,129,0.3)]">
+              <QrCode className="h-4 w-4" />
+            </div>
+            <div>
+              <p className="font-semibold text-emerald-950">
+                สแกน QR Code ประจำจุดสำเร็จ
+              </p>
+              <p className="text-[11px] text-emerald-700">
+                ล็อกตำแหน่ง: ชั้น {floor} • {room}
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setHasQrPrefill(false)}
+            className="rounded-lg p-1 text-emerald-600 hover:text-emerald-800 hover:bg-emerald-100/50 transition"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
+
+      {/* 3. Status Banner ประจำอาคาร */}
+      <div className="mx-4 mt-3 flex items-center justify-between rounded-xl bg-white/90 backdrop-blur-md border border-slate-200/80 px-4 py-2.5 text-xs text-slate-600 shadow-2xs">
+        <div className="flex items-center space-x-2.5">
           <span className="relative flex h-2.5 w-2.5">
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
-            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500"></span>
+            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-600"></span>
           </span>
-          <span className="text-[12px] font-medium text-slate-700">
-            ศูนย์ซ่อมบำรุง วิทยาเขตฝั่งตะวันออก • สถานะปกติ
+          <span className="text-xs font-medium text-slate-800">
+            ศูนย์บริการช่างประจำอาคารแผนกคอมพิวเตอร์ • พร้อมรับแจ้ง
           </span>
         </div>
-        <span className="rounded bg-slate-200/80 px-2 py-0.5 text-[10px] text-slate-600">
-          ระบบคัดกรองเปิดใช้งาน
+        <span className="rounded-md bg-emerald-50 px-2 py-0.5 text-[10px] font-mono font-semibold text-emerald-700 border border-emerald-200">
+          SLA ด่วน 15 นาที
         </span>
       </div>
 
-      <form onSubmit={handleSubmit} className="px-4 pt-4 space-y-5">
+      <form onSubmit={handleSubmit} className="px-4 pt-3.5 space-y-4">
         {/* ข้อความแจ้งเตือน Error ถ้ามี */}
         {errorMsg && (
-          <div className="flex items-center space-x-2 rounded-xl border border-red-200 bg-red-50 p-3 text-xs text-red-600">
-            <AlertTriangle className="h-4 w-4 shrink-0 text-red-500" />
+          <div className="flex items-center space-x-2 rounded-xl border border-rose-200 bg-rose-50/90 p-3 text-xs text-rose-700 shadow-2xs">
+            <AlertTriangle className="h-4 w-4 shrink-0 text-rose-600" />
             <span>{errorMsg}</span>
           </div>
         )}
 
-        {/* 3. หมวดหมู่ปัญหา (Category Chips) */}
-        <div>
-          <div className="mb-2 flex items-center justify-between">
-            <label className="text-sm font-bold text-slate-900">
-              ประเภทปัญหา <span className="text-red-500">*</span>
+        {/* 4. กล่องระบุสถานที่ */}
+        <div className="rounded-2xl border border-slate-200/90 bg-white/95 backdrop-blur-md p-5 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.06)] hover:border-emerald-500/30 transition-all space-y-4">
+          {/* Badge แสดงอาคารหลักคงที่ */}
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div className="flex items-center space-x-2.5">
+              <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-900 text-white shadow-xs">
+                <Building className="h-4 w-4" />
+              </span>
+              <div>
+                <span className="text-[10px] font-mono font-medium uppercase tracking-wider text-slate-400 block">
+                  สถานที่หลัก (FIXED SCOPE)
+                </span>
+                <span className="text-xs font-semibold text-slate-900 flex items-center space-x-1">
+                  <MapPin className="h-3 w-3 text-emerald-600" />
+                  <span>{DEPARTMENT_BUILDING_NAME}</span>
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-1 rounded-lg bg-slate-100 px-2.5 py-1 text-[10px] font-mono font-semibold text-slate-700 border border-slate-200/60">
+              <Layers className="h-3 w-3" />
+              <span>4 ชั้นเรียน/แล็บ</span>
+            </div>
+          </div>
+
+          {/* Segmented Button Controls: 1F | 2F | 3F | 4F */}
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="text-xs font-semibold text-slate-800">
+                เลือกระดับชั้น (Floor Selection) <span className="text-rose-500">*</span>
+              </label>
+              <span className="text-[11px] font-mono text-emerald-700">
+                {DEPARTMENT_FLOORS_DATA.find((f) => f.floor === floor)?.description}
+              </span>
+            </div>
+            <div className="grid grid-cols-4 gap-1.5 p-1 rounded-xl bg-slate-100 border border-slate-200/80">
+              {DEPARTMENT_FLOORS_DATA.map((f) => {
+                const isSelected = floor === f.floor;
+                return (
+                  <button
+                    key={f.floor}
+                    type="button"
+                    onClick={() => handleFloorChange(f.floor)}
+                    className={`flex flex-col items-center justify-center py-2 rounded-lg text-xs font-semibold transition-all ${
+                      isSelected
+                        ? "bg-white text-emerald-700 shadow-xs border border-slate-200/90"
+                        : "text-slate-600 hover:text-slate-900 hover:bg-white/50"
+                    }`}
+                  >
+                    <span className="font-mono text-sm tracking-tight">{f.floor}F</span>
+                    <span className="text-[9px] font-normal opacity-80 truncate max-w-[60px]">
+                      {f.label.split(" ")[1] || f.label}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Cascading Dropdown: ห้อง/พื้นที่ประจำชั้น */}
+          <div>
+            <label className="mb-1 block text-xs font-semibold text-slate-800">
+              ห้อง / พื้นที่ปฏิบัติการ <span className="text-rose-500">*</span>
             </label>
-            <span className="text-xs font-medium text-slate-400">
-              ขั้นตอนที่ 1 จาก 4
+            <div className="relative">
+              <select
+                value={room}
+                onChange={(e) => setRoom(e.target.value)}
+                className="w-full h-10 appearance-none rounded-xl border border-slate-200 bg-white/90 px-3 py-1 pr-8 text-xs font-medium text-slate-900 shadow-xs transition focus:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 truncate"
+              >
+                {currentFloorRooms.map((r) => (
+                  <option key={r.id} value={r.name}>
+                    {r.name} {r.description ? `— ${r.description}` : ""}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="pointer-events-none absolute right-3 top-3.5 h-3.5 w-3.5 text-slate-400" />
+            </div>
+          </div>
+
+          {/* ช่องกรอก: ระบุจุดเกิดเหตุ / หมายเลขเครื่อง */}
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-xs font-semibold text-slate-800">
+                จุดสังเกตเฉพาะ / หมายเลขเครื่อง / จุดเกิดเหตุ
+              </label>
+              <span className="text-[11px] text-slate-400">ตัวเลือกเพิ่มเติม</span>
+            </div>
+            <div className="relative">
+              <input
+                type="text"
+                value={specificPoint}
+                onChange={(e) => setSpecificPoint(e.target.value)}
+                placeholder="เช่น โต๊ะคอมเครื่องที่ 12, แอร์แถวหลังห้อง, ตู้ Rack A-02"
+                className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3 py-1 text-xs text-slate-900 shadow-xs transition focus:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 placeholder:text-slate-400"
+              />
+            </div>
+          </div>
+
+          {/* GPS Coordinates & Accuracy */}
+          <div className="flex items-center justify-between rounded-xl bg-slate-50 border border-slate-200/80 px-3.5 py-2 text-[11px] text-slate-600 font-mono">
+            <div className="flex items-center space-x-1.5">
+              <MapPin className="h-3.5 w-3.5 text-emerald-600" />
+              <span>
+                {coords.lat.toFixed(4)}° N, {coords.lng.toFixed(4)}° E
+              </span>
+            </div>
+            <span className="text-[10px] text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+              พิกัดอาคารแผนกคอมฯ (±{coords.accuracy} ม.)
+            </span>
+          </div>
+        </div>
+
+        {/* 5. หมวดหมู่งานซ่อมบำรุง 7 หมวดหมู่หลัก */}
+        <div className="rounded-2xl border border-slate-200/90 bg-white/95 backdrop-blur-md p-5 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.06)] hover:border-emerald-500/30 transition-all space-y-3.5">
+          <div className="flex items-center justify-between">
+            <div>
+              <label className="text-xs font-semibold text-slate-900 block">
+                หมวดหมู่งานซ่อมบำรุง <span className="text-rose-500">*</span>
+              </label>
+              <p className="text-[11px] text-slate-500">
+                กายภาพอาคาร และอุปกรณ์ไอทีประจำห้องแล็บ
+              </p>
+            </div>
+            <span className="rounded-lg bg-slate-100 px-2.5 py-1 text-[10px] font-mono font-semibold text-slate-700 border border-slate-200/60">
+              7 หมวดหมู่
             </span>
           </div>
 
-          <div className="flex space-x-2 overflow-x-auto pb-1 scrollbar-none">
-            {CATEGORIES.map((cat) => {
+          {/* Chips Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            {REPAIR_CATEGORIES.map((cat) => {
               const Icon = cat.icon;
               const isSelected = category === cat.id;
 
@@ -259,39 +471,118 @@ export default function ReportForm({ currentUser }: ReportFormProps) {
                   key={cat.id}
                   type="button"
                   onClick={() => setCategory(cat.id)}
-                  className={`flex shrink-0 items-center space-x-1.5 rounded-full px-4 py-2 text-xs font-medium transition-all ${
+                  className={`flex items-start space-x-3 rounded-xl p-3 text-left transition-all ${
                     isSelected
-                      ? "bg-slate-950 text-white shadow-md ring-2 ring-slate-900/10"
-                      : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-50"
+                      ? "bg-emerald-50/90 text-emerald-950 border border-emerald-500 ring-2 ring-emerald-500/20 shadow-xs"
+                      : "bg-white/80 hover:bg-slate-50 text-slate-800 border border-slate-200/90 shadow-2xs"
                   }`}
                 >
-                  <Icon
-                    className={`h-3.5 w-3.5 ${
-                      isSelected ? "text-emerald-400" : "text-slate-500"
+                  <div
+                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${
+                      isSelected
+                        ? "bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-[0_2px_8px_rgba(16,185,129,0.3)]"
+                        : "bg-slate-100 text-slate-700 border border-slate-200/80"
                     }`}
-                  />
-                  <span>{cat.label}</span>
+                  >
+                    <Icon className="h-4 w-4 stroke-[1.75]" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-semibold truncate">{cat.label}</p>
+                    <p
+                      className={`text-[10px] truncate mt-0.5 font-mono ${
+                        isSelected ? "text-emerald-700" : "text-slate-400"
+                      }`}
+                    >
+                      {cat.enLabel}
+                    </p>
+                  </div>
                   {isSelected && (
-                    <span className="ml-1 h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                    <span className="h-2 w-2 rounded-full bg-emerald-600 mt-1 shrink-0 animate-pulse" />
                   )}
                 </button>
               );
             })}
           </div>
+
+          {/* หมวดหมู่ที่เลือกและรายละเอียด */}
+          <div className="rounded-xl bg-slate-50 p-3 text-[11px] text-slate-600 border border-slate-200/80 flex items-center space-x-2">
+            <Info className="h-4 w-4 text-emerald-600 shrink-0" />
+            <span className="truncate">{selectedCategoryDef.description}</span>
+          </div>
         </div>
 
-        {/* 4. อัปโหลดภาพหลักฐาน */}
-        <div>
-          <div className="mb-1">
-            <label className="text-sm font-bold text-slate-900">
-              ภาพถ่ายหลักฐาน <span className="text-red-500">*</span>
-            </label>
-            <p className="text-[12px] text-slate-400">
-              แนบภาพถ่ายเพื่อให้ช่างประเมินและคัดกรองได้ทันที
-            </p>
+        {/* 6. ระบบตรวจจับงานซ้ำเบื้องต้น */}
+        {duplicateWarning && duplicateWarning.hasDuplicate && (
+          <div className="rounded-2xl border border-amber-300 bg-amber-50/90 backdrop-blur-md p-4 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.06)] text-xs text-amber-900 animate-in fade-in slide-in-from-top-2 duration-300 space-y-2.5">
+            <div className="flex items-start justify-between">
+              <div className="flex items-start space-x-2.5">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-white shadow-xs">
+                  <AlertTriangle className="h-4 w-4" />
+                </div>
+                <div>
+                  <p className="font-semibold text-amber-950">
+                    แจ้งเตือน: พบรายการแจ้งซ่อมซ้ำซ้อนในจุดนี้ ({duplicateWarning.count} รายการ)
+                  </p>
+                  <p className="text-[11px] text-amber-800 mt-0.5">
+                    มีผู้แจ้งปัญหาหมวดหมู่ &quot;{selectedCategoryDef.label}&quot; ในห้องนี้แล้วและกำลังอยู่ระหว่างดำเนินการ
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setShowDuplicateModal(!showDuplicateModal)}
+                className="rounded-lg bg-amber-200/80 px-2.5 py-1 text-[11px] font-medium text-amber-900 hover:bg-amber-300 transition"
+              >
+                {showDuplicateModal ? "ซ่อน" : "กดดูสถานะ"}
+              </button>
+            </div>
+
+            {/* กล่องแสดงรายการงานซ้ำเมื่อกดดู */}
+            {showDuplicateModal && (
+              <div className="pt-2 border-t border-amber-200 space-y-1.5">
+                {duplicateWarning.duplicates.map((dup) => (
+                  <div
+                    key={dup.id}
+                    className="flex items-center justify-between rounded-xl bg-white p-2.5 border border-amber-200 text-[11px]"
+                  >
+                    <div>
+                      <span className="font-mono font-medium text-slate-900 bg-slate-100 px-2 py-0.5 rounded-md mr-1.5 border border-slate-200">
+                        {dup.ticketNumber}
+                      </span>
+                      <span className="font-semibold text-slate-800">{dup.title}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => router.push(`/tracking/${dup.ticketNumber.replace("#", "")}`)}
+                      className="flex items-center space-x-1 font-medium text-emerald-700 hover:text-emerald-900 underline ml-2 shrink-0"
+                    >
+                      <span>ติดตาม</span>
+                      <ExternalLink className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* 7. อัปโหลดภาพถ่ายหลักฐานปัญหา */}
+        <div className="rounded-2xl border border-slate-200/90 bg-white/95 backdrop-blur-md p-5 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.06)] hover:border-emerald-500/30 transition-all space-y-3.5">
+          <div className="flex items-center justify-between">
+            <div>
+              <label className="text-xs font-semibold text-slate-900 block">
+                ภาพถ่ายหลักฐานก่อนซ่อม (Before Photo Proof)
+              </label>
+              <p className="text-[11px] text-slate-500">
+                ถ่ายภาพความเสียหายของอุปกรณ์หรือหน้างานเพื่อประกอบการคัดกรอง
+              </p>
+            </div>
+            <span className="rounded-lg bg-emerald-50 px-2.5 py-1 text-[10px] font-mono font-semibold text-emerald-700 border border-emerald-200">
+              แนบแล้ว {uploadedFiles.length} รูป
+            </span>
           </div>
 
-          {/* กล่องแตะเพื่อถ่ายรูป/เลือกไฟล์ */}
           <input
             type="file"
             ref={fileInputRef}
@@ -303,25 +594,25 @@ export default function ReportForm({ currentUser }: ReportFormProps) {
 
           <div
             onClick={() => fileInputRef.current?.click()}
-            className="mt-2 flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-200 bg-white py-6 text-center transition hover:border-slate-300 hover:bg-slate-50/50"
+            className="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-300 bg-slate-50/50 py-6 text-center transition hover:border-emerald-500/60 hover:bg-slate-100/50"
           >
-            <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-600">
-              <Camera className="h-6 w-6" />
+            <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-slate-200 text-slate-700 shadow-2xs">
+              <Camera className="h-5 w-5" />
             </div>
-            <p className="text-xs font-bold text-slate-800">
-              แตะเพื่อถ่ายภาพหรืออัปโหลดหลักฐาน
+            <p className="text-xs font-medium text-slate-800">
+              แตะเพื่อถ่ายรูปหรือลากรูปภาพมาวางที่นี่
             </p>
             <p className="text-[11px] text-slate-400 mt-0.5">
-              JPG, PNG, HEIC สูงสุด 15MB
+              JPG, PNG, HEIC (รองรับภาพถ่ายมือถือและกล้องสด)
             </p>
           </div>
 
           {/* พรีวิวรูปภาพที่เลือก */}
           {uploadedFiles.length > 0 && (
-            <div className="mt-3 grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3 pt-1">
               {uploadedFiles.map((file, idx) => (
                 <div key={idx} className="relative group">
-                  <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl border border-slate-200 bg-slate-100 shadow-sm">
+                  <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl border border-slate-200 bg-slate-100 shadow-xs">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={file.url}
@@ -336,18 +627,17 @@ export default function ReportForm({ currentUser }: ReportFormProps) {
                         e.stopPropagation();
                         removeFile(idx);
                       }}
-                      className="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-sm transition hover:bg-black"
+                      className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-lg bg-black/75 text-white backdrop-blur-xs transition hover:bg-black"
                     >
                       <X className="h-3.5 w-3.5" />
                     </button>
 
-                    {/* แถบข้อมูลขนาดไฟล์ล่างภาพ */}
-                    <div className="absolute inset-x-0 bottom-0 flex items-center justify-between bg-gradient-to-t from-black/80 via-black/40 to-transparent px-2 py-1 text-[11px] text-white">
-                      <span>{file.size}</span>
-                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
+                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent px-2.5 py-1 text-[10px] text-white flex items-center justify-between">
+                      <span className="truncate font-mono">{file.size}</span>
+                      <CheckCircle2 className="h-3 w-3 text-emerald-400 shrink-0" />
                     </div>
                   </div>
-                  <p className="mt-1 truncate text-[11px] text-slate-600 font-medium">
+                  <p className="mt-1 truncate text-[10px] text-slate-500 font-medium">
                     {file.name}
                   </p>
                 </div>
@@ -356,160 +646,111 @@ export default function ReportForm({ currentUser }: ReportFormProps) {
           )}
         </div>
 
-        {/* 5. ระบุพิกัดสถานที่และอาคาร */}
-        <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm space-y-3">
+        {/* 8. รายละเอียดอาการและปัญหา */}
+        <div className="rounded-2xl border border-slate-200/90 bg-white/95 backdrop-blur-md p-5 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.06)] hover:border-emerald-500/30 transition-all space-y-2.5">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-1.5">
-              <MapPin className="h-4 w-4 text-slate-600" />
-              <span className="text-sm font-bold text-slate-900">
-                ระบุพิกัดสถานที่
-              </span>
-            </div>
-            <div className="flex items-center space-x-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-600 border border-emerald-100">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-              <span>ล็อกพิกัด GPS แล้ว</span>
-            </div>
-          </div>
-
-          {/* แถบแสดงพิกัด GPS */}
-          <div className="flex items-center justify-between rounded-xl bg-slate-100/90 px-3 py-2 text-xs font-mono text-slate-700">
-            <span>
-              {coords.lat.toFixed(4)}° N, {coords.lng.toFixed(4)}° E
-            </span>
-            <span className="font-sans text-[11px] text-slate-400">
-              ความแม่นยำ ±{coords.accuracy} ม.
-            </span>
-          </div>
-
-          {/* ดรอปดาวน์เลือกอาคาร */}
-          <div>
-            <label className="mb-1 block text-xs font-semibold text-slate-500">
-              อาคารในมหาวิทยาลัย
+            <label className="text-xs font-semibold text-slate-900">
+              รายละเอียดอาการชำรุดและปัญหา <span className="text-rose-500">*</span>
             </label>
-            <div className="relative">
-              <select
-                value={building}
-                onChange={(e) => setBuilding(e.target.value)}
-                className="w-full appearance-none rounded-xl border border-slate-200 bg-slate-50/60 px-3 py-2.5 text-xs font-medium text-slate-800 transition focus:border-slate-400 focus:bg-white focus:outline-none"
-              >
-                {BUILDINGS.map((b) => (
-                  <option key={b} value={b}>
-                    {b}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="pointer-events-none absolute right-3 top-3 h-4 w-4 text-slate-400" />
-            </div>
-          </div>
-
-          {/* ระบุห้อง / จุดเกิดเหตุ */}
-          <div>
-            <label className="mb-1 block text-xs font-semibold text-slate-500">
-              ห้อง / จุดเกิดเหตุที่ชัดเจน
-            </label>
-            <div className="relative">
-              <input
-                type="text"
-                value={room}
-                onChange={(e) => setRoom(e.target.value)}
-                placeholder="เช่น ห้อง 402 ชั้น 4 อาคาร 3"
-                className="w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3 py-2.5 pr-8 text-xs font-medium text-slate-800 transition focus:border-slate-400 focus:bg-white focus:outline-none"
-              />
-              <CheckCircle2 className="pointer-events-none absolute right-3 top-3 h-4 w-4 text-emerald-500" />
-            </div>
-          </div>
-        </div>
-
-        {/* 6. รายละเอียดอาการและปัญหา */}
-        <div>
-          <div className="mb-1.5 flex items-center justify-between">
-            <label className="text-sm font-bold text-slate-900">
-              รายละเอียดอาการและปัญหา
-            </label>
-            <span className="text-[11px] text-slate-400">
+            <span className="text-[10px] text-slate-400 font-mono">
               {description.length} ตัวอักษร
             </span>
           </div>
           <textarea
-            rows={4}
+            rows={3}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="ระบุอาการชำรุด หรือตำแหน่งของอุปกรณ์ให้ชัดเจนที่สุด..."
-            className="w-full rounded-2xl border border-slate-200 bg-slate-100/70 p-3.5 text-xs leading-relaxed text-slate-800 transition focus:border-slate-400 focus:bg-white focus:outline-none"
+            placeholder="อธิบายอาการเสียให้ชัดเจน เช่น เปิดสวิตช์แล้วเครื่องดับทันที มีกลิ่นไหม้ หรือแอร์น้ำหยดลงโต๊ะ..."
+            className="w-full rounded-xl border border-slate-200 bg-white p-3 text-xs leading-relaxed text-slate-900 shadow-xs transition focus:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 placeholder:text-slate-400"
           />
         </div>
 
-        {/* 7. สวิตช์ความเร่งด่วน */}
-        <div className="flex items-center justify-between rounded-2xl border border-rose-100 bg-white p-3.5 shadow-sm">
-          <div className="flex items-center space-x-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-50 text-rose-500">
-              <AlertTriangle className="h-5 w-5" />
-            </div>
-            <div>
-              <p className="text-xs font-bold text-slate-900">
-                ระดับความเร่งด่วน
-              </p>
-              <p className="text-[11px] font-medium text-rose-600">
-                ความเร่งด่วน: สูง (มีความเสี่ยงทันที)
-              </p>
-            </div>
-          </div>
-
-          <label className="relative inline-flex cursor-pointer items-center">
-            <input
-              type="checkbox"
-              checked={isUrgent}
-              onChange={(e) => setIsUrgent(e.target.checked)}
-              className="peer sr-only"
-            />
-            <div className="peer h-6 w-11 rounded-full bg-slate-200 after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all after:content-[''] peer-checked:bg-rose-500 peer-checked:after:translate-x-full peer-focus:outline-none"></div>
+        {/* 9. ระดับความเร่งด่วน */}
+        <div className="rounded-2xl border border-slate-200/90 bg-white/95 backdrop-blur-md p-5 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.06)] hover:border-emerald-500/30 transition-all space-y-3">
+          <label className="text-xs font-semibold text-slate-900 block">
+            ระดับความเร่งด่วน (Urgency & Priority)
           </label>
-        </div>
 
-        {/* 8. SLA Info Badge */}
-        <div className="flex items-center justify-between rounded-xl bg-slate-100/80 px-3 py-2 text-xs text-slate-600">
-          <div className="flex items-center space-x-2">
-            <Clock className="h-3.5 w-3.5 text-slate-500" />
-            <span className="text-[11px] font-medium">
-              เป้าหมาย SLA: ส่งช่างภายใน 15 นาที
-            </span>
+          <div className="grid grid-cols-2 gap-3">
+            {/* ปกติ */}
+            <button
+              type="button"
+              onClick={() => setIsUrgent(false)}
+              className={`flex items-center space-x-3 rounded-xl p-3 text-left transition-all border ${
+                !isUrgent
+                  ? "border-emerald-600 bg-emerald-50/70 ring-2 ring-emerald-500/20 shadow-xs"
+                  : "border-slate-200 bg-white/80 hover:bg-slate-50"
+              }`}
+            >
+              <div
+                className={`flex h-9 w-9 items-center justify-center rounded-xl ${
+                  !isUrgent
+                    ? "bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-[0_2px_8px_rgba(16,185,129,0.3)]"
+                    : "bg-slate-100 text-slate-500 border border-slate-200/80"
+                }`}
+              >
+                <Clock className="h-4 w-4" />
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-slate-900">ปกติ (Normal)</p>
+                <p className="text-[10px] text-slate-500 font-mono">ตอบสนองใน 120 นาที</p>
+              </div>
+            </button>
+
+            {/* ด่วนมาก */}
+            <button
+              type="button"
+              onClick={() => setIsUrgent(true)}
+              className={`flex items-center space-x-3 rounded-xl p-3 text-left transition-all border ${
+                isUrgent
+                  ? "border-rose-600 bg-rose-50/80 ring-2 ring-rose-500/20 shadow-xs"
+                  : "border-slate-200 bg-white/80 hover:bg-slate-50"
+              }`}
+            >
+              <div
+                className={`flex h-9 w-9 items-center justify-center rounded-xl ${
+                  isUrgent
+                    ? "bg-gradient-to-br from-rose-500 to-rose-600 text-white shadow-[0_2px_8px_rgba(244,63,94,0.3)]"
+                    : "bg-slate-100 text-slate-500 border border-slate-200/80"
+                }`}
+              >
+                <Flame className="h-4 w-4 animate-pulse" />
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-rose-950">ด่วนมาก (Critical)</p>
+                <p className="text-[10px] text-rose-600 font-mono font-medium">ตอบสนองด่วน 15 นาที</p>
+              </div>
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={() => router.push("/tracking/REP-089")}
-            className="text-[11px] font-semibold text-slate-700 underline underline-offset-2 hover:text-slate-900"
-          >
-            ตัวอย่างตั๋วงาน
-          </button>
         </div>
 
-        {/* 9. ปุ่มส่งคำขอแจ้งซ่อม (Fixed Bottom / Sticky) */}
+        {/* 10. ปุ่มส่งคำขอแจ้งซ่อม */}
         <div className="pt-2">
           <button
             type="submit"
             disabled={isSubmitting}
-            className="flex w-full items-center justify-center space-x-2 rounded-2xl bg-slate-950 py-3.5 text-sm font-semibold text-white shadow-lg transition hover:bg-slate-900 active:scale-[0.98] disabled:opacity-50"
+            className="flex w-full items-center justify-center space-x-2 rounded-xl bg-gradient-to-b from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 py-3 text-sm font-semibold text-white shadow-[0_4px_16px_rgba(16,185,129,0.35)] transition-all active:scale-[0.98] disabled:opacity-50"
           >
             {isSubmitting ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                <span>กำลังส่งคำขอแจ้งซ่อม...</span>
+                <span>กำลังส่งข้อมูลเข้าสู่ระบบช่างประจำอาคาร...</span>
               </>
             ) : (
               <>
-                <Send className="h-4 w-4 -rotate-12" />
-                <span>ส่งคำขอแจ้งซ่อม</span>
+                <Send className="h-4 w-4" />
+                <span>ยืนยันส่งเรื่องแจ้งซ่อมประจำอาคาร</span>
               </>
             )}
           </button>
 
-          <p className="mt-2 text-center text-[11px] text-slate-400 flex items-center justify-center space-x-1">
-            <span>🔒 ยืนยันตัวตนนศ.แล้ว ส่งตั๋วเข้าระบบช่างโดยอัตโนมัติ</span>
+          <p className="mt-2 text-center text-[11px] text-slate-500 font-normal">
+            ส่งข้อมูลตรงถึงหัวหน้างานอาคารและช่างเทคนิคประจำแผนกทันที
           </p>
         </div>
       </form>
 
-      {/* 10. Sticky Mobile Bottom Navigation Bar */}
+      {/* 11. Sticky Mobile Bottom Navigation Bar */}
       <MobileBottomNav currentUser={currentUser} />
     </div>
   );

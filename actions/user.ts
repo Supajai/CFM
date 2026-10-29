@@ -5,43 +5,15 @@ import prisma from "@/lib/prisma";
 import { getSession, hashPassword } from "@/lib/auth";
 import { Role } from "@prisma/client";
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
-
-const createUserSchema = z.object({
-  name: z.string().min(2, "ชื่อ-นามสกุลต้องมีอย่างน้อย 2 ตัวอักษร"),
-  email: z.string().email("กรุณากรอกอีเมลที่ถูกต้อง"),
-  password: z.string().min(6, "รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร"),
-  role: z.nativeEnum(Role).default(Role.USER),
-  studentId: z.string().optional().nullable(),
-  technicianCode: z.string().optional().nullable(),
-  position: z.string().optional().nullable(),
-  department: z.string().optional().nullable(),
-  classLevel: z.string().optional().nullable(),
-  major: z.string().optional().nullable(),
-  specialty: z.string().optional().nullable(),
-  phone: z.string().optional().nullable(),
-  assignedBuildingId: z.string().optional().nullable(),
-});
-
-export type CreateUserInput = z.infer<typeof createUserSchema>;
-
-const updateUserSchema = z.object({
-  name: z.string().min(2, "ชื่อ-นามสกุลต้องมีอย่างน้อย 2 ตัวอักษร"),
-  email: z.string().email("กรุณากรอกอีเมลที่ถูกต้อง"),
-  role: z.nativeEnum(Role).optional(),
-  studentId: z.string().optional().nullable(),
-  technicianCode: z.string().optional().nullable(),
-  position: z.string().optional().nullable(),
-  department: z.string().optional().nullable(),
-  classLevel: z.string().optional().nullable(),
-  major: z.string().optional().nullable(),
-  specialty: z.string().optional().nullable(),
-  phone: z.string().optional().nullable(),
-  assignedBuildingId: z.string().optional().nullable(),
-  newPassword: z.string().optional().nullable(),
-});
-
-export type UpdateUserInput = z.infer<typeof updateUserSchema>;
+import {
+  createUserSchema,
+  updateUserSchema,
+} from "@/lib/validations/user";
+import type {
+  CreateUserInput,
+  UpdateUserInput,
+} from "@/lib/validations/user";
+import { DEPARTMENT_NAME } from "@/lib/constants/academic-data";
 
 /**
  * Server Action: สร้างผู้ใช้งานใหม่ (เฉพาะ Super Admin เท่านั้น)
@@ -75,6 +47,16 @@ export async function createUserAction(rawInput: CreateUserInput) {
       techCode = `#${(techCount + 1).toString().padStart(2, "0")}`;
     }
 
+    // กำหนดค่า department ตามบทบาทภายใต้ขอบเขตอาคารแผนก
+    let userDepartment = validated.department?.trim() || null;
+    if (validated.role === Role.USER) {
+      userDepartment = DEPARTMENT_NAME;
+    } else if (validated.role === Role.ADMIN) {
+      userDepartment = userDepartment || "งานบริหารและอาคารสถานที่ แผนกวิชาช่างเทคนิคคอมพิวเตอร์";
+    } else if (validated.role === Role.TECHNICIAN) {
+      userDepartment = userDepartment || "ศูนย์ฮาร์ดแวร์และซ่อมบำรุง (Lab 101 ชั้น 1)";
+    }
+
     const newUser = await prisma.user.create({
       data: {
         name: validated.name.trim(),
@@ -85,7 +67,7 @@ export async function createUserAction(rawInput: CreateUserInput) {
         studentId: validated.studentId?.trim() || null,
         technicianCode: techCode,
         position: validated.position?.trim() || null,
-        department: validated.department?.trim() || null,
+        department: userDepartment,
         classLevel: validated.classLevel?.trim() || null,
         major: validated.major?.trim() || null,
         specialty: validated.specialty?.trim() || null,
@@ -93,10 +75,29 @@ export async function createUserAction(rawInput: CreateUserInput) {
     });
 
     // บันทึกความสัมพันธ์อาคารที่รับผิดชอบสำหรับ Role ADMIN ทันที
-    if (validated.role === Role.ADMIN && validated.assignedBuildingId) {
-      if (validated.assignedBuildingId !== "ALL") {
-        await prisma.building.update({
+    if (validated.role === Role.ADMIN) {
+      let targetBuilding = null;
+      if (validated.assignedBuildingId && validated.assignedBuildingId !== "ALL") {
+        targetBuilding = await prisma.building.findUnique({
           where: { id: validated.assignedBuildingId },
+        });
+      }
+
+      // หากไม่ได้ระบุเจาะจง ให้ผูกกับอาคารแผนกวิชาช่างเทคนิคคอมพิวเตอร์โดยอัตโนมัติ
+      if (!targetBuilding) {
+        targetBuilding = await prisma.building.findFirst({
+          where: {
+            OR: [
+              { code: "BLD-COMPTECH" },
+              { name: { contains: "ช่างเทคนิคคอมพิวเตอร์" } },
+            ],
+          },
+        });
+      }
+
+      if (targetBuilding) {
+        await prisma.building.update({
+          where: { id: targetBuilding.id },
           data: { adminId: newUser.id },
         });
       }

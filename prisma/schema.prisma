@@ -1,6 +1,5 @@
 // prisma/schema.prisma
-// Smart Campus Issue & Repair Tracker
-// ระบบแจ้งซ่อมและรายงานปัญหาในสถานศึกษา
+// ระบบบริหารจัดการและแจ้งซ่อมประจำอาคารแผนกวิชาช่างเทคนิคคอมพิวเตอร์ (Single Department Scope)
 
 generator client {
   provider = "prisma-client-js"
@@ -11,132 +10,85 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ----------------------------------------------------
-// Enums
-// ----------------------------------------------------
-
-enum Role {
-  SUPER_ADMIN // สิทธิ์สูงสุด จัดการผู้ใช้และสิทธิ์ของทุกคนได้
-  ADMIN       // ผู้ดูแลระบบ / หัวหน้างานอาคารสถานที่ ดูแลภาพรวม มอบหมายงาน
-  TECHNICIAN  // ช่างเทคนิค / ทีมซ่อมบำรุง เข้าใช้งานหน้ากระดาน Kanban
-  USER        // นักศึกษา / บุคลากรทั่วไป แจ้งซ่อมและติดตามประวัติตนเอง
-}
-
-enum Category {
-  AIR_CONDITIONING // เครื่องปรับอากาศและการระบายอากาศ
-  ELECTRICAL       // ระบบไฟฟ้า
-  PLUMBING         // ระบบประปาและสุขาภิบาล
-  IT_EQUIPMENT     // ไอทีและโสตทัศนูปกรณ์
-  FURNITURE        // ครุภัณฑ์และฮาร์ดแวร์ทั่วไป
-  OTHER            // อื่นๆ
-}
-
-enum Priority {
-  LOW      // ความสำคัญต่ำ
-  NORMAL   // ปกติ
-  URGENT   // เร่งด่วน
-  CRITICAL // เร่งด่วนสูงสุด (มีความเสี่ยงทันที)
-}
-
-enum TicketStatus {
-  PENDING     // รับเรื่องและตรวจสอบข้อมูลแล้ว
-  ASSIGNED    // มอบหมายช่างแล้ว / รอดำเนินการ
-  IN_PROGRESS // กำลังดำเนินการซ่อมแซม
-  RESOLVED    // ซ่อมแซมเสร็จสิ้น / รอตรวจรับงาน
-  CLOSED      // ตรวจสอบและปิดงานแล้ว
-  CANCELLED   // ยกเลิกคำร้อง
-}
-
-enum AttachmentType {
-  BEFORE // ภาพถ่ายหลักฐานก่อนซ่อม (แนบตอนแจ้งซ่อม)
-  AFTER  // ภาพถ่ายผลงานหลังซ่อมเสร็จสิ้น
-}
-
-// ----------------------------------------------------
-// Models
-// ----------------------------------------------------
-
 model User {
-  id             String         @id @default(cuid())
-  name           String         // ชื่อ-นามสกุล เช่น "ศุภวิชญ์", "อเล็กซ์ มอร์แกน"
-  email          String         @unique
-  password       String         @default("$2a$10$iI02Qk8uA1xR9v.8qVnFaeJ7j2W0d4bC3F0XJ0O8V5v4V1v4V1v4V") // เข้ารหัสผ่านด้วย bcryptjs
-  role           Role           @default(USER)
-  phone          String?        // เบอร์โทรศัพท์ เช่น "(+66) 81-***-4921", "ต่อ 248"
-  studentId      String?        // รหัสนักศึกษา/บุคลากร เช่น "#65-0482"
-  technicianCode String?        // รหัสช่าง เช่น "#04"
-  position       String?        // ตำแหน่ง เช่น "หัวหน้าทีมช่างเทคนิค • ระบบปรับอากาศและความเย็น"
-  avatar         String?        // URL รูปโปรไฟล์
-  department     String?        // คณะ/ภาควิชา หรือ หน่วยงานสังกัด
-  classLevel     String?        // ระดับชั้น เช่น "ปวช.", "ปวส.", "ปริญญาตรี"
-  major          String?        // สาขาวิชา เช่น "เทคโนโลยีคอมพิวเตอร์", "วิศวกรรมโยธา"
-  specialty      String?        // สายงานความเชี่ยวชาญช่าง เช่น "เครื่องปรับอากาศ", "ระบบไฟฟ้า"
-  
-  // Relations
-  reportedTickets Ticket[]       @relation("ReporterTickets")
-  assignedTickets Ticket[]       @relation("TechnicianTickets")
-  ticketHistories TicketHistory[] @relation("ChangedByUser")
-  managedBuildings Building[]     @relation("BuildingAdmin")
-
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
+  id               String          @id @default(cuid())
+  name             String
+  email            String          @unique
+  role             Role            @default(USER)
+  phone            String?
+  studentId        String?
+  technicianCode   String?
+  position         String?
+  avatar           String?
+  department       String?         @default("แผนกวิชาช่างเทคนิคคอมพิวเตอร์")
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  password         String          @default("$2a$10$iI02Qk8uA1xR9v.8qVnFaeJ7j2W0d4bC3F0XJ0O8V5v4V1v4V1v4V")
+  classLevel       String?
+  major            String?
+  specialty        String?
+  managedBuildings Building[]      @relation("BuildingAdmin")
+  reportedTickets  Ticket[]        @relation("ReporterTickets")
+  assignedTickets  Ticket[]        @relation("TechnicianTickets")
+  ticketHistories  TicketHistory[] @relation("ChangedByUser")
 
   @@index([role])
   @@index([email])
 }
 
 model Ticket {
-  id               String         @id @default(cuid())
-  ticketNumber     String         @unique // รหัสตั๋ว เช่น "#REP-089"
-  incidentCode     String?        // รหัสอ้างอิงเหตุการณ์ เช่น "INC-2024-E"
-  title            String         // หัวข้อปัญหา เช่น "เครื่องปรับอากาศมีน้ำรั่วซึมหยดลงบนตู้เซิร์ฟเวอร์โดยตรง"
-  description      String         @db.Text // รายละเอียดอาการและปัญหา
-  category         Category       @default(OTHER)
-  
-  // สถานที่และพิกัด (Location & Geolocation)
-  building         String         // อาคาร เช่น "อาคาร 3 - สาขาวิชาช่างเทคนิคคอมพิวเตอร์"
-  buildingId       String?        // รหัสอ้างอิงอาคาร (Foreign Key เชื่อมไปยัง Building)
-  buildingRef      Building?      @relation(fields: [buildingId], references: [id], onDelete: SetNull)
-  room             String         // ห้อง / จุดเกิดเหตุ เช่น "ห้องปฏิบัติการ 402 ชั้น 4 (ฝั่งทิศตะวันตก)"
-  specificLocation String?        // จุดสังเกตเฉพาะเจาะจง เช่น "แร็คเซิร์ฟเวอร์ตู้ที่ #04"
-  latitude         Float?         // พิกัด GPS Latitude เช่น 15.2284
-  longitude        Float?         // พิกัด GPS Longitude เช่น 104.8592
-  gpsAccuracy      Float?         // ความแม่นยำของ GPS เช่น 2.0 (เมตร)
+  id               String          @id @default(cuid())
+  ticketNumber     String          @unique
+  incidentCode     String?
+  title            String
+  description      String          @db.Text
+  category         Category        @default(OTHER)
+  building         String          @default("อาคารแผนกวิชาช่างเทคนิคคอมพิวเตอร์")
+  floor            Int             @default(1)
+  room             String
+  roomName         String          @default("")
+  specificPoint    String?         // เช่น โต๊ะคอมเครื่องที่ 12
+  specificLocation String?
+  latitude         Float?
+  longitude        Float?
+  gpsAccuracy      Float?
+  isUrgent         Boolean         @default(false)
+  priority         Priority        @default(NORMAL)
+  slaTargetMinutes Int?            @default(15)
 
-  // ความสำคัญและ SLA
-  isUrgent         Boolean        @default(false) // Toggle ด่วนพิเศษ
-  priority         Priority       @default(NORMAL)
-  slaTargetMinutes Int?           @default(15) // เป้าหมาย SLA ตอบสนอง เช่น 15 นาที
+  // ภาพถ่ายก่อนและหลังซ่อม และรายละเอียดการแก้ไข (Proof of Work)
+  beforeImageUrl   String?         @db.Text
+  afterImageUrl    String?         @db.Text
+  resolutionDetail String?         @db.Text
 
-  // สถานะและกระบวนการทำงาน
-  status           TicketStatus   @default(PENDING)
-  currentStep      Int            @default(1) // ขั้นตอนปัจจุบัน 1-4 ตามไทม์ไลน์
-  stepNote         String?        // หมายเหตุขั้นตอนปัจจุบัน เช่น "กำลังเดินทางจากศูนย์ซ่อมบำรุง อาคาร 1"
-  etaMinutes       Int?           // เวลาคาดการณ์ช่างถึงหน้างาน (~12 นาที, ~30 นาที)
-  partsOrdered     Boolean        @default(false) // เบิกอะไหล่เรียบร้อยแล้วหรือไม่
-
-  // การตรวจรับและประเมินผล
-  rating           Int?           // คะแนนประเมิน (1-5)
-  feedback         String?        @db.Text // ข้อเสนอแนะเพิ่มเติมจากผู้แจ้ง
-  resolvedAt       DateTime?      // เวลาที่ช่างทำงานเสร็จ
-  closedAt         DateTime?      // เวลาที่ผู้แจ้งเซ็นรับงาน/ปิดตั๋ว
-
-  // Relations
+  status           TicketStatus    @default(PENDING)
+  currentStep      Int             @default(1)
+  stepNote         String?
+  cancelReason     String?         @db.Text
+  holdReason       String?         @db.Text
+  estimatedCompletionAt DateTime?
+  etaMinutes       Int?
+  partsOrdered     Boolean         @default(false)
+  rating           Int?
+  feedback         String?         @db.Text
+  resolvedAt       DateTime?
+  closedAt         DateTime?
   reporterId       String?
-  reporter         User?          @relation("ReporterTickets", fields: [reporterId], references: [id], onDelete: SetNull)
-
   technicianId     String?
-  technician       User?          @relation("TechnicianTickets", fields: [technicianId], references: [id], onDelete: SetNull)
-
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  buildingId       String?
   attachments      Attachment[]
+  buildingRef      Building?       @relation(fields: [buildingId], references: [id], onDelete: SetNull)
+  reporter         User?           @relation("ReporterTickets", fields: [reporterId], references: [id], onDelete: SetNull)
+  technician       User?           @relation("TechnicianTickets", fields: [technicianId], references: [id], onDelete: SetNull)
   histories        TicketHistory[]
-
-  createdAt        DateTime       @default(now())
-  updatedAt        DateTime       @updatedAt
 
   @@index([status])
   @@index([priority])
   @@index([category])
+  @@index([floor])
+  @@index([roomName])
   @@index([building])
   @@index([buildingId])
   @@index([reporterId])
@@ -145,35 +97,30 @@ model Ticket {
 
 model Attachment {
   id        String         @id @default(cuid())
-  fileName  String         // ชื่อไฟล์เดิม เช่น "vent_leak.jpg", "ภาพน้ำแอร์หยด ท่อ.jpg"
-  fileSize  String?        // ขนาดไฟล์ เช่น "1.2 MB", "2.4 MB"
-  fileType  String?        // MIME type เช่น "image/jpeg", "image/png"
-  url       String         // URL หรือ Base64 / Storage path
-  type      AttachmentType @default(BEFORE) // BEFORE = ก่อนซ่อม, AFTER = หลังซ่อม
-
+  fileName  String
+  fileSize  String?
+  fileType  String?
+  url       String
+  type      AttachmentType @default(BEFORE)
   ticketId  String
-  ticket    Ticket         @relation(fields: [ticketId], references: [id], onDelete: Cascade)
-
   createdAt DateTime       @default(now())
+  ticket    Ticket         @relation(fields: [ticketId], references: [id], onDelete: Cascade)
 
   @@index([ticketId])
   @@index([type])
 }
 
 model TicketHistory {
-  id          String        @id @default(cuid())
-  status      TicketStatus  // สถานะที่เปลี่ยนไป
-  step        Int?          // ขั้นตอน 1-4
-  title       String?       // หัวข้อไทม์ไลน์ เช่น "มอบหมายช่างแล้ว • กำลังเดินทาง"
-  note        String?       @db.Text // บันทึกรายละเอียดของไทม์ไลน์
-  
+  id          String       @id @default(cuid())
+  status      TicketStatus
+  step        Int?
+  title       String?
+  note        String?      @db.Text
   ticketId    String
-  ticket      Ticket        @relation(fields: [ticketId], references: [id], onDelete: Cascade)
-
   changedById String?
-  changedBy   User?         @relation("ChangedByUser", fields: [changedById], references: [id], onDelete: SetNull)
-
-  timestamp   DateTime      @default(now())
+  timestamp   DateTime     @default(now())
+  changedBy   User?        @relation("ChangedByUser", fields: [changedById], references: [id], onDelete: SetNull)
+  ticket      Ticket       @relation(fields: [ticketId], references: [id], onDelete: Cascade)
 
   @@index([ticketId])
   @@index([changedById])
@@ -181,20 +128,74 @@ model TicketHistory {
 
 model Building {
   id          String   @id @default(cuid())
-  code        String   @unique // รหัสอาคาร เช่น "BLD-03"
-  name        String   // ชื่ออาคาร เช่น "อาคาร 3 - สาขาวิชาช่างเทคนิคคอมพิวเตอร์"
-  zone        String   // โซนพื้นที่ เช่น "โซนตะวันตก", "โซนกลาง"
-  totalFloors Int      // จำนวนชั้น เช่น 4
-  latitude    Float?   // พิกัด ละติจูด เช่น 15.2284
-  longitude   Float?   // พิกัด ลองจิจูด เช่น 104.8592
-
-  adminId     String?  // ผู้ดูแลอาคาร (Foreign Key เชื่อมไปยัง User Role ADMIN)
-  admin       User?    @relation("BuildingAdmin", fields: [adminId], references: [id], onDelete: SetNull)
-  tickets     Ticket[] // รายการตั๋วแจ้งซ่อมที่สังกัดในอาคารนี้
-
+  code        String   @unique
+  name        String
+  zone        String
+  totalFloors Int
+  latitude    Float?
+  longitude   Float?
+  adminId     String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  admin       User?    @relation("BuildingAdmin", fields: [adminId], references: [id], onDelete: SetNull)
+  tickets     Ticket[]
 
   @@index([adminId])
   @@index([zone])
+}
+
+model DepartmentRoom {
+  id          String   @id @default(cuid())
+  code        String   @unique // เช่น "Lab101", "Lab301", "Room201"
+  name        String   // เช่น "ห้องปฏิบัติการฮาร์ดแวร์และซ่อมบำรุงคอมพิวเตอร์ (Lab 101)"
+  floor       Int      // 1-4
+  type        String   @default("LAB") // LAB, CLASSROOM, OFFICE, RESTROOM, COMMON
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([floor])
+  @@index([code])
+}
+
+enum Role {
+  USER
+  TECHNICIAN
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum Category {
+  PLUMBING         // ระบบประปา สุขภัณฑ์ และห้องน้ำ
+  ELECTRICAL       // ระบบไฟฟ้า แสงสว่าง และปลั๊กไฟ
+  AIR_CONDITIONING // ระบบเครื่องปรับอากาศ
+  FURNITURE        // งานโครงสร้าง ครุภัณฑ์ และสถานที่
+  PC_HARDWARE      // อุปกรณ์คอมพิวเตอร์และฮาร์ดแวร์ประจำแล็บ
+  NETWORK          // ระบบเครือข่ายและอินเทอร์เน็ต
+  AV_EQUIPMENT     // โสตทัศนูปกรณ์และสื่อการสอน
+  IT_EQUIPMENT     // ไอทีและอุปกรณ์ทั่วไป (Legacy)
+  OTHER            // อื่นๆ
+}
+
+enum Priority {
+  LOW
+  NORMAL
+  URGENT
+  CRITICAL
+}
+
+enum TicketStatus {
+  PENDING
+  ASSIGNED
+  IN_PROGRESS
+  ON_HOLD
+  RESOLVED
+  CLOSED
+  CANCELLED
+}
+
+enum AttachmentType {
+  BEFORE
+  AFTER
 }

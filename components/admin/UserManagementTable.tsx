@@ -29,14 +29,16 @@ import {
   createUserAction,
   updateUserAction,
   deleteUserAction,
+} from "@/actions/user";
+import type {
   CreateUserInput,
   UpdateUserInput,
-} from "@/actions/user";
+} from "@/lib/validations/user";
 import { formatDateThai } from "@/lib/utils";
 import {
-  ACADEMIC_DEPARTMENTS,
+  DEPARTMENT_NAME,
+  DEPARTMENT_USER_GROUPS,
   CLASS_LEVEL_OPTIONS,
-  getMajorsByDepartment,
 } from "@/lib/constants/academic-data";
 import {
   ADMIN_POSITIONS,
@@ -44,6 +46,10 @@ import {
   TECHNICIAN_SERVICE_CENTERS,
   TECHNICIAN_SPECIALTIES_MASTER,
 } from "@/lib/constants/campus-master-data";
+import {
+  DEPARTMENT_BUILDING_NAME,
+  DEPARTMENT_BUILDING_CODE,
+} from "@/lib/constants/department-locations";
 
 // ตัวเลือกสายงานความเชี่ยวชาญช่างซ่อมบำรุง
 export const TECHNICIAN_SPECIALTIES = TECHNICIAN_SPECIALTIES_MASTER;
@@ -93,9 +99,9 @@ const initialCreateFormState: CreateUserInput = {
   studentId: "",
   technicianCode: "",
   position: ADMIN_POSITIONS[0].value,
-  department: ADMIN_DEPARTMENTS[0].value,
-  classLevel: "ปวช. 1",
-  major: "",
+  department: DEPARTMENT_NAME,
+  classLevel: DEPARTMENT_USER_GROUPS[0].classLevel,
+  major: DEPARTMENT_USER_GROUPS[0].major,
   specialty: TECHNICIAN_SPECIALTIES_MASTER[0].value,
   phone: "",
   assignedBuildingId: "",
@@ -196,11 +202,21 @@ export default function UserManagementTable({
     }
   };
 
+  const departmentBuilding = useMemo(() => {
+    return (
+      availableBuildings.find(
+        (b) => b.code === DEPARTMENT_BUILDING_CODE || b.name.includes("ช่างเทคนิคคอมพิวเตอร์")
+      ) || availableBuildings[0]
+    );
+  }, [availableBuildings]);
+
   // เปิด Modal แก้ไข พร้อมโหลดข้อมูลเดิม
   const openEditModal = (u: UserItem) => {
     setEditingUser(u);
     const currentBuildingId =
-      u.managedBuildings && u.managedBuildings.length > 0 ? u.managedBuildings[0].id : "";
+      u.managedBuildings && u.managedBuildings.length > 0
+        ? u.managedBuildings[0].id
+        : departmentBuilding?.id || "";
 
     setEditForm({
       name: u.name,
@@ -215,7 +231,7 @@ export default function UserManagementTable({
           ? ADMIN_DEPARTMENTS[0].value
           : u.role === Role.TECHNICIAN
           ? TECHNICIAN_SERVICE_CENTERS[0].value
-          : ""),
+          : DEPARTMENT_NAME),
       classLevel: u.classLevel || "",
       major: u.major || "",
       specialty:
@@ -233,11 +249,20 @@ export default function UserManagementTable({
     setAlertMsg(null);
 
     try {
-      const res = await createUserAction(createForm);
+      const payload: CreateUserInput = {
+        ...createForm,
+        assignedBuildingId:
+          createForm.role === Role.ADMIN
+            ? createForm.assignedBuildingId || departmentBuilding?.id || ""
+            : createForm.assignedBuildingId,
+      };
+
+      const res = await createUserAction(payload);
       if (res.success && res.user) {
         let assignedBlds: Array<{ id: string; code: string; name: string }> = [];
-        if (createForm.role === Role.ADMIN && createForm.assignedBuildingId) {
-          const matched = availableBuildings.find((b) => b.id === createForm.assignedBuildingId);
+        if (createForm.role === Role.ADMIN) {
+          const targetBldId = payload.assignedBuildingId || departmentBuilding?.id;
+          const matched = availableBuildings.find((b) => b.id === targetBldId) || departmentBuilding;
           if (matched) {
             assignedBlds = [{ id: matched.id, code: matched.code, name: matched.name }];
           }
@@ -387,14 +412,16 @@ export default function UserManagementTable({
       <div className="space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <div className="flex items-center space-x-2">
-              <Shield className="h-6 w-6 text-purple-600" />
-              <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+            <div className="flex items-center space-x-2.5">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-b from-emerald-500 to-emerald-600 text-white shadow-[0_2px_8px_rgba(16,185,129,0.35)]">
+                <Shield className="h-5 w-5 stroke-[1.75]" />
+              </div>
+              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
                 จัดการรายชื่อและสิทธิ์ผู้ใช้งาน (RBAC)
               </h1>
             </div>
             <p className="mt-1 text-xs text-slate-500">
-              ควบคุมสิทธิ์การเข้าถึงระบบ 4 ระดับ (Super Admin, Admin, Technician, User)
+              ควบคุมสิทธิ์การเข้าถึงระบบประจำอาคารแผนกวิชาช่างเทคนิคคอมพิวเตอร์ 4 ระดับ
             </p>
           </div>
 
@@ -403,37 +430,37 @@ export default function UserManagementTable({
             <button
               type="button"
               onClick={() => setShowCreateModal(true)}
-              className="flex items-center space-x-2 rounded-2xl bg-slate-950 px-4 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-slate-800 transition active:scale-95"
+              className="flex items-center space-x-2 rounded-xl bg-gradient-to-b from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white px-4 py-2 text-xs font-semibold shadow-[0_2px_8px_rgba(16,185,129,0.35)] active:scale-[0.98] transition-all"
             >
               <UserPlus className="h-4 w-4" />
-              <span>+ เพิ่มผู้ใช้งานใหม่</span>
+              <span>เพิ่มผู้ใช้งานใหม่</span>
             </button>
           </div>
         </div>
 
         {/* Quick Role Badges */}
         <div className="flex flex-wrap items-center gap-2 text-xs">
-          <span className="rounded-xl border border-purple-200 bg-purple-50 px-3 py-1 font-semibold text-purple-800">
-            Super Admin: {stats.superAdmins}
+          <span className="rounded-xl border border-slate-200/80 bg-white/90 px-3 py-1 font-medium text-slate-800 shadow-2xs">
+            Super Admin: <span className="font-mono font-bold text-slate-900">{stats.superAdmins}</span>
           </span>
-          <span className="rounded-xl border border-blue-200 bg-blue-50 px-3 py-1 font-semibold text-blue-800">
-            Admin: {stats.admins}
+          <span className="rounded-xl border border-slate-200/80 bg-white/90 px-3 py-1 font-medium text-slate-800 shadow-2xs">
+            Admin: <span className="font-mono font-bold text-slate-900">{stats.admins}</span>
           </span>
-          <span className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-1 font-semibold text-amber-800">
-            Technician: {stats.technicians}
+          <span className="rounded-xl border border-amber-200/80 bg-amber-50/90 px-3 py-1 font-medium text-amber-800 shadow-2xs">
+            Technician: <span className="font-mono font-bold text-amber-900">{stats.technicians}</span>
           </span>
-          <span className="rounded-xl border border-slate-200 bg-white px-3 py-1 font-semibold text-slate-700">
-            Users: {stats.students}
+          <span className="rounded-xl border border-emerald-200/80 bg-emerald-50/90 px-3 py-1 font-medium text-emerald-800 shadow-2xs">
+            Users: <span className="font-mono font-bold text-emerald-900">{stats.students}</span>
           </span>
         </div>
 
         {/* Alert Feedback Banner */}
         {alertMsg && (
           <div
-            className={`flex items-center justify-between rounded-2xl p-3.5 text-xs border ${
+            className={`flex items-center justify-between rounded-xl p-3 text-xs border shadow-2xs ${
               alertMsg.type === "success"
-                ? "bg-emerald-50 border-emerald-200 text-emerald-800"
-                : "bg-rose-50 border-rose-200 text-rose-800"
+                ? "bg-emerald-50/90 border-emerald-200/80 text-emerald-800"
+                : "bg-rose-50/90 border-rose-200/80 text-rose-800"
             }`}
           >
             <div className="flex items-center space-x-2">
@@ -447,7 +474,7 @@ export default function UserManagementTable({
             <button
               type="button"
               onClick={() => setAlertMsg(null)}
-              className="rounded-full p-1 hover:bg-black/5"
+              className="rounded-lg p-1 hover:bg-black/5"
             >
               <X className="h-3.5 w-3.5" />
             </button>
@@ -455,15 +482,15 @@ export default function UserManagementTable({
         )}
 
         {/* Search & Filters */}
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200/90 bg-white/90 backdrop-blur-md p-4 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.06)]">
           <div className="relative flex-1 min-w-[260px]">
-            <Search className="pointer-events-none absolute left-3.5 top-2.5 h-4 w-4 text-slate-400" />
+            <Search className="pointer-events-none absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="ค้นหาชื่อ, อีเมล, รหัสนักศึกษา, สังกัด, ตำแหน่ง..."
-              className="w-full rounded-xl border border-slate-200 bg-slate-50/60 pl-10 pr-4 py-2 text-xs font-medium text-slate-800 focus:border-slate-400 focus:bg-white focus:outline-none"
+              className="w-full h-10 rounded-xl border border-slate-300/80 bg-white pl-10 pr-4 py-1 text-xs text-slate-900 shadow-2xs focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 placeholder:text-slate-400"
             />
           </div>
 
@@ -472,7 +499,7 @@ export default function UserManagementTable({
             <select
               value={selectedRoleFilter}
               onChange={(e) => setSelectedRoleFilter(e.target.value)}
-              className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 focus:outline-none"
+              className="h-10 rounded-xl border border-slate-300/80 bg-white px-3 py-1 text-xs font-medium text-slate-800 shadow-2xs focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 cursor-pointer"
             >
               <option value="ALL">ทุกบทบาท (All Roles)</option>
               <option value={Role.SUPER_ADMIN}>เฉพาะ Super Admin</option>
@@ -485,20 +512,20 @@ export default function UserManagementTable({
       </div>
 
       {/* 2. Users Table */}
-      <div className="mt-5 rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+      <div className="mt-5 rounded-2xl border border-slate-200/90 bg-white/90 backdrop-blur-md shadow-[0_2px_12px_-4px_rgba(0,0,0,0.06)] overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-slate-700">
-            <thead className="border-b border-slate-100 bg-slate-50/80 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+          <table className="w-full text-left text-xs text-zinc-700">
+            <thead className="border-b border-zinc-200 bg-zinc-50/75 text-[11px] font-medium text-zinc-600 uppercase tracking-wider">
               <tr>
-                <th className="px-6 py-3.5">ผู้ใช้งาน / บัญชี</th>
-                <th className="px-4 py-3.5">สังกัด / ติดต่อ</th>
-                <th className="px-4 py-3.5 text-center">ประวัติใบงาน</th>
-                <th className="px-6 py-3.5">สิทธิ์ปัจจุบัน (Role Selector)</th>
-                <th className="px-4 py-3.5 text-right">วันที่ลงทะเบียน</th>
-                <th className="px-6 py-3.5 text-right">จัดการ (Actions)</th>
+                <th className="px-6 py-3">ผู้ใช้งาน / บัญชี</th>
+                <th className="px-4 py-3">สังกัด / ติดต่อ</th>
+                <th className="px-4 py-3 text-center">ประวัติใบงาน</th>
+                <th className="px-6 py-3">สิทธิ์ปัจจุบัน (Role Selector)</th>
+                <th className="px-4 py-3 text-right">วันที่ลงทะเบียน</th>
+                <th className="px-6 py-3 text-right">จัดการ (Actions)</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-zinc-100">
               {filteredUsers.map((u) => {
                 const isCurrent = u.id === currentUserId;
                 const isUpdatingThis = updatingUserId === u.id;
@@ -508,7 +535,7 @@ export default function UserManagementTable({
                     {/* 1. User Info */}
                     <td className="px-6 py-4">
                       <div className="flex items-center space-x-3">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-xs font-bold text-slate-800 shadow-sm border border-slate-200">
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-zinc-100 text-xs font-semibold text-zinc-800 border border-zinc-200">
                           {u.name.charAt(0)}
                         </div>
                         <div className="min-w-0">
@@ -548,8 +575,8 @@ export default function UserManagementTable({
                                 </span>
                               )}
                               {u.specialty && (
-                                <span className="text-[9px] font-semibold text-amber-800 bg-amber-50 px-1.5 py-0.2 rounded border border-amber-200">
-                                  🛠️ {u.specialty}
+                                <span className="text-[9px] font-medium text-amber-800 bg-amber-50 px-1.5 py-0.2 rounded border border-amber-200">
+                                  {u.specialty}
                                 </span>
                               )}
                             </div>
@@ -557,23 +584,23 @@ export default function UserManagementTable({
                           {(u.role === Role.ADMIN || u.role === Role.SUPER_ADMIN) && (
                             <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
                               {u.studentId && (
-                                <span className="text-[10px] text-blue-700 font-mono">
+                                <span className="text-[10px] text-zinc-700 font-mono">
                                   รหัสบุคลากร: {u.studentId}
                                 </span>
                               )}
                               {u.position && (
-                                <span className="text-[10px] text-slate-500 truncate max-w-[200px]">
+                                <span className="text-[10px] text-zinc-500 truncate max-w-[200px]">
                                   {u.position}
                                 </span>
                               )}
                               {u.role === Role.ADMIN && (
                                 u.managedBuildings && u.managedBuildings.length > 0 ? (
-                                  <span className="text-[9px] font-bold text-blue-800 bg-blue-50 px-1.5 py-0.2 rounded border border-blue-200">
-                                    📍 {u.managedBuildings.map((b) => b.name.split("-")[0]?.trim() || b.code).join(", ")}
+                                  <span className="text-[9px] font-medium text-zinc-800 bg-zinc-100 px-1.5 py-0.2 rounded border border-zinc-200">
+                                    {u.managedBuildings.map((b) => b.name.split("-")[0]?.trim() || b.code).join(", ")}
                                   </span>
                                 ) : (
-                                  <span className="text-[9px] font-semibold text-amber-700 bg-amber-50 px-1.5 py-0.2 rounded border border-amber-200">
-                                    ⚠️ ยังไม่ระบุอาคาร
+                                  <span className="text-[9px] font-medium text-amber-700 bg-amber-50 px-1.5 py-0.2 rounded border border-amber-200">
+                                    ยังไม่ระบุอาคาร
                                   </span>
                                 )
                               )}
@@ -614,20 +641,20 @@ export default function UserManagementTable({
                           disabled={isUpdatingThis || isCurrent}
                           value={u.role}
                           onChange={(e) => handleRoleChange(u.id, e.target.value as Role)}
-                          className={`rounded-xl border px-3 py-1.5 text-xs font-bold transition focus:outline-none cursor-pointer disabled:cursor-not-allowed ${
+                          className={`rounded-md border px-2.5 py-1 text-xs font-medium transition focus:outline-none cursor-pointer disabled:cursor-not-allowed ${
                             u.role === Role.SUPER_ADMIN
-                              ? "border-purple-300 bg-purple-50 text-purple-800"
+                              ? "border-zinc-300 bg-zinc-100 text-zinc-900"
                               : u.role === Role.ADMIN
-                              ? "border-blue-300 bg-blue-50 text-blue-800"
+                              ? "border-zinc-300 bg-zinc-100 text-zinc-900"
                               : u.role === Role.TECHNICIAN
-                              ? "border-amber-300 bg-amber-50 text-amber-800"
-                              : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+                              ? "border-amber-200 bg-amber-50 text-amber-800"
+                              : "border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50"
                           }`}
                         >
-                          <option value={Role.SUPER_ADMIN}>👑 Super Admin</option>
-                          <option value={Role.ADMIN}>🏢 Admin อาคาร</option>
-                          <option value={Role.TECHNICIAN}>🔧 Technician ช่าง</option>
-                          <option value={Role.USER}>🎓 User นักศึกษา/บุคลากร</option>
+                          <option value={Role.SUPER_ADMIN}>Super Admin</option>
+                          <option value={Role.ADMIN}>Admin อาคาร</option>
+                          <option value={Role.TECHNICIAN}>Technician ช่าง</option>
+                          <option value={Role.USER}>User นักศึกษา/บุคลากร</option>
                         </select>
 
                         {isUpdatingThis && (
@@ -696,11 +723,11 @@ export default function UserManagementTable({
       {showCreateModal && (
         <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
           <div className="flex min-h-full items-center justify-center py-6">
-            <div className="w-full max-w-xl rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-2xl space-y-6 animate-in zoom-in-95 duration-200">
+            <div className="w-full max-w-xl rounded-2xl border border-slate-200/90 bg-white/95 backdrop-blur-xl p-6 shadow-2xl space-y-5 animate-in zoom-in-95 duration-200">
             {/* Header */}
-            <div className="flex items-start justify-between border-b border-slate-100 pb-4">
+            <div className="flex items-start justify-between border-b border-slate-200/80 pb-4">
               <div className="flex items-center space-x-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-950 text-white shadow-sm">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-b from-emerald-500 to-emerald-600 text-white shadow-[0_2px_8px_rgba(16,185,129,0.35)]">
                   <UserPlus className="h-5 w-5" />
                 </div>
                 <div>
@@ -749,26 +776,29 @@ export default function UserManagementTable({
                       setCreateForm((prev) => ({
                         ...prev,
                         role: Role.USER,
+                        department: DEPARTMENT_NAME,
+                        classLevel: prev.classLevel || DEPARTMENT_USER_GROUPS[0].classLevel,
+                        major: prev.major || DEPARTMENT_USER_GROUPS[0].major,
                         technicianCode: "",
                         specialty: "",
                       }))
                     }
-                    className={`flex flex-col items-center justify-center p-3.5 rounded-2xl border text-center transition-all cursor-pointer ${
+                    className={`flex flex-col items-center justify-center p-3.5 rounded-md border text-center transition cursor-pointer ${
                       createForm.role === Role.USER
-                        ? "border-emerald-600 bg-emerald-50/70 text-emerald-950 ring-2 ring-emerald-500/20 shadow-sm"
-                        : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50"
+                        ? "border-emerald-600 bg-emerald-50/70 text-emerald-950 ring-1 ring-emerald-500/20 shadow-xs"
+                        : "border-zinc-200 bg-white text-zinc-600 hover:border-zinc-300 hover:bg-zinc-50"
                     }`}
                   >
                     <div
-                      className={`flex h-10 w-10 items-center justify-center rounded-xl mb-2 transition ${
+                      className={`flex h-9 w-9 items-center justify-center rounded-md mb-2 transition ${
                         createForm.role === Role.USER
-                          ? "bg-emerald-600 text-white shadow-sm"
-                          : "bg-slate-100 text-slate-500"
+                          ? "bg-emerald-600 text-white shadow-xs"
+                          : "bg-zinc-100 text-zinc-500"
                       }`}
                     >
-                      <GraduationCap className="h-5 w-5" />
+                      <GraduationCap className="h-4.5 w-4.5" />
                     </div>
-                    <span className="text-xs font-bold leading-tight">🎓 นักศึกษา / บุคลากร</span>
+                    <span className="text-xs font-semibold leading-tight">นักศึกษา / บุคลากร</span>
                     <span className="text-[10px] text-slate-400 mt-0.5">Role: USER</span>
                   </button>
 
@@ -786,23 +816,23 @@ export default function UserManagementTable({
                         assignedBuildingId: "",
                       }))
                     }
-                    className={`flex flex-col items-center justify-center p-3.5 rounded-2xl border text-center transition-all cursor-pointer ${
+                    className={`flex flex-col items-center justify-center p-3.5 rounded-md border text-center transition cursor-pointer ${
                       createForm.role === Role.TECHNICIAN
-                        ? "border-amber-600 bg-amber-50/70 text-amber-950 ring-2 ring-amber-500/20 shadow-sm"
-                        : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50"
+                        ? "border-amber-600 bg-amber-50/70 text-amber-950 ring-1 ring-amber-500/20 shadow-xs"
+                        : "border-zinc-200 bg-white text-zinc-600 hover:border-zinc-300 hover:bg-zinc-50"
                     }`}
                   >
                     <div
-                      className={`flex h-10 w-10 items-center justify-center rounded-xl mb-2 transition ${
+                      className={`flex h-9 w-9 items-center justify-center rounded-md mb-2 transition ${
                         createForm.role === Role.TECHNICIAN
-                          ? "bg-amber-600 text-white shadow-sm"
-                          : "bg-slate-100 text-slate-500"
+                          ? "bg-amber-600 text-white shadow-xs"
+                          : "bg-zinc-100 text-zinc-500"
                       }`}
                     >
-                      <Hammer className="h-5 w-5" />
+                      <Hammer className="h-4.5 w-4.5" />
                     </div>
-                    <span className="text-xs font-bold leading-tight">🛠️ ช่างซ่อมบำรุง</span>
-                    <span className="text-[10px] text-slate-400 mt-0.5">Role: TECHNICIAN</span>
+                    <span className="text-xs font-semibold leading-tight">ช่างซ่อมบำรุง</span>
+                    <span className="text-[10px] text-zinc-400 mt-0.5">Role: TECHNICIAN</span>
                   </button>
 
                   {/* Card 3: ADMIN (แอดมินงานอาคาร) */}
@@ -817,27 +847,27 @@ export default function UserManagementTable({
                         classLevel: "",
                         major: "",
                         position: prev.position || ADMIN_POSITIONS[0].value,
-                        department: prev.department || ADMIN_DEPARTMENTS[0].value,
-                        assignedBuildingId: prev.assignedBuildingId || (availableBuildings && availableBuildings[0]?.id) || "",
+                        department: ADMIN_DEPARTMENTS[0].value,
+                        assignedBuildingId: departmentBuilding?.id || "",
                       }))
                     }
-                    className={`flex flex-col items-center justify-center p-3.5 rounded-2xl border text-center transition-all cursor-pointer ${
+                    className={`flex flex-col items-center justify-center p-3.5 rounded-md border text-center transition cursor-pointer ${
                       createForm.role === Role.ADMIN
-                        ? "border-blue-600 bg-blue-50/70 text-blue-950 ring-2 ring-blue-500/20 shadow-sm"
-                        : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50"
+                        ? "border-emerald-600 bg-emerald-50/70 text-emerald-950 ring-1 ring-emerald-500/20 shadow-xs"
+                        : "border-zinc-200 bg-white text-zinc-600 hover:border-zinc-300 hover:bg-zinc-50"
                     }`}
                   >
                     <div
-                      className={`flex h-10 w-10 items-center justify-center rounded-xl mb-2 transition ${
+                      className={`flex h-9 w-9 items-center justify-center rounded-md mb-2 transition ${
                         createForm.role === Role.ADMIN
-                          ? "bg-blue-600 text-white shadow-sm"
-                          : "bg-slate-100 text-slate-500"
+                          ? "bg-emerald-600 text-white shadow-xs"
+                          : "bg-zinc-100 text-zinc-500"
                       }`}
                     >
-                      <Building className="h-5 w-5" />
+                      <Building className="h-4.5 w-4.5" />
                     </div>
-                    <span className="text-xs font-bold leading-tight">🏢 แอดมินงานอาคาร</span>
-                    <span className="text-[10px] text-slate-400 mt-0.5">Role: ADMIN</span>
+                    <span className="text-xs font-semibold leading-tight">แอดมินงานอาคาร</span>
+                    <span className="text-[10px] text-zinc-400 mt-0.5">Role: ADMIN</span>
                   </button>
                 </div>
               </div>
@@ -851,7 +881,7 @@ export default function UserManagementTable({
                 <div className="space-y-4 animate-in fade-in duration-200">
                   <div className="flex items-center space-x-2 py-1.5 px-3 rounded-xl bg-emerald-50 border border-emerald-200/60 text-emerald-900 text-xs font-semibold">
                     <GraduationCap className="h-4 w-4 text-emerald-600" />
-                    <span>ขั้นตอนที่ 2: กรอกข้อมูลนักศึกษา / บุคลากร (Student Details)</span>
+                    <span>ขั้นตอนที่ 2: กรอกข้อมูลนักศึกษา / บุคลากรประจำแผนก (Department User Details)</span>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -865,105 +895,84 @@ export default function UserManagementTable({
                         required
                         value={createForm.name}
                         onChange={(e) => setCreateForm({ ...createForm, name: e.target.value })}
-                        placeholder="เช่น นายกิตติศักดิ์ พัฒนากุล"
+                        placeholder="เช่น นายกิตติศักดิ์ พัฒนากุล หรือ อ.สมชาย เทคโน"
                         className="w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3.5 py-2 text-xs font-medium text-slate-800 focus:border-slate-400 focus:bg-white focus:outline-none"
                       />
                     </div>
 
-                    {/* รหัสนักศึกษา */}
+                    {/* รหัสนักศึกษา / รหัสประจำตัว */}
                     <div className="space-y-1">
                       <label className="text-xs font-semibold text-slate-700">
-                        รหัสนักศึกษา (Student ID)
+                        รหัสนักศึกษา / รหัสประจำตัว (Student ID / Code)
                       </label>
                       <input
                         type="text"
                         value={createForm.studentId || ""}
                         onChange={(e) => setCreateForm({ ...createForm, studentId: e.target.value })}
-                        placeholder="เช่น 65-0482001 หรือ 66-021004"
+                        placeholder="เช่น 66-021004 หรือ ST-101"
                         className="w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3.5 py-2 text-xs font-medium text-slate-800 focus:border-slate-400 focus:bg-white focus:outline-none"
                       />
                     </div>
 
-                    {/* ระดับชั้น */}
-                    <div className="space-y-1">
-                      <label className="text-xs font-semibold text-slate-700">
-                        ระดับชั้น (Class Level)
-                      </label>
-                      <div className="relative">
-                        <select
-                          value={createForm.classLevel || ""}
-                          onChange={(e) => setCreateForm({ ...createForm, classLevel: e.target.value })}
-                          className="w-full appearance-none rounded-xl border border-slate-200 bg-white px-3.5 py-2 pr-9 text-xs font-medium text-slate-800 focus:border-slate-400 focus:outline-none cursor-pointer transition"
-                        >
-                          <option value="">--- กรุณาเลือกระดับชั้น ---</option>
-                          {CLASS_LEVEL_OPTIONS.map((c) => (
-                            <option key={c.value} value={c.value}>
-                              {c.label}
-                            </option>
-                          ))}
-                        </select>
-                        <ChevronDown className="pointer-events-none absolute right-3 top-2.5 h-4 w-4 text-slate-400" />
-                      </div>
-                    </div>
-
-                    {/* แผนกวิชา (Cascading Master Dropdown) */}
-                    <div className="space-y-1">
-                      <label className="text-xs font-semibold text-slate-700">
-                        แผนกวิชา (Department)
-                      </label>
-                      <div className="relative">
-                        <select
-                          value={createForm.department || ""}
-                          onChange={(e) => {
-                            const selectedDept = e.target.value;
-                            setCreateForm({
-                              ...createForm,
-                              department: selectedDept,
-                              major: "", // Reset สาขาวิชาทันทีเมื่อสลับแผนก
-                            });
-                          }}
-                          className="w-full appearance-none rounded-xl border border-slate-200 bg-white px-3.5 py-2 pr-9 text-xs font-medium text-slate-800 focus:border-slate-400 focus:outline-none cursor-pointer transition"
-                        >
-                          <option value="">--- กรุณาเลือกแผนกวิชา ---</option>
-                          {ACADEMIC_DEPARTMENTS.map((dept) => (
-                            <option key={dept.id} value={dept.name}>
-                              {dept.name}
-                            </option>
-                          ))}
-                        </select>
-                        <ChevronDown className="pointer-events-none absolute right-3 top-2.5 h-4 w-4 text-slate-400" />
-                      </div>
-                    </div>
-
-                    {/* สาขาวิชา (Cascading Dependent Dropdown) */}
+                    {/* แผนกวิชาต้นสังกัด (Locked Badge / Read-only) */}
                     <div className="space-y-1">
                       <label className="text-xs font-semibold text-slate-700 flex items-center justify-between">
-                        <span>สาขาวิชา (Major)</span>
-                        {!createForm.department && (
-                          <span className="text-[10px] text-amber-600 font-normal">
-                            (เลือกแผนกวิชาก่อน)
-                          </span>
-                        )}
+                        <span>แผนกวิชาต้นสังกัด (Department)</span>
+                        <span className="text-[10px] text-emerald-600 font-semibold">ล็อกเฉพาะแผนก</span>
+                      </label>
+                      <div className="flex items-center space-x-2 rounded-xl border border-emerald-200 bg-emerald-50/70 px-3.5 py-2 text-xs font-semibold text-emerald-950">
+                        <Lock className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                        <span>{DEPARTMENT_NAME}</span>
+                      </div>
+                    </div>
+
+                    {/* ระดับชั้น / สาขาวิชา (Dropdown เฉพาะในแผนกวิชาช่างเทคนิคคอมพิวเตอร์) */}
+                    <div className="sm:col-span-2 space-y-1">
+                      <label className="text-xs font-semibold text-slate-700 flex items-center justify-between">
+                        <span>ระดับชั้น / สาขาวิชา (Class Level & Major) <span className="text-rose-500">*</span></span>
+                        <span className="text-[10px] text-slate-400">เฉพาะหลักสูตรประจำแผนกวิชาช่างเทคนิคคอมพิวเตอร์</span>
                       </label>
                       <div className="relative">
                         <select
-                          disabled={!createForm.department}
-                          value={createForm.major || ""}
-                          onChange={(e) => setCreateForm({ ...createForm, major: e.target.value })}
-                          className="w-full appearance-none rounded-xl border border-slate-200 bg-white px-3.5 py-2 pr-9 text-xs font-medium text-slate-800 focus:border-slate-400 focus:outline-none cursor-pointer transition disabled:bg-slate-100/80 disabled:text-slate-400 disabled:cursor-not-allowed"
+                          required
+                          value={
+                            DEPARTMENT_USER_GROUPS.find(
+                              (g) => g.classLevel === createForm.classLevel && g.major === createForm.major
+                            )?.value || (createForm.classLevel && createForm.major ? `${createForm.classLevel} ${createForm.major}` : DEPARTMENT_USER_GROUPS[0].value)
+                          }
+                          onChange={(e) => {
+                            const selectedGroup = DEPARTMENT_USER_GROUPS.find((g) => g.value === e.target.value);
+                            if (selectedGroup) {
+                              setCreateForm({
+                                ...createForm,
+                                classLevel: selectedGroup.classLevel,
+                                major: selectedGroup.major,
+                              });
+                            }
+                          }}
+                          className="w-full appearance-none h-9 rounded-md border border-zinc-300 bg-white px-3 text-xs font-normal text-zinc-900 shadow-xs focus:border-emerald-600 focus:outline-none focus:ring-1 focus:ring-emerald-600 cursor-pointer"
                         >
-                          {!createForm.department ? (
-                            <option value="">--- กรุณาเลือกแผนกวิชาก่อน ---</option>
-                          ) : (
-                            <>
-                              <option value="">--- กรุณาเลือกสาขาวิชา ---</option>
-                              {getMajorsByDepartment(createForm.department).map((major) => (
-                                <option key={major} value={major}>
-                                  {major}
-                                </option>
-                              ))}
-                            </>
-                          )}
+                          <optgroup label="ระดับประกาศนียบัตรวิชาชีพ (ปวช.)">
+                            {DEPARTMENT_USER_GROUPS.filter((g) => g.groupType === "VOCATIONAL_CERT").map((g) => (
+                              <option key={g.value} value={g.value}>
+                                {g.label}
+                              </option>
+                            ))}
+                          </optgroup>
+                          <optgroup label="ระดับประกาศนียบัตรวิชาชีพชั้นสูง (ปวส.)">
+                            {DEPARTMENT_USER_GROUPS.filter((g) => g.groupType === "HIGH_VOCATIONAL_CERT").map((g) => (
+                              <option key={g.value} value={g.value}>
+                                {g.label}
+                              </option>
+                            ))}
+                          </optgroup>
+                          <optgroup label="อาจารย์ / บุคลากรประจำแผนก">
+                            {DEPARTMENT_USER_GROUPS.filter((g) => g.groupType === "STAFF").map((g) => (
+                              <option key={g.value} value={g.value}>
+                                {g.label}
+                              </option>
+                            ))}
+                          </optgroup>
                         </select>
                         <ChevronDown className="pointer-events-none absolute right-3 top-2.5 h-4 w-4 text-slate-400" />
                       </div>
@@ -983,10 +992,10 @@ export default function UserManagementTable({
                       />
                     </div>
 
-                    {/* อีเมลมหาวิทยาลัย */}
+                    {/* อีเมลสำหรับเข้าสู่ระบบ */}
                     <div className="space-y-1">
                       <label className="text-xs font-semibold text-slate-700">
-                        อีเมลมหาวิทยาลัย <span className="text-rose-500">*</span>
+                        อีเมลสำหรับเข้าสู่ระบบ <span className="text-rose-500">*</span>
                       </label>
                       <input
                         type="email"
@@ -1028,7 +1037,7 @@ export default function UserManagementTable({
                 <div className="space-y-4 animate-in fade-in duration-200">
                   <div className="flex items-center space-x-2 py-1.5 px-3 rounded-xl bg-amber-50 border border-amber-200/60 text-amber-900 text-xs font-semibold">
                     <Hammer className="h-4 w-4 text-amber-600" />
-                    <span>ขั้นตอนที่ 2: กรอกข้อมูลช่างซ่อมบำรุง (Technician Details)</span>
+                    <span>ขั้นตอนที่ 2: กรอกข้อมูลช่างซ่อมบำรุงประจำอาคาร (Department Technician Details)</span>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1067,7 +1076,7 @@ export default function UserManagementTable({
                       />
                     </div>
 
-                    {/* สายงานความเชี่ยวชาญหลัก */}
+                    {/* สายงานความเชี่ยวชาญหลัก (7 หมวดหมู่งานซ่อม) */}
                     <div className="space-y-1">
                       <label className="text-xs font-semibold text-slate-700">
                         สายงานความเชี่ยวชาญหลัก <span className="text-rose-500">*</span>
@@ -1088,10 +1097,11 @@ export default function UserManagementTable({
                       </div>
                     </div>
 
-                    {/* ศูนย์ซ่อม / สังกัดงานอาคาร */}
-                    <div className="space-y-1">
-                      <label className="text-xs font-semibold text-slate-700">
-                        ศูนย์ซ่อม / สังกัดงานอาคาร <span className="text-rose-500">*</span>
+                    {/* ศูนย์ซ่อม / สังกัดงานอาคาร (Dropdown จุดประจำการในอาคาร) */}
+                    <div className="sm:col-span-2 space-y-1">
+                      <label className="text-xs font-semibold text-slate-700 flex items-center justify-between">
+                        <span>ศูนย์ซ่อม / จุดประจำการในอาคาร <span className="text-rose-500">*</span></span>
+                        <span className="text-[10px] text-amber-600 font-semibold">จุดประจำการประจำอาคารแผนก</span>
                       </label>
                       <div className="relative">
                         <select
@@ -1101,7 +1111,7 @@ export default function UserManagementTable({
                         >
                           {TECHNICIAN_SERVICE_CENTERS.map((c) => (
                             <option key={c.value} value={c.value}>
-                              🏢 {c.label}
+                              {c.label}
                             </option>
                           ))}
                         </select>
@@ -1168,7 +1178,7 @@ export default function UserManagementTable({
                 <div className="space-y-4 animate-in fade-in duration-200">
                   <div className="flex items-center space-x-2 py-1.5 px-3 rounded-xl bg-blue-50 border border-blue-200/60 text-blue-900 text-xs font-semibold">
                     <Building className="h-4 w-4 text-blue-600" />
-                    <span>ขั้นตอนที่ 2: กรอกข้อมูลแอดมินงานอาคาร (Building Admin Details)</span>
+                    <span>ขั้นตอนที่ 2: กรอกข้อมูลแอดมินงานอาคารประจำแผนก (Building Admin Details)</span>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1187,51 +1197,28 @@ export default function UserManagementTable({
                       />
                     </div>
 
-                    {/* อาคารที่รับผิดชอบหลัก (Assigned Building) */}
+                    {/* อาคารที่รับผิดชอบ (ล็อกค่าอัตโนมัติ) */}
                     <div className="sm:col-span-2 space-y-1">
                       <label className="text-xs font-semibold text-slate-700 flex items-center justify-between">
                         <span>
-                          อาคารที่รับผิดชอบหลัก (Assigned Building) <span className="text-rose-500">*</span>
+                          อาคารที่รับผิดชอบ (Assigned Building) <span className="text-rose-500">*</span>
                         </span>
-                        <span className="text-[10px] text-blue-600 font-medium">ผูกกับ Scoped Data Authorization</span>
+                        <span className="text-[10px] text-blue-600 font-semibold">ผูก Scoped Authorization อัตโนมัติ</span>
                       </label>
-                      <div className="relative">
-                        <select
-                          required
-                          value={createForm.assignedBuildingId || ""}
-                          onChange={(e) => setCreateForm({ ...createForm, assignedBuildingId: e.target.value })}
-                          className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-800 focus:border-slate-400 focus:outline-none cursor-pointer appearance-none pr-8"
-                        >
-                          <option value="">-- กรุณาเลือกอาคารที่รับผิดชอบ --</option>
-                          <option value="ALL">🏢 ทุกอาคาร (แอดมินส่วนกลาง / ไม่จำกัดอาคาร)</option>
-                          {availableBuildings.map((b) => (
-                            <option key={b.id} value={b.id}>
-                              📍 [{b.code}] {b.name} {b.adminId ? "(มีผู้ดูแลเดิมแล้ว)" : "(ว่าง)"}
-                            </option>
-                          ))}
-                        </select>
-                        <ChevronDown className="pointer-events-none absolute right-3 top-2.5 h-4 w-4 text-slate-400" />
+                      <div className="flex items-center space-x-2 rounded-xl border border-blue-200 bg-blue-50/80 px-3.5 py-2 text-xs font-semibold text-blue-950">
+                        <Building className="h-4 w-4 text-blue-600 shrink-0" />
+                        <span>[{DEPARTMENT_BUILDING_CODE}] {DEPARTMENT_BUILDING_NAME}</span>
+                        <span className="ml-auto inline-flex items-center space-x-1 rounded-md bg-blue-100 px-2 py-0.5 text-[10px] font-bold text-blue-800">
+                          <Lock className="h-3 w-3" />
+                          <span>ล็อกประจำอาคารแผนก</span>
+                        </span>
                       </div>
-                      <p className="text-[10px] text-slate-400">
-                        Admin คนนี้จะมีสิทธิ์ดูสถิติและจ่ายงานซ่อมเฉพาะอาคารที่เลือกตามกฎความปลอดภัย
+                      <p className="text-[10px] text-slate-500">
+                        ระบบจะผูกบัญชีแอดมินนี้เข้ากับอาคารแผนกวิชาช่างเทคนิคคอมพิวเตอร์ในฐานข้อมูลโดยตรง
                       </p>
                     </div>
 
-                    {/* รหัสบุคลากร */}
-                    <div className="space-y-1">
-                      <label className="text-xs font-semibold text-slate-700">
-                        รหัสบุคลากร (Staff ID)
-                      </label>
-                      <input
-                        type="text"
-                        value={createForm.studentId || ""}
-                        onChange={(e) => setCreateForm({ ...createForm, studentId: e.target.value })}
-                        placeholder="เช่น ST-4401 หรือ ADM-02"
-                        className="w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3.5 py-2 text-xs font-medium text-slate-800 focus:border-slate-400 focus:bg-white focus:outline-none"
-                      />
-                    </div>
-
-                    {/* ตำแหน่งงาน */}
+                    {/* ตำแหน่งงาน (Dropdown มาตรฐาน 4 ตำแหน่งในแผนก) */}
                     <div className="space-y-1">
                       <label className="text-xs font-semibold text-slate-700">
                         ตำแหน่งงาน (Position) <span className="text-rose-500">*</span>
@@ -1252,24 +1239,29 @@ export default function UserManagementTable({
                       </div>
                     </div>
 
-                    {/* ฝ่าย / หน่วยงาน */}
-                    <div className="sm:col-span-2 space-y-1">
+                    {/* รหัสบุคลากร */}
+                    <div className="space-y-1">
                       <label className="text-xs font-semibold text-slate-700">
-                        ฝ่าย / หน่วยงาน (Department) <span className="text-rose-500">*</span>
+                        รหัสบุคลากร (Staff ID)
                       </label>
-                      <div className="relative">
-                        <select
-                          value={createForm.department || ADMIN_DEPARTMENTS[0].value}
-                          onChange={(e) => setCreateForm({ ...createForm, department: e.target.value })}
-                          className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-800 focus:border-slate-400 focus:outline-none cursor-pointer appearance-none pr-8"
-                        >
-                          {ADMIN_DEPARTMENTS.map((d) => (
-                            <option key={d.value} value={d.value}>
-                              🏢 {d.label}
-                            </option>
-                          ))}
-                        </select>
-                        <ChevronDown className="pointer-events-none absolute right-3 top-2.5 h-4 w-4 text-slate-400" />
+                      <input
+                        type="text"
+                        value={createForm.studentId || ""}
+                        onChange={(e) => setCreateForm({ ...createForm, studentId: e.target.value })}
+                        placeholder="เช่น ADM-01 หรือ T-204"
+                        className="w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3.5 py-2 text-xs font-medium text-slate-800 focus:border-slate-400 focus:bg-white focus:outline-none"
+                      />
+                    </div>
+
+                    {/* ฝ่าย / สำนักงาน (Locked to งานบริหารและอาคารสถานที่ แผนกวิชาช่างเทคนิคคอมพิวเตอร์) */}
+                    <div className="sm:col-span-2 space-y-1">
+                      <label className="text-xs font-semibold text-slate-700 flex items-center justify-between">
+                        <span>ฝ่าย / สำนักงาน (Department) <span className="text-rose-500">*</span></span>
+                        <span className="text-[10px] text-blue-600 font-semibold">หน่วยงานประจำแผนก</span>
+                      </label>
+                      <div className="flex items-center space-x-2 rounded-xl border border-slate-200 bg-slate-100/80 px-3.5 py-2 text-xs font-semibold text-slate-700">
+                        <Lock className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                        <span>{ADMIN_DEPARTMENTS[0].value}</span>
                       </div>
                     </div>
 
@@ -1282,7 +1274,7 @@ export default function UserManagementTable({
                         type="text"
                         value={createForm.phone || ""}
                         onChange={(e) => setCreateForm({ ...createForm, phone: e.target.value })}
-                        placeholder="02-123-4567, 081-999-8888"
+                        placeholder="02-123-4567 หรือ 081-999-8888"
                         className="w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3.5 py-2 text-xs font-medium text-slate-800 focus:border-slate-400 focus:bg-white focus:outline-none"
                       />
                     </div>
@@ -1297,7 +1289,7 @@ export default function UserManagementTable({
                         required
                         value={createForm.email}
                         onChange={(e) => setCreateForm({ ...createForm, email: e.target.value })}
-                        placeholder="admin.facility@campus.ac.th"
+                        placeholder="admin.comptech@campus.ac.th"
                         className="w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3.5 py-2 text-xs font-medium text-slate-800 focus:border-slate-400 focus:bg-white focus:outline-none"
                       />
                     </div>
@@ -1432,13 +1424,13 @@ export default function UserManagementTable({
       {/* 4. Modal: แก้ไขข้อมูลผู้ใช้ (Edit User Modal) */}
       {/* ========================================================= */}
       {editingUser && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-zinc-950/40 backdrop-blur-xs p-4 animate-in fade-in duration-200">
           <div className="flex min-h-full items-center justify-center py-6">
-            <div className="w-full max-w-xl rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-2xl space-y-6 animate-in zoom-in-95 duration-200">
+            <div className="w-full max-w-xl rounded-lg border border-zinc-200 bg-white p-5 sm:p-6 shadow-xl space-y-5 animate-in zoom-in-95 duration-200">
             {/* Header */}
             <div className="flex items-start justify-between border-b border-slate-100 pb-4">
               <div className="flex items-center space-x-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-sm">
+                <div className="flex h-9 w-9 items-center justify-center rounded-md bg-emerald-600 text-white shadow-xs">
                   <Edit3 className="h-5 w-5" />
                 </div>
                 <div>
@@ -1513,12 +1505,12 @@ export default function UserManagementTable({
                     disabled={editingUser.id === currentUserId}
                     value={editForm.role}
                     onChange={(e) => setEditForm({ ...editForm, role: e.target.value as Role })}
-                    className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-800 focus:border-slate-400 focus:outline-none cursor-pointer disabled:cursor-not-allowed disabled:bg-slate-100"
+                    className="w-full h-9 rounded-md border border-zinc-300 bg-white px-3 py-1 text-xs font-normal text-zinc-900 shadow-xs focus:border-emerald-600 focus:outline-none focus:ring-1 focus:ring-emerald-600 cursor-pointer disabled:cursor-not-allowed disabled:bg-zinc-100"
                   >
-                    <option value={Role.USER}>🎓 USER (นักศึกษา / บุคลากร)</option>
-                    <option value={Role.TECHNICIAN}>🛠️ TECHNICIAN (ช่างซ่อมบำรุง)</option>
-                    <option value={Role.ADMIN}>🏢 ADMIN (หัวหน้างานอาคารสถานที่)</option>
-                    <option value={Role.SUPER_ADMIN}>👑 SUPER_ADMIN (ผู้ดูแลระบบสูงสุด)</option>
+                    <option value={Role.USER}>USER (นักศึกษา / บุคลากร)</option>
+                    <option value={Role.TECHNICIAN}>TECHNICIAN (ช่างซ่อมบำรุง)</option>
+                    <option value={Role.ADMIN}>ADMIN (หัวหน้างานอาคารสถานที่)</option>
+                    <option value={Role.SUPER_ADMIN}>SUPER_ADMIN (ผู้ดูแลระบบสูงสุด)</option>
                   </select>
                 </div>
 
@@ -1527,91 +1519,75 @@ export default function UserManagementTable({
                   <>
                     <div className="space-y-1">
                       <label className="text-xs font-semibold text-slate-700">
-                        รหัสนักศึกษา (Student ID)
+                        รหัสนักศึกษา / รหัสประจำตัว (Student ID / Code)
                       </label>
                       <input
                         type="text"
                         value={editForm.studentId || ""}
                         onChange={(e) => setEditForm({ ...editForm, studentId: e.target.value })}
-                        placeholder="เช่น 65-0482001"
+                        placeholder="เช่น 65-0482001 หรือ ST-101"
                         className="w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3.5 py-2 text-xs font-medium text-slate-800 focus:border-slate-400 focus:bg-white focus:outline-none"
                       />
                     </div>
-                    <div className="space-y-1">
-                      <label className="text-xs font-semibold text-slate-700">
-                        ระดับชั้น (Class Level)
-                      </label>
-                      <div className="relative">
-                        <select
-                          value={editForm.classLevel || ""}
-                          onChange={(e) => setEditForm({ ...editForm, classLevel: e.target.value })}
-                          className="w-full appearance-none rounded-xl border border-slate-200 bg-white px-3.5 py-2 pr-9 text-xs font-medium text-slate-800 focus:border-slate-400 focus:outline-none cursor-pointer transition"
-                        >
-                          <option value="">--- กรุณาเลือกระดับชั้น ---</option>
-                          {CLASS_LEVEL_OPTIONS.map((c) => (
-                            <option key={c.value} value={c.value}>
-                              {c.label}
-                            </option>
-                          ))}
-                        </select>
-                        <ChevronDown className="pointer-events-none absolute right-3 top-2.5 h-4 w-4 text-slate-400" />
-                      </div>
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-xs font-semibold text-slate-700">
-                        แผนกวิชา (Department)
-                      </label>
-                      <div className="relative">
-                        <select
-                          value={editForm.department || ""}
-                          onChange={(e) => {
-                            const selectedDept = e.target.value;
-                            setEditForm({
-                              ...editForm,
-                              department: selectedDept,
-                              major: "", // Reset สาขาวิชาทันทีเมื่อสลับแผนก
-                            });
-                          }}
-                          className="w-full appearance-none rounded-xl border border-slate-200 bg-white px-3.5 py-2 pr-9 text-xs font-medium text-slate-800 focus:border-slate-400 focus:outline-none cursor-pointer transition"
-                        >
-                          <option value="">--- กรุณาเลือกแผนกวิชา ---</option>
-                          {ACADEMIC_DEPARTMENTS.map((dept) => (
-                            <option key={dept.id} value={dept.name}>
-                              {dept.name}
-                            </option>
-                          ))}
-                        </select>
-                        <ChevronDown className="pointer-events-none absolute right-3 top-2.5 h-4 w-4 text-slate-400" />
-                      </div>
-                    </div>
+
                     <div className="space-y-1">
                       <label className="text-xs font-semibold text-slate-700 flex items-center justify-between">
-                        <span>สาขาวิชา (Major)</span>
-                        {!editForm.department && (
-                          <span className="text-[10px] text-amber-600 font-normal">
-                            (เลือกแผนกวิชาก่อน)
-                          </span>
-                        )}
+                        <span>แผนกวิชาต้นสังกัด (Department)</span>
+                        <span className="text-[10px] text-emerald-600 font-semibold">ล็อกเฉพาะแผนก</span>
+                      </label>
+                      <div className="flex items-center space-x-2 rounded-xl border border-emerald-200 bg-emerald-50/70 px-3.5 py-2 text-xs font-semibold text-emerald-950">
+                        <Lock className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                        <span>{DEPARTMENT_NAME}</span>
+                      </div>
+                    </div>
+
+                    <div className="sm:col-span-2 space-y-1">
+                      <label className="text-xs font-semibold text-slate-700 flex items-center justify-between">
+                        <span>ระดับชั้น / สาขาวิชา (Class Level & Major)</span>
+                        <span className="text-[10px] text-slate-400">เฉพาะหลักสูตรประจำแผนกคอมพิวเตอร์</span>
                       </label>
                       <div className="relative">
                         <select
-                          disabled={!editForm.department}
-                          value={editForm.major || ""}
-                          onChange={(e) => setEditForm({ ...editForm, major: e.target.value })}
-                          className="w-full appearance-none rounded-xl border border-slate-200 bg-white px-3.5 py-2 pr-9 text-xs font-medium text-slate-800 focus:border-slate-400 focus:outline-none cursor-pointer transition disabled:bg-slate-100/80 disabled:text-slate-400 disabled:cursor-not-allowed"
+                          value={
+                            DEPARTMENT_USER_GROUPS.find(
+                              (g) => g.classLevel === editForm.classLevel && g.major === editForm.major
+                            )?.value || (editForm.classLevel && editForm.major ? `${editForm.classLevel} ${editForm.major}` : "")
+                          }
+                          onChange={(e) => {
+                            const selectedGroup = DEPARTMENT_USER_GROUPS.find((g) => g.value === e.target.value);
+                            if (selectedGroup) {
+                              setEditForm({
+                                ...editForm,
+                                classLevel: selectedGroup.classLevel,
+                                major: selectedGroup.major,
+                                department: DEPARTMENT_NAME,
+                              });
+                            }
+                          }}
+                          className="w-full appearance-none rounded-xl border border-slate-200 bg-white px-3.5 py-2 pr-9 text-xs font-semibold text-slate-800 focus:border-slate-400 focus:outline-none cursor-pointer transition"
                         >
-                          {!editForm.department ? (
-                            <option value="">--- กรุณาเลือกแผนกวิชาก่อน ---</option>
-                          ) : (
-                            <>
-                              <option value="">--- กรุณาเลือกสาขาวิชา ---</option>
-                              {getMajorsByDepartment(editForm.department).map((major) => (
-                                <option key={major} value={major}>
-                                  {major}
-                                </option>
-                              ))}
-                            </>
-                          )}
+                          <option value="">--- กรุณาเลือกระดับชั้น / สาขาวิชา ---</option>
+                          <optgroup label="ระดับประกาศนียบัตรวิชาชีพ (ปวช.)">
+                            {DEPARTMENT_USER_GROUPS.filter((g) => g.groupType === "VOCATIONAL_CERT").map((g) => (
+                              <option key={g.value} value={g.value}>
+                                {g.label}
+                              </option>
+                            ))}
+                          </optgroup>
+                          <optgroup label="ระดับประกาศนียบัตรวิชาชีพชั้นสูง (ปวส.)">
+                            {DEPARTMENT_USER_GROUPS.filter((g) => g.groupType === "HIGH_VOCATIONAL_CERT").map((g) => (
+                              <option key={g.value} value={g.value}>
+                                {g.label}
+                              </option>
+                            ))}
+                          </optgroup>
+                          <optgroup label="อาจารย์ / บุคลากรประจำแผนก">
+                            {DEPARTMENT_USER_GROUPS.filter((g) => g.groupType === "STAFF").map((g) => (
+                              <option key={g.value} value={g.value}>
+                                {g.label}
+                              </option>
+                            ))}
+                          </optgroup>
                         </select>
                         <ChevronDown className="pointer-events-none absolute right-3 top-2.5 h-4 w-4 text-slate-400" />
                       </div>
@@ -1640,7 +1616,7 @@ export default function UserManagementTable({
                     </div>
                     <div className="space-y-1">
                       <label className="text-xs font-semibold text-slate-700">
-                        สายงานความเชี่ยวชาญหลัก
+                        สายงานความเชี่ยวชาญหลัก (7 หมวดหมู่งานซ่อม)
                       </label>
                       <div className="relative">
                         <select
@@ -1658,8 +1634,9 @@ export default function UserManagementTable({
                       </div>
                     </div>
                     <div className="sm:col-span-2 space-y-1">
-                      <label className="text-xs font-semibold text-slate-700">
-                        ศูนย์ซ่อม / สังกัดงานอาคาร
+                      <label className="text-xs font-semibold text-slate-700 flex items-center justify-between">
+                        <span>ศูนย์ซ่อม / จุดประจำการในอาคาร</span>
+                        <span className="text-[10px] text-amber-600 font-semibold">จุดประจำการประจำอาคารแผนก</span>
                       </label>
                       <div className="relative">
                         <select
@@ -1669,7 +1646,7 @@ export default function UserManagementTable({
                         >
                           {TECHNICIAN_SERVICE_CENTERS.map((c) => (
                             <option key={c.value} value={c.value}>
-                              🏢 {c.label}
+                              {c.label}
                             </option>
                           ))}
                         </select>
@@ -1681,41 +1658,22 @@ export default function UserManagementTable({
 
                 {editForm.role === Role.ADMIN && (
                   <>
-                    {/* อาคารที่รับผิดชอบหลัก */}
+                    {/* อาคารที่รับผิดชอบ */}
                     <div className="sm:col-span-2 space-y-1">
                       <label className="text-xs font-semibold text-slate-700 flex items-center justify-between">
-                        <span>อาคารที่รับผิดชอบหลัก (Assigned Building)</span>
-                        <span className="text-[10px] text-blue-600 font-medium">Scoped Authorization</span>
+                        <span>อาคารที่รับผิดชอบ (Assigned Building)</span>
+                        <span className="text-[10px] text-blue-600 font-semibold">ผูก Scoped Authorization อัตโนมัติ</span>
                       </label>
-                      <div className="relative">
-                        <select
-                          value={editForm.assignedBuildingId || ""}
-                          onChange={(e) => setEditForm({ ...editForm, assignedBuildingId: e.target.value })}
-                          className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-800 focus:border-slate-400 focus:outline-none cursor-pointer appearance-none pr-8"
-                        >
-                          <option value="">-- ไม่ระบุ / ปลดการผูกอาคาร --</option>
-                          <option value="ALL">🏢 ทุกอาคาร (แอดมินส่วนกลาง / ไม่จำกัดอาคาร)</option>
-                          {availableBuildings.map((b) => (
-                            <option key={b.id} value={b.id}>
-                              📍 [{b.code}] {b.name}
-                            </option>
-                          ))}
-                        </select>
-                        <ChevronDown className="pointer-events-none absolute right-3 top-2.5 h-4 w-4 text-slate-400" />
+                      <div className="flex items-center space-x-2 rounded-xl border border-blue-200 bg-blue-50/80 px-3.5 py-2 text-xs font-semibold text-blue-950">
+                        <Building className="h-4 w-4 text-blue-600 shrink-0" />
+                        <span>[{DEPARTMENT_BUILDING_CODE}] {DEPARTMENT_BUILDING_NAME}</span>
+                        <span className="ml-auto inline-flex items-center space-x-1 rounded-md bg-blue-100 px-2 py-0.5 text-[10px] font-bold text-blue-800">
+                          <Lock className="h-3 w-3" />
+                          <span>ล็อกประจำอาคารแผนก</span>
+                        </span>
                       </div>
                     </div>
 
-                    <div className="space-y-1">
-                      <label className="text-xs font-semibold text-slate-700">
-                        รหัสบุคลากร (Staff ID)
-                      </label>
-                      <input
-                        type="text"
-                        value={editForm.studentId || ""}
-                        onChange={(e) => setEditForm({ ...editForm, studentId: e.target.value })}
-                        className="w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3.5 py-2 text-xs font-medium text-slate-800 focus:border-slate-400 focus:bg-white focus:outline-none"
-                      />
-                    </div>
                     <div className="space-y-1">
                       <label className="text-xs font-semibold text-slate-700">
                         ตำแหน่งงาน (Position)
@@ -1735,23 +1693,27 @@ export default function UserManagementTable({
                         <ChevronDown className="pointer-events-none absolute right-3 top-2.5 h-4 w-4 text-slate-400" />
                       </div>
                     </div>
-                    <div className="sm:col-span-2 space-y-1">
+
+                    <div className="space-y-1">
                       <label className="text-xs font-semibold text-slate-700">
-                        ฝ่าย / หน่วยงาน (Department)
+                        รหัสบุคลากร (Staff ID)
                       </label>
-                      <div className="relative">
-                        <select
-                          value={editForm.department || ADMIN_DEPARTMENTS[0].value}
-                          onChange={(e) => setEditForm({ ...editForm, department: e.target.value })}
-                          className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-800 focus:border-slate-400 focus:outline-none cursor-pointer appearance-none pr-8"
-                        >
-                          {ADMIN_DEPARTMENTS.map((d) => (
-                            <option key={d.value} value={d.value}>
-                              🏢 {d.label}
-                            </option>
-                          ))}
-                        </select>
-                        <ChevronDown className="pointer-events-none absolute right-3 top-2.5 h-4 w-4 text-slate-400" />
+                      <input
+                        type="text"
+                        value={editForm.studentId || ""}
+                        onChange={(e) => setEditForm({ ...editForm, studentId: e.target.value })}
+                        className="w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3.5 py-2 text-xs font-medium text-slate-800 focus:border-slate-400 focus:bg-white focus:outline-none"
+                      />
+                    </div>
+
+                    <div className="sm:col-span-2 space-y-1">
+                      <label className="text-xs font-semibold text-slate-700 flex items-center justify-between">
+                        <span>ฝ่าย / สำนักงาน (Department)</span>
+                        <span className="text-[10px] text-blue-600 font-semibold">หน่วยงานประจำแผนก</span>
+                      </label>
+                      <div className="flex items-center space-x-2 rounded-xl border border-slate-200 bg-slate-100/80 px-3.5 py-2 text-xs font-semibold text-slate-700">
+                        <Lock className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                        <span>{ADMIN_DEPARTMENTS[0].value}</span>
                       </div>
                     </div>
                   </>
@@ -1796,9 +1758,9 @@ export default function UserManagementTable({
                 )}
 
                 {/* Reset Password (Optional) */}
-                <div className="sm:col-span-2 space-y-1 rounded-2xl border border-slate-200 bg-slate-50/50 p-3.5">
-                  <label className="text-xs font-bold text-slate-800 flex items-center space-x-1.5">
-                    <Lock className="h-3.5 w-3.5 text-blue-600" />
+                <div className="sm:col-span-2 space-y-1 rounded-md border border-zinc-200 bg-zinc-50/50 p-3">
+                  <label className="text-xs font-semibold text-zinc-800 flex items-center space-x-1.5">
+                    <Lock className="h-3.5 w-3.5 text-emerald-600" />
                     <span>ตั้งรหัสผ่านใหม่ (Reset Password)</span>
                   </label>
                   <p className="text-[11px] text-slate-400">
@@ -1823,14 +1785,14 @@ export default function UserManagementTable({
                 <button
                   type="button"
                   onClick={() => setEditingUser(null)}
-                  className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition"
+                  className="rounded-md border border-zinc-200 bg-white px-4 py-2 text-xs font-medium text-zinc-700 hover:bg-zinc-50 transition"
                 >
                   ยกเลิก
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="flex items-center space-x-2 rounded-xl bg-slate-950 px-5 py-2.5 text-xs font-bold text-white shadow hover:bg-slate-800 transition active:scale-95 disabled:opacity-50"
+                  className="flex items-center space-x-2 rounded-md bg-emerald-600 px-4 py-2 text-xs font-medium text-white shadow-xs hover:bg-emerald-700 transition disabled:opacity-50"
                 >
                   {isSubmitting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                   <span>{isSubmitting ? "กำลังบันทึก..." : "บันทึกการแก้ไข"}</span>
@@ -1846,26 +1808,26 @@ export default function UserManagementTable({
       {/* 5. Modal: ยืนยันการลบผู้ใช้ (Delete Confirmation Dialog) */}
       {/* ========================================================= */}
       {deletingUser && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-zinc-950/40 backdrop-blur-xs p-4 animate-in fade-in duration-200">
           <div className="flex min-h-full items-center justify-center py-6">
-            <div className="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl space-y-5 animate-in zoom-in-95 duration-200">
+            <div className="w-full max-w-md rounded-lg border border-zinc-200 bg-white p-5 sm:p-6 shadow-xl space-y-4 animate-in zoom-in-95 duration-200">
             {/* Header Icon */}
             <div className="flex items-center space-x-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-100 text-rose-600 shadow-sm">
-                <AlertTriangle className="h-6 w-6" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-md bg-rose-50 text-rose-600 border border-rose-200">
+                <AlertTriangle className="h-5 w-5" />
               </div>
               <div>
-                <h3 className="text-base font-bold text-slate-900">
+                <h3 className="text-sm font-semibold text-zinc-900">
                   ยืนยันการลบผู้ใช้งาน
                 </h3>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-zinc-500">
                   การกระทำนี้ไม่สามารถย้อนกลับได้
                 </p>
               </div>
             </div>
 
             {/* Target User Info */}
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 space-y-2">
+            <div className="rounded-md border border-zinc-200 bg-zinc-50 p-3 space-y-1.5">
               <div className="flex items-center justify-between">
                 <p className="text-xs font-bold text-slate-900 truncate">
                   {deletingUser.name}

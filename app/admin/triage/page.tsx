@@ -1,24 +1,26 @@
 // app/admin/triage/page.tsx
 import prisma from "@/lib/prisma";
 import UnassignedTriageTable from "@/components/admin/UnassignedTriageTable";
-import UnassignedAdminWarning from "@/components/admin/UnassignedAdminWarning";
-import BuildingFilterDropdown from "@/components/admin/BuildingFilterDropdown";
-import { Inbox, MapPin } from "lucide-react";
+import DepartmentTicketFilter from "@/components/admin/DepartmentTicketFilter";
+import { Inbox, MapPin, Building2, ShieldCheck } from "lucide-react";
 import { Metadata } from "next";
 import { getSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { Prisma } from "@prisma/client";
+import { Prisma, Category } from "@prisma/client";
+import { DEPARTMENT_BUILDING_NAME } from "@/lib/constants/department-locations";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "คัดกรองและจ่ายงานช่าง (Triage Queue) | CampusOps",
-  description: "คิวจัดสรรและจ่ายงานช่างตามความเชี่ยวชาญและระดับความเร่งด่วน",
+  title: "คัดกรองและจ่ายงานช่าง อาคารแผนกวิชาช่างเทคนิคคอมพิวเตอร์ | CampusOps",
+  description: "คิวจัดสรรและจ่ายงานช่างตามความเชี่ยวชาญและระดับความเร่งด่วน ประจำอาคารแผนก",
 };
 
 interface AdminTriagePageProps {
   searchParams?: {
-    buildingId?: string;
+    floor?: string;
+    room?: string;
+    category?: string;
   };
 }
 
@@ -28,54 +30,25 @@ export default async function AdminTriagePage({ searchParams }: AdminTriagePageP
     redirect("/login?callbackUrl=/admin/triage");
   }
 
-  const isSuperAdmin = session.role === "SUPER_ADMIN";
-
-  // 1. ดึงข้อมูลอาคารที่ดูแล
-  let managedBuildings: Array<{ id: string; code: string; name: string }> = [];
-  let allBuildingsForFilter: Array<{ id: string; code: string; name: string }> = [];
-
-  if (!isSuperAdmin) {
-    managedBuildings = await prisma.building.findMany({
-      where: { adminId: session.userId },
-      select: { id: true, code: true, name: true },
-      orderBy: { code: "asc" },
-    });
-
-    // หากไม่พบอาคารที่ผูกไว้กับ Admin คนนี้
-    if (managedBuildings.length === 0) {
-      return (
-        <UnassignedAdminWarning
-          userName={session.name}
-          userEmail={session.email}
-          userId={session.userId}
-        />
-      );
-    }
-  } else {
-    allBuildingsForFilter = await prisma.building.findMany({
-      select: { id: true, code: true, name: true },
-      orderBy: { code: "asc" },
-    });
-  }
-
-  // 2. เงื่อนไข Scope กรองใบงานที่ยังไม่ได้มอบหมาย
+  // 1. เงื่อนไข Scope กรองใบงานที่ยังไม่ได้มอบหมาย
   const ticketScopeWhere: Prisma.TicketWhereInput = {};
 
-  if (!isSuperAdmin) {
-    const managedBuildingIds = managedBuildings.map((b) => b.id);
-    const managedBuildingNames = managedBuildings.map((b) => b.name);
-    ticketScopeWhere.OR = [
-      { buildingId: { in: managedBuildingIds } },
-      { building: { in: managedBuildingNames } },
-    ];
-  } else if (searchParams?.buildingId && searchParams.buildingId !== "ALL") {
-    const selectedBld = allBuildingsForFilter.find((b) => b.id === searchParams.buildingId);
-    if (selectedBld) {
-      ticketScopeWhere.OR = [
-        { buildingId: selectedBld.id },
-        { building: selectedBld.name },
-      ];
+  if (searchParams?.floor && searchParams.floor !== "ALL") {
+    const floorNum = parseInt(searchParams.floor, 10);
+    if (!isNaN(floorNum)) {
+      ticketScopeWhere.floor = floorNum;
     }
+  }
+
+  if (searchParams?.room && searchParams.room !== "ALL") {
+    ticketScopeWhere.OR = [
+      { room: { contains: searchParams.room, mode: "insensitive" } },
+      { roomName: { contains: searchParams.room, mode: "insensitive" } },
+    ];
+  }
+
+  if (searchParams?.category && searchParams.category !== "ALL") {
+    ticketScopeWhere.category = searchParams.category as Category;
   }
 
   const [unassignedTickets, technicians] = await Promise.all([
@@ -102,61 +75,50 @@ export default async function AdminTriagePage({ searchParams }: AdminTriagePageP
         email: true,
         technicianCode: true,
         department: true,
+        specialty: true,
+        phone: true,
       },
+      orderBy: { name: "asc" },
     }),
   ]);
 
-  const selectedBuildingObj = isSuperAdmin && searchParams?.buildingId && searchParams.buildingId !== "ALL"
-    ? allBuildingsForFilter.find((b) => b.id === searchParams.buildingId)
-    : null;
-
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-100 pb-5">
+      {/* 1. Header: ศูนย์บริหารจัดการและจ่ายงานซ่อม อาคารแผนกวิชาช่างเทคนิคคอมพิวเตอร์ */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-200/80 pb-5">
         <div>
-          <div className="flex items-center space-x-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm shadow-blue-200">
-              <Inbox className="h-4 w-4" />
+          <div className="flex items-center space-x-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-b from-emerald-500 to-emerald-600 text-white shadow-[0_2px_8px_rgba(16,185,129,0.35)]">
+              <Inbox className="h-5 w-5 stroke-[1.75]" />
             </div>
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
-              คัดกรองและจ่ายงานช่าง (Triage & Work Dispatch)
-            </h1>
+            <div>
+              <h1 className="text-xl font-bold tracking-tight text-slate-900">
+                ศูนย์บริหารจัดการและจ่ายงานซ่อม อาคารแผนกวิชาช่างเทคนิคคอมพิวเตอร์
+              </h1>
+            </div>
           </div>
           <p className="mt-1 text-xs text-slate-500">
-            คัดกรองความเร่งด่วน ตรวจสอบพิกัด และมอบหมายงานให้ช่างที่มีเวรปฏิบัติการทันที
+            คิวคัดกรองความเร่งด่วน ตรวจสอบพิกัดห้องแล็บ และมอบหมายงานให้ช่างที่ตรงกับสายงานความเชี่ยวชาญ
           </p>
 
-          {/* Scoped Badge */}
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            {!isSuperAdmin ? (
-              <div className="inline-flex items-center space-x-2 rounded-xl bg-blue-50 px-3.5 py-1.5 border border-blue-200/80 text-blue-900 shadow-xs">
-                <MapPin className="h-4 w-4 text-blue-600 shrink-0" />
-                <span className="text-xs font-semibold text-blue-700">อาคารที่รับผิดชอบ:</span>
-                <span className="text-xs font-bold text-blue-950">
-                  {managedBuildings.map((b) => b.name).join(", ")}
-                </span>
-                <span className="rounded-md bg-blue-200/60 px-1.5 py-0.5 text-[10px] font-mono font-bold text-blue-800">
-                  {managedBuildings.map((b) => b.code).join(", ")}
-                </span>
-              </div>
-            ) : (
-              <div className="flex flex-wrap items-center gap-2.5">
-                <div className="inline-flex items-center space-x-1.5 rounded-xl bg-purple-50 px-3 py-1.5 border border-purple-200 text-purple-900 shadow-xs">
-                  <span className="text-xs">👑</span>
-                  <span className="text-xs font-bold text-purple-900">
-                    {selectedBuildingObj ? `กรองเฉพาะ: [${selectedBuildingObj.code}] ${selectedBuildingObj.name}` : "จ่ายงานได้ทุกอาคาร (Super Admin View)"}
-                  </span>
-                </div>
-                <BuildingFilterDropdown
-                  currentBuildingId={searchParams?.buildingId || "ALL"}
-                  buildings={allBuildingsForFilter}
-                />
-              </div>
-            )}
+          <div className="mt-3.5 flex flex-wrap items-center gap-2">
+            <div className="inline-flex items-center space-x-2 rounded-xl bg-emerald-50/90 px-3 py-1 border border-emerald-200/80 text-emerald-900 shadow-2xs">
+              <MapPin className="h-3.5 w-3.5 text-emerald-600 shrink-0 stroke-[1.75]" />
+              <span className="text-xs font-semibold">{DEPARTMENT_BUILDING_NAME}</span>
+            </div>
+
+            <div className="inline-flex items-center space-x-1.5 rounded-xl bg-slate-100/90 px-3 py-1 border border-slate-200/80 text-slate-800 text-xs font-medium shadow-2xs">
+              <ShieldCheck className="h-3.5 w-3.5 text-slate-600 stroke-[1.75]" />
+              <span>ผู้จัดสรรงาน: {session.name}</span>
+            </div>
           </div>
         </div>
       </div>
 
+      {/* 2. Filter กรองตาม ชั้น, ห้องแล็บ, และหมวดหมู่ปัญหา */}
+      <DepartmentTicketFilter />
+
+      {/* 3. ตารางคิวงานที่ยังไม่ได้มอบหมาย */}
       <UnassignedTriageTable
         tickets={unassignedTickets}
         technicians={technicians}

@@ -60,10 +60,11 @@ export async function createSession(payload: SessionPayload) {
  * ดึงข้อมูล Session ปัจจุบันจาก Cookie
  */
 export async function getSession(): Promise<SessionPayload | null> {
-  const cookie = cookies().get(SESSION_COOKIE_NAME);
-  if (!cookie?.value) return null;
-
   try {
+    const cookieStore = cookies();
+    const cookie = cookieStore.get(SESSION_COOKIE_NAME);
+    if (!cookie?.value) return null;
+
     const { payload } = await jwtVerify(cookie.value, JWT_SECRET, {
       algorithms: ["HS256"],
     });

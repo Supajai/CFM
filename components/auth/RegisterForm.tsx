@@ -73,47 +73,47 @@ export default function RegisterForm() {
   };
 
   return (
-    <div className="w-full max-w-lg rounded-3xl border border-slate-200 bg-white p-8 shadow-2xl space-y-6">
-      <div className="text-center space-y-1">
-        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-md shadow-blue-500/20">
-          <GraduationCap className="h-6 w-6" />
+    <div className="w-full max-w-lg rounded-2xl border border-slate-200/90 bg-white/95 backdrop-blur-md p-6 sm:p-8 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] hover:border-emerald-500/40 transition-all space-y-5">
+      <div className="text-center space-y-2">
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-b from-emerald-500 to-emerald-600 text-white shadow-[0_2px_10px_rgba(16,185,129,0.35)]">
+          <GraduationCap className="h-6 w-6 stroke-[1.75]" />
         </div>
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+        <h1 className="text-xl font-bold tracking-tight text-slate-900">
           ลงทะเบียนสมาชิกใหม่
         </h1>
         <p className="text-xs text-slate-500">
-          สำหรับนักศึกษาและบุคลากรเพื่อแจ้งซ่อมและติดตามประวัติ
+          สำหรับนักศึกษาและบุคลากร แผนกวิชาช่างเทคนิคคอมพิวเตอร์
         </p>
       </div>
 
       {errorMsg && (
-        <div className="flex items-center space-x-2 rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-600">
-          <AlertCircle className="h-4 w-4 shrink-0 text-rose-500" />
+        <div className="flex items-center space-x-2 rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-700 shadow-2xs">
+          <AlertCircle className="h-4 w-4 shrink-0 text-rose-600 stroke-[1.75]" />
           <span>{errorMsg}</span>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-3.5 text-xs">
+      <form onSubmit={handleSubmit} className="space-y-4 text-xs">
         <div>
-          <label className="block font-semibold text-slate-700 mb-1">
-            ชื่อ - นามสกุล <span className="text-red-500">*</span>
+          <label className="block font-semibold text-slate-700 mb-1.5">
+            ชื่อ - นามสกุล <span className="text-rose-500">*</span>
           </label>
           <div className="relative">
-            <User className="pointer-events-none absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
+            <User className="pointer-events-none absolute left-3.5 top-3 h-4 w-4 text-slate-400 stroke-[1.75]" />
             <input
               type="text"
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="เช่น ศุภวิชญ์ ไตรภาคี"
-              className="w-full rounded-xl border border-slate-200 bg-slate-50/50 pl-10 pr-3 py-2.5 font-medium text-slate-800 focus:border-slate-400 focus:bg-white focus:outline-none"
+              className="w-full h-10 rounded-xl border border-slate-300/80 bg-white pl-10 pr-3 text-xs text-slate-900 shadow-2xs focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 placeholder:text-slate-400 font-medium"
             />
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block font-semibold text-slate-700 mb-1">
+            <label className="block font-semibold text-slate-700 mb-1.5">
               รหัสนักศึกษา / บุคลากร
             </label>
             <input
@@ -121,88 +121,87 @@ export default function RegisterForm() {
               value={studentId}
               onChange={(e) => setStudentId(e.target.value)}
               placeholder="#65-0482"
-              className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2.5 font-medium text-slate-800 focus:border-slate-400 focus:bg-white focus:outline-none"
+              className="w-full h-10 rounded-xl border border-slate-300/80 bg-white px-3 text-xs font-mono font-medium text-slate-900 shadow-2xs focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 placeholder:text-slate-400"
             />
           </div>
 
           <div>
-            <label className="block font-semibold text-slate-700 mb-1">
+            <label className="block font-semibold text-slate-700 mb-1.5">
               เบอร์โทรศัพท์ติดต่อ
             </label>
             <div className="relative">
-              <Phone className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-slate-400" />
+              <Phone className="pointer-events-none absolute left-3.5 top-3 h-4 w-4 text-slate-400 stroke-[1.75]" />
               <input
                 type="tel"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="081-xxx-xxxx"
-                className="w-full rounded-xl border border-slate-200 bg-slate-50/50 pl-9 pr-3 py-2.5 font-medium text-slate-800 focus:border-slate-400 focus:bg-white focus:outline-none"
+                className="w-full h-10 rounded-xl border border-slate-300/80 bg-white pl-10 pr-3 text-xs font-mono text-slate-900 shadow-2xs focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 placeholder:text-slate-400"
               />
             </div>
           </div>
         </div>
 
         <div>
-          <label className="block font-semibold text-slate-700 mb-1">
-            คณะ / สาขาวิชา หรือหน่วยงาน
+          <label className="block font-semibold text-slate-700 mb-1.5">
+            แผนกวิชาต้นสังกัด
           </label>
           <input
             type="text"
+            readOnly
             value={department}
-            onChange={(e) => setDepartment(e.target.value)}
-            placeholder="เช่น สาขาวิชาช่างเทคนิคคอมพิวเตอร์"
-            className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2.5 font-medium text-slate-800 focus:border-slate-400 focus:bg-white focus:outline-none"
+            className="w-full h-10 rounded-xl border border-slate-200 bg-slate-50/80 px-3 text-xs text-slate-700 shadow-2xs cursor-not-allowed font-semibold"
           />
         </div>
 
         <div>
-          <label className="block font-semibold text-slate-700 mb-1">
-            อีเมลสถานศึกษา <span className="text-red-500">*</span>
+          <label className="block font-semibold text-slate-700 mb-1.5">
+            อีเมลสถานศึกษา <span className="text-rose-500">*</span>
           </label>
           <div className="relative">
-            <Mail className="pointer-events-none absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
+            <Mail className="pointer-events-none absolute left-3.5 top-3 h-4 w-4 text-slate-400 stroke-[1.75]" />
             <input
               type="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="student@campus.ac.th"
-              className="w-full rounded-xl border border-slate-200 bg-slate-50/50 pl-10 pr-3 py-2.5 font-medium text-slate-800 focus:border-slate-400 focus:bg-white focus:outline-none"
+              className="w-full h-10 rounded-xl border border-slate-300/80 bg-white pl-10 pr-3 text-xs text-slate-900 shadow-2xs focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 placeholder:text-slate-400 font-medium"
             />
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block font-semibold text-slate-700 mb-1">
-              รหัสผ่าน (ขั้นต่ำ 6 ตัว) <span className="text-red-500">*</span>
+            <label className="block font-semibold text-slate-700 mb-1.5">
+              รหัสผ่าน (ขั้นต่ำ 6 ตัว) <span className="text-rose-500">*</span>
             </label>
             <div className="relative">
-              <Lock className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-slate-400" />
+              <Lock className="pointer-events-none absolute left-3.5 top-3 h-4 w-4 text-slate-400 stroke-[1.75]" />
               <input
                 type="password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••"
-                className="w-full rounded-xl border border-slate-200 bg-slate-50/50 pl-9 pr-3 py-2.5 font-medium text-slate-800 focus:border-slate-400 focus:bg-white focus:outline-none"
+                className="w-full h-10 rounded-xl border border-slate-300/80 bg-white pl-10 pr-3 text-xs text-slate-900 shadow-2xs focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
               />
             </div>
           </div>
 
           <div>
-            <label className="block font-semibold text-slate-700 mb-1">
-              ยืนยันรหัสผ่าน <span className="text-red-500">*</span>
+            <label className="block font-semibold text-slate-700 mb-1.5">
+              ยืนยันรหัสผ่าน <span className="text-rose-500">*</span>
             </label>
             <div className="relative">
-              <Lock className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-slate-400" />
+              <Lock className="pointer-events-none absolute left-3.5 top-3 h-4 w-4 text-slate-400 stroke-[1.75]" />
               <input
                 type="password"
                 required
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="••••••"
-                className="w-full rounded-xl border border-slate-200 bg-slate-50/50 pl-9 pr-3 py-2.5 font-medium text-slate-800 focus:border-slate-400 focus:bg-white focus:outline-none"
+                className="w-full h-10 rounded-xl border border-slate-300/80 bg-white pl-10 pr-3 text-xs text-slate-900 shadow-2xs focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
               />
             </div>
           </div>
@@ -211,7 +210,7 @@ export default function RegisterForm() {
         <button
           type="submit"
           disabled={isLoading}
-          className="mt-2 flex w-full items-center justify-center space-x-2 rounded-2xl bg-blue-600 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-600/20 transition hover:bg-blue-500 active:scale-[0.98] disabled:opacity-50"
+          className="mt-2 flex w-full items-center justify-center space-x-2 h-10 rounded-xl bg-gradient-to-b from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-xs font-semibold text-white shadow-[0_2px_10px_rgba(16,185,129,0.3)] transition-all active:scale-[0.98] disabled:opacity-50 cursor-pointer"
         >
           {isLoading ? (
             <>
@@ -221,7 +220,7 @@ export default function RegisterForm() {
           ) : (
             <>
               <span>ยืนยันการสมัครสมาชิก</span>
-              <ArrowRight className="h-4 w-4" />
+              <ArrowRight className="h-4 w-4 stroke-[1.75]" />
             </>
           )}
         </button>
@@ -231,7 +230,7 @@ export default function RegisterForm() {
         มีบัญชีอยู่แล้ว?{" "}
         <Link
           href="/login"
-          className="font-bold text-slate-900 underline underline-offset-2 hover:text-blue-600 transition"
+          className="font-semibold text-emerald-700 underline underline-offset-2 hover:text-emerald-800 transition"
         >
           เข้าสู่ระบบที่นี่
         </Link>
