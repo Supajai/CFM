@@ -253,9 +253,9 @@ export default function TechnicianKanbanBoard({
   };
 
   return (
-    <div className="flex-1 flex flex-col bg-slate-50/50 min-w-0">
+    <div className="flex-1 flex flex-col bg-slate-100/90 min-w-0">
       {/* 1. Header Toolbar (เฉพาะของช่างเทคนิค: ไม่มีปุ่มสร้างใบงานใหม่) */}
-      <header className="border-b border-slate-200/90 bg-white/80 px-4 sm:px-6 py-3.5 backdrop-blur-md flex flex-wrap items-center justify-between gap-3 shrink-0">
+      <header className="border-b border-slate-200 bg-white px-4 sm:px-6 py-3.5 flex flex-wrap items-center justify-between gap-3 shrink-0">
         <div className="flex items-center space-x-3 flex-1 min-w-[280px] max-w-2xl">
           {/* Search Box */}
           <div className="relative flex-1">
@@ -266,7 +266,7 @@ export default function TechnicianKanbanBoard({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="ค้นหาใบงาน, ห้อง, หรืออุปกรณ์..."
-              className="w-full rounded-xl border border-slate-200/90 bg-slate-50/80 pl-10 pr-20 py-2 text-xs font-medium text-slate-800 placeholder-slate-400 transition focus:border-emerald-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+              className="w-full rounded-md border border-slate-300 bg-slate-50 pl-10 pr-20 py-2 text-xs font-normal text-slate-800 placeholder-slate-400 transition focus:border-emerald-700 focus:bg-white focus:outline-none focus:ring-1 focus:ring-emerald-700"
             />
             <div className="absolute right-2.5 top-2 text-[10px] py-0.5 px-1.5 text-slate-400 font-mono bg-slate-100 rounded border border-slate-200">
               Ctrl+K
@@ -278,7 +278,7 @@ export default function TechnicianKanbanBoard({
             <select
               value={selectedBuilding}
               onChange={(e) => setSelectedBuilding(e.target.value)}
-              className="rounded-xl border border-slate-200/90 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-2xs transition hover:bg-slate-50 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+              className="rounded-md border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 focus:border-emerald-700 focus:outline-none focus:ring-1 focus:ring-emerald-700"
             >
               <option value="ทั้งหมด">อาคารทั้งหมด</option>
               {BUILDINGS.filter((b) => b !== "ทั้งหมด").map((b) => (
@@ -293,10 +293,10 @@ export default function TechnicianKanbanBoard({
           <button
             type="button"
             onClick={() => setIsUrgentOnly(!isUrgentOnly)}
-            className={`flex items-center space-x-1.5 rounded-xl border px-3 py-2 text-xs font-semibold transition shrink-0 active:scale-95 ${
+            className={`flex items-center space-x-1.5 rounded-md border px-3 py-2 text-xs font-medium transition shrink-0 ${
               isUrgentOnly
-                ? "border-rose-300 bg-rose-50 text-rose-700 shadow-2xs"
-                : "border-slate-200/90 bg-white text-slate-700 hover:bg-slate-50"
+                ? "border-rose-300 bg-rose-50 text-rose-700 shadow-sm"
+                : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
             }`}
           >
             <Flame
@@ -311,13 +311,13 @@ export default function TechnicianKanbanBoard({
           <button
             type="button"
             onClick={() => setFilterMyTasksOnly(!filterMyTasksOnly)}
-            className={`flex items-center space-x-1.5 rounded-xl border px-3 py-2 text-xs font-semibold transition shrink-0 active:scale-95 ${
+            className={`flex items-center space-x-1.5 rounded-md border px-3 py-2 text-xs font-medium transition shrink-0 ${
               filterMyTasksOnly
-                ? "border-emerald-300 bg-emerald-50 text-emerald-800 shadow-2xs"
-                : "border-slate-200/90 bg-white text-slate-700 hover:bg-slate-50"
+                ? "border-emerald-300 bg-emerald-50 text-emerald-800 shadow-sm"
+                : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
             }`}
           >
-            <User className="h-3.5 w-3.5 text-emerald-600" />
+            <User className="h-3.5 w-3.5 text-emerald-700" />
             <span>{filterMyTasksOnly ? "เฉพาะงานฉัน" : "งานของฉัน"}</span>
           </button>
         </div>
@@ -332,12 +332,12 @@ export default function TechnicianKanbanBoard({
       </header>
 
       {/* 2. Sub-header & Guidance */}
-      <div className="border-b border-slate-200/80 bg-white/60 px-4 sm:px-6 py-2.5 backdrop-blur-sm flex flex-wrap items-center justify-between gap-2 text-xs">
+      <div className="border-b border-slate-200 bg-white px-4 sm:px-6 py-2.5 flex flex-wrap items-center justify-between gap-2 text-xs">
         <div className="flex items-center space-x-2 text-slate-500">
           <span>หน่วยงานซ่อมบำรุง</span>
           <span>/</span>
           <span className="font-bold text-slate-800">
-            กระดานคันบันงานช่างเทคนิค (Technician Kanban)
+            กระดานงานช่างเทคนิค
           </span>
         </div>
 
@@ -372,12 +372,12 @@ export default function TechnicianKanbanBoard({
           <div
             onDragOver={handleDragOver}
             onDrop={(e) => handleDrop(e, TicketStatus.ASSIGNED)}
-            className="flex flex-col w-full min-w-0 rounded-2xl bg-slate-100/80 border border-slate-200/80 p-3.5 sm:p-4 h-[calc(100vh-190px)] min-h-[500px] shadow-xs"
+            className="flex flex-col w-full min-w-0 rounded-lg bg-slate-50/90 border border-slate-200/80 p-3.5 sm:p-4 h-[calc(100vh-190px)] min-h-[500px] shadow-sm"
           >
             {/* ส่วนหัวคอลัมน์ (แสดงชื่อสถานะและตัวนับจำนวนงาน ไม่มีปุ่ม +) */}
             <div className="flex items-center justify-between pb-3 mb-2 border-b border-slate-200/60 shrink-0">
               <div className="flex items-center gap-2 min-w-0">
-                <span className="h-2.5 w-2.5 rounded-full bg-amber-500 animate-pulse shrink-0" />
+                <span className="h-2 w-2 rounded-full bg-slate-500 shrink-0" />
                 <span className="font-bold text-sm text-slate-800 truncate">
                   มอบหมายแล้ว / รอดำเนินการ
                 </span>
@@ -404,7 +404,7 @@ export default function TechnicianKanbanBoard({
               ))}
 
               {filteredTodo.length === 0 && (
-                <div className="rounded-xl border border-dashed border-slate-300 p-8 text-center text-xs text-slate-400">
+                <div className="rounded-md border border-dashed border-slate-300 p-8 text-center text-xs text-slate-400 font-medium">
                   ไม่มีใบงานรอดำเนินการ
                 </div>
               )}
@@ -415,16 +415,16 @@ export default function TechnicianKanbanBoard({
           <div
             onDragOver={handleDragOver}
             onDrop={(e) => handleDrop(e, TicketStatus.IN_PROGRESS)}
-            className="flex flex-col w-full min-w-0 rounded-2xl bg-blue-50/50 border border-blue-200/80 p-3.5 sm:p-4 h-[calc(100vh-190px)] min-h-[500px] shadow-xs"
+            className="flex flex-col w-full min-w-0 rounded-lg bg-slate-50/90 border border-slate-200/80 p-3.5 sm:p-4 h-[calc(100vh-190px)] min-h-[500px] shadow-sm"
           >
             {/* ส่วนหัวคอลัมน์ (แสดงชื่อสถานะและตัวนับจำนวนงาน ไม่มีปุ่ม +) */}
-            <div className="flex items-center justify-between pb-3 mb-2 border-b border-blue-200/60 shrink-0">
+            <div className="flex items-center justify-between pb-3 mb-2 border-b border-slate-200/60 shrink-0">
               <div className="flex items-center gap-2 min-w-0">
-                <span className="h-2.5 w-2.5 rounded-full bg-blue-600 animate-pulse shrink-0" />
+                <span className="h-2 w-2 rounded-full bg-amber-500 animate-pulse shrink-0" />
                 <span className="font-bold text-sm text-slate-800 truncate">
                   กำลังดำเนินการซ่อม
                 </span>
-                <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-white border border-blue-200 text-blue-700 font-mono shrink-0">
+                <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-white border border-amber-200 text-amber-800 font-mono shrink-0">
                   {filteredInProgress.length}
                 </span>
               </div>
@@ -447,7 +447,7 @@ export default function TechnicianKanbanBoard({
               ))}
 
               {filteredInProgress.length === 0 && (
-                <div className="rounded-xl border border-dashed border-blue-200/80 bg-white/50 p-8 text-center text-xs text-blue-400">
+                <div className="rounded-md border border-dashed border-slate-300 bg-white/50 p-8 text-center text-xs text-slate-400 font-medium">
                   ไม่มีงานที่กำลังซ่อมแซม
                 </div>
               )}
@@ -458,12 +458,12 @@ export default function TechnicianKanbanBoard({
           <div
             onDragOver={handleDragOver}
             onDrop={(e) => handleDrop(e, TicketStatus.RESOLVED)}
-            className="flex flex-col w-full min-w-0 rounded-2xl bg-emerald-50/40 border border-emerald-200/80 p-3.5 sm:p-4 h-[calc(100vh-190px)] min-h-[500px] shadow-xs"
+            className="flex flex-col w-full min-w-0 rounded-lg bg-slate-50/90 border border-slate-200/80 p-3.5 sm:p-4 h-[calc(100vh-190px)] min-h-[500px] shadow-sm"
           >
             {/* ส่วนหัวคอลัมน์ (แสดงชื่อสถานะและตัวนับจำนวนงาน ไม่มีปุ่ม +) */}
-            <div className="flex items-center justify-between pb-3 mb-2 border-b border-emerald-200/60 shrink-0">
+            <div className="flex items-center justify-between pb-3 mb-2 border-b border-slate-200/60 shrink-0">
               <div className="flex items-center gap-2 min-w-0">
-                <span className="h-2.5 w-2.5 rounded-full bg-emerald-600 shrink-0" />
+                <span className="h-2 w-2 rounded-full bg-emerald-600 shrink-0" />
                 <span className="font-bold text-sm text-slate-800 truncate">
                   เสร็จสิ้น / ซ่อมเสร็จแล้ว
                 </span>
@@ -501,7 +501,7 @@ export default function TechnicianKanbanBoard({
 
       {/* Task Detail Slideover Drawer */}
       {selectedTask && (
-        <div className="fixed inset-0 z-50 flex justify-end bg-slate-950/40 backdrop-blur-xs animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-50 flex justify-end bg-black/50 animate-in fade-in duration-200">
           <div className="relative w-full max-w-md bg-white p-6 shadow-2xl flex flex-col justify-between overflow-y-auto animate-in slide-in-from-right duration-200 space-y-5">
             <div>
               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
@@ -527,19 +527,19 @@ export default function TechnicianKanbanBoard({
                   {selectedTask.title}
                 </h3>
 
-                <p className="text-slate-600 leading-relaxed bg-slate-50 p-3 rounded-xl border border-slate-200/80">
+                <p className="text-slate-600 leading-relaxed bg-slate-50 p-3 rounded-lg border border-slate-200">
                   {selectedTask.description}
                 </p>
 
                 <div className="flex items-center space-x-2 text-slate-700 pt-1">
-                  <MapPin className="h-4 w-4 text-emerald-600" />
+                  <MapPin className="h-4 w-4 text-emerald-800" />
                   <span className="font-semibold">
                     ชั้น {selectedTask.floor || 1} • {selectedTask.roomName || selectedTask.room}
                   </span>
                 </div>
 
                 {selectedTask.reporter && (
-                  <div className="rounded-xl border border-slate-200/80 bg-slate-50/70 p-3 space-y-1">
+                  <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 space-y-1">
                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
                       ข้อมูลผู้แจ้งซ่อม
                     </span>
@@ -559,7 +559,7 @@ export default function TechnicianKanbanBoard({
             <div className="pt-4 border-t border-slate-100 flex items-center justify-between gap-2">
               <Link
                 href={`/tracking/${selectedTask.ticketNumber.replace("#", "")}`}
-                className="flex items-center space-x-1.5 text-xs font-semibold text-emerald-700 hover:text-emerald-800"
+                className="flex items-center space-x-1.5 text-xs font-semibold text-emerald-800 hover:text-emerald-900"
               >
                 <span>ดูหน้า Tracking ละเอียด</span>
                 <ExternalLink className="h-3.5 w-3.5" />
@@ -567,7 +567,7 @@ export default function TechnicianKanbanBoard({
               <button
                 type="button"
                 onClick={() => setSelectedTask(null)}
-                className="rounded-xl bg-slate-100 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-200"
+                className="rounded-md bg-slate-100 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-200"
               >
                 ปิด
               </button>

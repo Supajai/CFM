@@ -237,9 +237,9 @@ export default function KanbanBoard({
   };
 
   return (
-    <div className="flex-1 flex flex-col min-w-0 bg-slate-50 overflow-x-hidden">
+    <div className="flex-1 flex flex-col min-w-0 bg-slate-100/90 overflow-x-hidden">
       {/* 1. Top Bar */}
-      <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-slate-200/90 bg-white/95 backdrop-blur-md px-6 shadow-xs">
+      <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-slate-200 bg-white px-6 shadow-sm">
         {/* Search Input & Shortcuts */}
         <div className="flex items-center space-x-3 flex-1 max-w-xl">
           <div className="relative w-full">
@@ -250,9 +250,9 @@ export default function KanbanBoard({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="ค้นหาใบงาน, ครุภัณฑ์, อาคาร..."
-              className="w-full rounded-xl border border-slate-200/90 bg-slate-50/80 pl-10 pr-20 py-2 text-xs font-medium text-slate-800 placeholder-slate-400 transition focus:border-emerald-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+              className="w-full rounded-md border border-slate-200 bg-white pl-10 pr-20 py-2 text-xs font-medium text-slate-800 placeholder-slate-400 transition-colors focus:border-emerald-700 focus:outline-none focus:ring-1 focus:ring-emerald-700"
             />
-            <div className="absolute right-2.5 top-2 chip-tech text-[10px] py-0 px-1.5 text-slate-500">
+            <div className="absolute right-2.5 top-2.5 chip-tech text-[10px] py-0 px-1.5 text-slate-500">
               Ctrl + K
             </div>
           </div>
@@ -262,7 +262,7 @@ export default function KanbanBoard({
             <select
               value={selectedBuilding}
               onChange={(e) => setSelectedBuilding(e.target.value)}
-              className="rounded-xl border border-slate-200/90 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-xs transition hover:bg-slate-50 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+              className="rounded-md border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50 focus:border-emerald-700 focus:outline-none focus:ring-1 focus:ring-emerald-700"
             >
               <option value="ทั้งหมด">อาคารทั้งหมด</option>
               {BUILDINGS.filter((b) => b !== "ทั้งหมด").map((b) => (
@@ -277,25 +277,25 @@ export default function KanbanBoard({
           <button
             type="button"
             onClick={() => setIsUrgentOnly(!isUrgentOnly)}
-            className={`flex items-center space-x-1.5 rounded-xl border px-3 py-2 text-xs font-semibold transition shrink-0 active:scale-95 ${
+            className={`flex items-center space-x-1.5 rounded-md border px-3 py-2 text-xs font-medium transition-colors shrink-0 ${
               isUrgentOnly
-                ? "border-rose-300 bg-rose-50 text-rose-700 shadow-xs"
-                : "border-slate-200/90 bg-white text-slate-700 hover:bg-slate-50"
+                ? "border-rose-300 bg-rose-50 text-rose-700"
+                : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
             }`}
           >
-            <Flame className={`h-3.5 w-3.5 stroke-[1.75] ${isUrgentOnly ? "text-rose-600 fill-rose-600" : "text-slate-400"}`} />
+            <Flame className={`h-3.5 w-3.5 ${isUrgentOnly ? "text-rose-600 fill-rose-600" : "text-slate-400"}`} />
             <span>{isUrgentOnly ? "เฉพาะเร่งด่วน" : "ระดับความเร่งด่วน"}</span>
           </button>
         </div>
 
         {/* View Switcher & Notification Profile */}
         <div className="flex items-center space-x-3 ml-4">
-          <div className="flex rounded-xl bg-slate-100 p-1 text-xs font-semibold text-slate-600">
+          <div className="flex rounded-md bg-slate-100 p-1 text-xs font-medium text-slate-600">
             <button
               type="button"
               onClick={() => setActiveTab("active")}
-              className={`rounded-lg px-3 py-1 transition ${
-                activeTab === "active" ? "bg-white text-slate-900 shadow-xs font-bold" : "hover:text-slate-900"
+              className={`rounded px-3 py-1 transition-colors ${
+                activeTab === "active" ? "bg-white text-slate-900 shadow-sm font-semibold" : "hover:text-slate-900"
               }`}
             >
               ใบงานที่กำลังดำเนินงาน
@@ -303,8 +303,8 @@ export default function KanbanBoard({
             <button
               type="button"
               onClick={() => setActiveTab("archive")}
-              className={`rounded-lg px-3 py-1 transition ${
-                activeTab === "archive" ? "bg-white text-slate-900 shadow-xs font-bold" : "hover:text-slate-900"
+              className={`rounded px-3 py-1 transition-colors ${
+                activeTab === "archive" ? "bg-white text-slate-900 shadow-sm font-semibold" : "hover:text-slate-900"
               }`}
             >
               คลังประวัติ
@@ -314,40 +314,40 @@ export default function KanbanBoard({
           <div className="relative">
             <button
               type="button"
-              className="relative rounded-full p-2 text-slate-500 hover:bg-slate-100 transition"
+              className="relative rounded-md p-2 text-slate-500 hover:bg-slate-100 transition-colors"
             >
-              <Bell className="h-4 w-4 stroke-[1.75]" />
-              <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-rose-500 ring-2 ring-white" />
+              <Bell className="h-4 w-4" />
+              <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-rose-600 ring-2 ring-white" />
             </button>
           </div>
         </div>
       </header>
 
       {/* 2. Sub-header (Breadcrumb & Live Status Chips) */}
-      <div className="border-b border-slate-200/90 bg-white/70 px-6 py-2.5 backdrop-blur-md flex flex-wrap items-center justify-between gap-3 text-xs">
+      <div className="border-b border-slate-200 bg-white px-6 py-2.5 flex flex-wrap items-center justify-between gap-3 text-xs">
         <div className="flex items-center space-x-2 text-slate-500">
           <span>ฝ่ายอาคารและสถานที่</span>
           <span>/</span>
-          <span className="font-bold text-slate-800">บอร์ดคัดกรองงานซ่อม</span>
+          <span className="font-semibold text-slate-900">กระดานคัดกรองงานซ่อม</span>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
           {/* ซิงก์ข้อมูลสด */}
-          <div className="flex items-center space-x-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700 border border-emerald-200">
-            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+          <div className="flex items-center space-x-1.5 rounded-md bg-emerald-50 px-2.5 py-1 text-[11px] font-medium text-emerald-800 border border-emerald-200">
+            <span className="h-2 w-2 rounded-full bg-emerald-700" />
             <span>ซิงก์ข้อมูลสด: เชื่อมต่อแล้ว</span>
           </div>
 
           {/* SLA เฉลี่ย */}
           <div className="flex items-center space-x-1.5 text-[11px] text-slate-600">
-            <Clock className="h-3.5 w-3.5 text-emerald-600 stroke-[1.75]" />
+            <Clock className="h-3.5 w-3.5 text-slate-500" />
             <span>ระยะเวลาคัดกรองเฉลี่ย SLA:</span>
             <span className="chip-tech text-[10px] py-0.5 px-2">18น. 48ว.</span>
           </div>
 
           {/* เร่งด่วนวิกฤต */}
-          <div className="flex items-center space-x-1 rounded-full bg-rose-50 px-2.5 py-1 text-[11px] font-bold text-rose-600 border border-rose-200">
-            <Flame className="w-3 h-3 stroke-[2] animate-pulse" />
+          <div className="flex items-center space-x-1 rounded-md bg-rose-50 px-2.5 py-1 text-[11px] font-semibold text-rose-700 border border-rose-200">
+            <Flame className="w-3 h-3 text-rose-600" />
             <span>เร่งด่วนวิกฤต {initialStats.urgentCount} รายการ</span>
           </div>
         </div>
@@ -357,14 +357,14 @@ export default function KanbanBoard({
       <div className="px-6 pt-5 pb-4 flex flex-wrap items-center justify-between gap-4">
         <div>
           <div className="flex items-center space-x-2.5">
-            <h2 className="text-xl font-bold tracking-tight text-slate-900">
+            <h2 className="text-lg font-bold tracking-tight text-slate-900">
               รายการงานซ่อมบำรุงที่รอดำเนินการ
             </h2>
             <span className="chip-tech text-xs bg-emerald-50 text-emerald-800 border-emerald-200 font-bold">
               {filteredTodo.length + filteredInProgress.length + filteredDone.length} ใบงานเปิดอยู่
             </span>
           </div>
-          <p className="mt-1 text-xs text-slate-500 font-medium">
+          <p className="mt-1 text-xs text-slate-500 font-normal">
             ศูนย์กลางคัดกรองและกระจายงานซ่อมบำรุงอาคารสถานที่ • คิวงานอัปเดตแบบเรียลไทม์
           </p>
         </div>
@@ -374,9 +374,9 @@ export default function KanbanBoard({
           <button
             type="button"
             onClick={() => setShowCreateModal(true)}
-            className="btn-primary-gradient flex items-center space-x-1.5 px-4 py-2 text-xs font-semibold"
+            className="flex items-center space-x-1.5 rounded-md bg-emerald-800 hover:bg-emerald-900 text-white px-3.5 py-2 text-xs font-medium shadow-sm transition-colors"
           >
-            <Plus className="h-4 w-4 stroke-[2]" />
+            <Plus className="h-4 w-4" />
             <span>สร้างใบงานใหม่</span>
           </button>
         </div>
@@ -389,15 +389,15 @@ export default function KanbanBoard({
           <div
             onDragOver={handleDragOver}
             onDrop={(e) => handleDrop(e, TicketStatus.ASSIGNED)}
-            className="rounded-2xl border border-slate-200/90 bg-slate-100/60 backdrop-blur-sm p-4 min-h-[520px] flex flex-col shadow-xs"
+            className="rounded-lg border border-slate-200/80 bg-slate-50/90 p-4 min-h-[520px] flex flex-col shadow-sm"
           >
-            <div className="flex items-center justify-between pb-3.5 mb-3.5 border-b border-slate-200/80">
+            <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-200">
               <div className="flex items-center space-x-2">
-                <span className="h-2.5 w-2.5 rounded-full bg-amber-500 animate-pulse" />
-                <h3 className="text-xs font-bold text-slate-900 tracking-tight">
+                <span className="h-2 w-2 rounded-full bg-slate-500" />
+                <h3 className="text-xs font-semibold text-slate-900 tracking-tight">
                   มอบหมายแล้ว / รอดำเนินการ
                 </h3>
-                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-amber-100 text-[11px] font-bold text-amber-800 border border-amber-200">
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-slate-200 text-[11px] font-semibold text-slate-700">
                   {filteredTodo.length}
                 </span>
               </div>
@@ -405,9 +405,9 @@ export default function KanbanBoard({
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(true)}
-                  className="p-1.5 rounded-lg hover:bg-slate-200 hover:text-slate-700 transition"
+                  className="p-1 rounded-md hover:bg-slate-200 hover:text-slate-700 transition-colors"
                 >
-                  <Plus className="h-4 w-4 stroke-[2]" />
+                  <Plus className="h-4 w-4" />
                 </button>
               </div>
             </div>
@@ -424,7 +424,7 @@ export default function KanbanBoard({
               ))}
 
               {filteredTodo.length === 0 && (
-                <div className="rounded-xl border border-dashed border-slate-300 p-8 text-center text-xs text-slate-400 font-medium">
+                <div className="rounded-md border border-dashed border-slate-300 p-8 text-center text-xs text-slate-400 font-medium">
                   ไม่มีใบงานรอดำเนินการ
                 </div>
               )}
@@ -435,15 +435,15 @@ export default function KanbanBoard({
           <div
             onDragOver={handleDragOver}
             onDrop={(e) => handleDrop(e, TicketStatus.IN_PROGRESS)}
-            className="rounded-2xl border border-blue-200/90 bg-blue-50/40 backdrop-blur-sm p-4 min-h-[520px] flex flex-col shadow-xs"
+            className="rounded-lg border border-slate-200/80 bg-slate-50/90 p-4 min-h-[520px] flex flex-col shadow-sm"
           >
-            <div className="flex items-center justify-between pb-3.5 mb-3.5 border-b border-blue-200/70">
+            <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-200">
               <div className="flex items-center space-x-2">
-                <span className="h-2.5 w-2.5 rounded-full bg-blue-600 animate-pulse" />
-                <h3 className="text-xs font-bold text-slate-900 tracking-tight">
+                <span className="h-2 w-2 rounded-full bg-amber-500" />
+                <h3 className="text-xs font-semibold text-slate-900 tracking-tight">
                   กำลังดำเนินการซ่อม
                 </h3>
-                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-200 text-[11px] font-bold text-blue-900 border border-blue-300">
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-amber-100 text-[11px] font-semibold text-amber-800 border border-amber-200">
                   {filteredInProgress.length}
                 </span>
               </div>
@@ -451,9 +451,9 @@ export default function KanbanBoard({
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(true)}
-                  className="p-1.5 rounded-lg hover:bg-blue-100 hover:text-slate-700 transition"
+                  className="p-1 rounded-md hover:bg-slate-200 hover:text-slate-700 transition-colors"
                 >
-                  <Plus className="h-4 w-4 stroke-[2]" />
+                  <Plus className="h-4 w-4" />
                 </button>
               </div>
             </div>
@@ -470,8 +470,8 @@ export default function KanbanBoard({
               ))}
 
               {/* Drop hint box */}
-              <div className="rounded-xl border border-dashed border-blue-300 bg-white/70 p-3 text-center text-xs text-blue-700 font-semibold flex items-center justify-center space-x-1.5 transition hover:bg-white shadow-xs">
-                <span>ลากใบงานลำดับความสำคัญถัดไปมาวางที่นี่</span>
+              <div className="rounded-md border border-dashed border-slate-300 bg-white p-3 text-center text-xs text-slate-500 font-medium flex items-center justify-center space-x-1.5 transition-colors hover:border-slate-400">
+                <span>ลากใบงานมาวางที่นี่เพื่อเริ่มดำเนินการ</span>
               </div>
             </div>
           </div>
@@ -480,15 +480,15 @@ export default function KanbanBoard({
           <div
             onDragOver={handleDragOver}
             onDrop={(e) => handleDrop(e, TicketStatus.RESOLVED)}
-            className="rounded-2xl border border-emerald-200/90 bg-emerald-50/30 backdrop-blur-sm p-4 min-h-[520px] flex flex-col shadow-xs"
+            className="rounded-lg border border-slate-200/80 bg-slate-50/90 p-4 min-h-[520px] flex flex-col shadow-sm"
           >
-            <div className="flex items-center justify-between pb-3.5 mb-3.5 border-b border-emerald-200/70">
+            <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-200">
               <div className="flex items-center space-x-2">
-                <span className="h-2.5 w-2.5 rounded-full bg-emerald-600" />
-                <h3 className="text-xs font-bold text-slate-900 tracking-tight">
+                <span className="h-2 w-2 rounded-full bg-emerald-700" />
+                <h3 className="text-xs font-semibold text-slate-900 tracking-tight">
                   เสร็จสิ้น / ซ่อมเสร็จแล้ว
                 </h3>
-                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-200 text-[11px] font-bold text-emerald-900 border border-emerald-300">
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-100 text-[11px] font-semibold text-emerald-800 border border-emerald-200">
                   {filteredDone.length}
                 </span>
               </div>
@@ -496,7 +496,7 @@ export default function KanbanBoard({
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(true)}
-                  className="p-1.5 rounded-lg hover:bg-emerald-100 hover:text-slate-700 transition"
+                  className="p-1 rounded-md hover:bg-slate-200 hover:text-slate-700 transition-colors"
                 >
                   <Plus className="h-4 w-4 stroke-[2]" />
                 </button>
@@ -525,7 +525,7 @@ export default function KanbanBoard({
       </div>
 
       {/* 5. Bottom Operator Status Bar */}
-      <footer className="sticky bottom-0 z-20 border-t border-slate-200/90 bg-white/95 backdrop-blur-md px-6 py-2.5 flex flex-wrap items-center justify-between gap-4 text-xs shadow-xs">
+      <footer className="sticky bottom-0 z-20 border-t border-slate-200 bg-white px-6 py-2.5 flex flex-wrap items-center justify-between gap-4 text-xs shadow-sm">
         <div className="flex items-center space-x-6">
           <div className="flex items-center space-x-2">
             <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -557,7 +557,7 @@ export default function KanbanBoard({
           <button
             type="button"
             onClick={() => alert("ระบบสร้างและส่งออกรายงานบันทึกเวรประจำวัน (.csv / .pdf)")}
-            className="flex items-center space-x-1.5 rounded-xl border border-slate-200/90 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 transition shadow-xs"
+            className="flex items-center space-x-1.5 rounded-md border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 transition shadow-sm"
           >
             <Download className="h-3.5 w-3.5 stroke-[1.75]" />
             <span>ส่งออกบันทึกเวร</span>
@@ -567,7 +567,7 @@ export default function KanbanBoard({
 
       {/* 6. Ticket Detail Drawer / Modal */}
       {selectedTicket && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4">
           <div className="w-full max-w-xl card-elevated p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200 space-y-5">
             {/* Header */}
             <div className="flex items-start justify-between border-b border-slate-100 pb-3.5">
@@ -688,7 +688,7 @@ export default function KanbanBoard({
                 </button>
                 <Link
                   href={`/tracking/${selectedTicket.ticketNumber.replace("#", "")}`}
-                  className="ml-auto inline-flex items-center space-x-1.5 rounded-xl bg-slate-900 px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-slate-800 transition shadow-xs"
+                  className="ml-auto inline-flex items-center space-x-1.5 rounded-md bg-slate-900 px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-slate-800 transition shadow-sm"
                 >
                   <span>ดูหน้าติดตาม</span>
                   <ExternalLink className="h-3.5 w-3.5 stroke-[1.75]" />

@@ -9,6 +9,8 @@ import {
 import { Metadata } from "next";
 import ResolvedWorkArchive from "@/components/technician/ResolvedWorkArchive";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "ประวัติงานที่ซ่อมเสร็จสิ้น (Resolved History) | CampusOps",
   description: "ประวัติผลงานการซ่อมแซมและคะแนนความพึงพอใจจากผู้แจ้ง",
@@ -55,7 +57,7 @@ export default async function TechnicianHistoryPage() {
             </div>
 
             <div className="pt-2 flex flex-wrap items-center gap-2">
-              <div className="inline-flex items-center space-x-2 rounded-xl bg-emerald-50/90 px-3 py-1.5 border border-emerald-200/90 text-emerald-900 shadow-xs">
+              <div className="inline-flex items-center space-x-2 rounded-xl bg-emerald-50/90 px-3 py-1.5 border border-emerald-200/90 text-emerald-900 shadow-sm">
                 <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 stroke-[1.75]" />
                 <span className="text-xs font-semibold">ปิดงานสมบูรณ์แล้ว</span>
                 <span className="chip-tech text-[10px] text-emerald-900 bg-white border-emerald-200 py-0.5 px-2">
@@ -66,7 +68,7 @@ export default async function TechnicianHistoryPage() {
           </div>
 
           <div className="shrink-0 flex items-center">
-            <span className="chip-tech text-xs font-bold text-slate-800 bg-slate-100/90 border-slate-200/90 px-3 py-1.5 rounded-xl shadow-xs">
+            <span className="chip-tech text-xs font-bold text-slate-800 bg-slate-100/90 border-slate-200/90 px-3 py-1.5 rounded-xl shadow-sm">
               เกณฑ์ความสำเร็จ: <strong className="text-emerald-700 font-mono">100% Verified</strong>
             </span>
           </div>

@@ -1,4 +1,4 @@
-// components/admin/UnassignedAdminWarning.tsx
+﻿// components/admin/UnassignedAdminWarning.tsx
 import React from "react";
 import Link from "next/link";
 import { ShieldAlert, Building2, ArrowLeft, Mail, AlertTriangle } from "lucide-react";
@@ -17,14 +17,12 @@ export default function UnassignedAdminWarning({
     <div className="p-4 sm:p-6 lg:p-8 max-w-2xl mx-auto my-12">
       <div className="card-elevated p-8 sm:p-10 text-center space-y-6 relative overflow-hidden">
         {/* Amber status glow */}
-        <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-48 h-48 bg-amber-400/10 rounded-full blur-3xl pointer-events-none" />
-
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-600 border border-amber-500/20 shadow-xs relative">
-          <ShieldAlert className="h-7 w-7" strokeWidth={1.75} />
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-lg bg-amber-50 text-amber-600 border border-amber-200 shadow-sm relative">
+          <ShieldAlert className="h-6 w-6" strokeWidth={1.75} />
         </div>
 
         <div className="space-y-2 max-w-md mx-auto">
-          <div className="inline-flex items-center space-x-1.5 chip-tech text-amber-800 bg-amber-50/90 border-amber-200">
+          <div className="inline-flex items-center space-x-1.5 rounded-md px-2 py-0.5 text-xs text-amber-800 bg-amber-50 border border-amber-200">
             <Building2 className="h-3.5 w-3.5 text-amber-600" strokeWidth={1.75} />
             <span>Scoped Building Authorization</span>
           </div>
@@ -37,7 +35,7 @@ export default function UnassignedAdminWarning({
         </div>
 
         {/* User Info Card */}
-        <div className="rounded-2xl border border-slate-200/90 bg-slate-50/60 backdrop-blur-sm p-5 max-w-md mx-auto text-left space-y-3 text-xs">
+        <div className="rounded-lg border border-slate-200 bg-slate-50 p-5 max-w-md mx-auto text-left space-y-3 text-xs">
           <div className="flex items-center justify-between border-b border-slate-200/80 pb-2.5">
             <span className="text-slate-500 font-medium">ชื่อผู้ดูแล:</span>
             <span className="font-semibold text-slate-900">{userName || "ไม่ระบุ"}</span>
@@ -65,7 +63,7 @@ export default function UnassignedAdminWarning({
           </a>
           <Link
             href="/student/dashboard"
-            className="w-full sm:w-auto inline-flex items-center justify-center space-x-2 rounded-xl border border-slate-200/90 bg-white/90 px-5 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:border-slate-300 shadow-xs transition-all active:scale-[0.98]"
+            className="w-full sm:w-auto inline-flex items-center justify-center space-x-2 rounded-xl border border-slate-200/90 bg-white/90 px-5 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:border-slate-300 shadow-sm transition-all active:scale-[0.98]"
           >
             <ArrowLeft className="h-4 w-4" strokeWidth={1.75} />
             <span>กลับสู่หน้าแรก</span>

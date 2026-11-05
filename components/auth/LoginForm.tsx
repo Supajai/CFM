@@ -115,28 +115,28 @@ export default function LoginForm() {
   };
 
   return (
-    <div className="w-full max-w-md rounded-2xl border border-slate-200/90 bg-white/95 backdrop-blur-md p-6 sm:p-8 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] hover:border-emerald-500/40 transition-all space-y-6">
+    <div className="bg-white/95 backdrop-blur-md border border-slate-200/80 rounded-2xl p-8 shadow-xl max-w-md w-full space-y-6 relative z-10">
       {/* Brand Header */}
       <div className="text-center space-y-2">
-        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-b from-emerald-500 to-emerald-600 text-white shadow-[0_2px_10px_rgba(16,185,129,0.35)]">
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-700 text-white shadow-md shadow-emerald-700/20">
           <Wrench className="h-6 w-6 stroke-[1.75]" />
         </div>
         <h1 className="text-xl font-bold tracking-tight text-slate-900">
           เข้าสู่ระบบ CampusOps
         </h1>
         <p className="text-xs text-slate-500">
-          ระบบบริหารจัดการและแจ้งซ่อมประจำอาคารแผนกวิชาช่างเทคนิคคอมพิวเตอร์
+          ระบบบริหารจัดการและแจ้งซ่อมประจำอาคารแผนกเทคโนโลยีคอมพิวเตอร์
         </p>
       </div>
 
       {/* Callback Notice Alert (หากถูกส่งมาจากหน้าที่ต้องสงวนสิทธิ์ เช่น /report) */}
       {callbackUrl && (
-        <div className="flex items-start space-x-3 rounded-xl border border-amber-200/80 bg-amber-50/90 p-3.5 text-xs text-amber-900 shadow-2xs animate-in fade-in duration-300">
+        <div className="flex items-start space-x-3 rounded-xl border border-amber-200 bg-amber-50 p-3.5 text-xs text-amber-900 shadow-2xs animate-in fade-in duration-300">
           <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-800">
             <Lock className="h-3.5 w-3.5" />
           </div>
           <div className="space-y-0.5">
-            <p className="font-bold text-amber-950">
+            <p className="font-semibold text-amber-950">
               {callbackUrl.startsWith("/report")
                 ? "กรุณาเข้าสู่ระบบก่อนทำรายการแจ้งซ่อม"
                 : callbackUrl.startsWith("/super-admin")
@@ -161,13 +161,13 @@ export default function LoginForm() {
       )}
 
       {/* Role Switcher for Demo / Presentation */}
-      <div className="rounded-xl border border-slate-200/80 bg-slate-50/80 p-3.5 space-y-2.5 shadow-2xs">
+      <div className="rounded-xl border border-slate-200/80 bg-slate-50/80 p-3.5 space-y-2.5">
         <div className="flex items-center justify-between">
-          <span className="text-[11px] font-bold text-slate-700 flex items-center space-x-1.5">
-            <Sparkles className="h-3.5 w-3.5 text-amber-500 stroke-[1.75]" />
+          <span className="text-[11px] font-semibold text-slate-700 flex items-center space-x-1.5">
+            <Sparkles className="h-3.5 w-3.5 text-emerald-600 stroke-[1.75]" />
             <span>ปุ่มลัดสลับ Role ทดสอบ (Demo Switcher)</span>
           </span>
-          <span className="font-mono text-[10px] font-semibold bg-slate-200/80 text-slate-700 px-1.5 py-0.5 rounded">
+          <span className="font-mono text-[10px] font-bold bg-slate-200/80 text-slate-700 px-2 py-0.5 rounded-md">
             PW: 123456
           </span>
         </div>
@@ -182,10 +182,10 @@ export default function LoginForm() {
                 key={acc.email}
                 type="button"
                 onClick={() => handleSelectDemo(acc.email)}
-                className={`flex flex-col text-left p-2.5 rounded-xl border text-xs transition-all cursor-pointer ${
+                className={`flex flex-col text-left py-2 px-3 rounded-xl border text-xs transition-all active:scale-[0.98] cursor-pointer ${
                   isSelected
-                    ? "border-emerald-500 bg-emerald-50/80 text-emerald-950 ring-1 ring-emerald-500/30 shadow-2xs font-semibold"
-                    : "border-slate-200/90 bg-white hover:bg-slate-50 hover:border-slate-300 text-slate-700"
+                    ? "border-emerald-500 bg-emerald-50/80 text-emerald-950 font-bold ring-2 ring-emerald-500 shadow-sm"
+                    : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:border-slate-300"
                 }`}
               >
                 <div className="flex items-center space-x-1.5 font-medium">
@@ -216,14 +216,14 @@ export default function LoginForm() {
             อีเมลสถานศึกษา
           </label>
           <div className="relative">
-            <Mail className="pointer-events-none absolute left-3.5 top-3 h-4 w-4 text-slate-400 stroke-[1.75]" />
+            <Mail className="pointer-events-none absolute left-3.5 top-3.5 h-4 w-4 text-slate-400 stroke-[1.75]" />
             <input
               type="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="example@campus.ac.th"
-              className="w-full h-10 rounded-xl border border-slate-300/80 bg-white pl-10 pr-3 text-xs text-slate-900 shadow-2xs focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 placeholder:text-slate-400 font-medium"
+              className="w-full h-11 rounded-xl border border-slate-200 bg-white pl-10 pr-3 text-xs text-slate-900 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 placeholder:text-slate-400 font-medium transition-all"
             />
           </div>
         </div>
@@ -234,19 +234,19 @@ export default function LoginForm() {
             <span className="font-mono text-[10px] text-slate-400">เริ่มต้น: 123456</span>
           </div>
           <div className="relative">
-            <Lock className="pointer-events-none absolute left-3.5 top-3 h-4 w-4 text-slate-400 stroke-[1.75]" />
+            <Lock className="pointer-events-none absolute left-3.5 top-3.5 h-4 w-4 text-slate-400 stroke-[1.75]" />
             <input
               type={showPassword ? "text" : "password"}
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full h-10 rounded-xl border border-slate-300/80 bg-white pl-10 pr-10 text-xs text-slate-900 shadow-2xs focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 font-medium"
+              className="w-full h-11 rounded-xl border border-slate-200 bg-white pl-10 pr-10 text-xs text-slate-900 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 font-medium transition-all"
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-3 text-slate-400 hover:text-slate-600"
+              className="absolute right-3.5 top-3.5 text-slate-400 hover:text-slate-600"
             >
               {showPassword ? <EyeOff className="h-4 w-4 stroke-[1.75]" /> : <Eye className="h-4 w-4 stroke-[1.75]" />}
             </button>
@@ -256,7 +256,7 @@ export default function LoginForm() {
         <button
           type="submit"
           disabled={isLoading}
-          className="flex w-full items-center justify-center space-x-2 h-10 rounded-xl bg-gradient-to-b from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-xs font-semibold text-white shadow-[0_2px_10px_rgba(16,185,129,0.3)] transition-all active:scale-[0.98] disabled:opacity-50 cursor-pointer"
+          className="flex w-full items-center justify-center space-x-2 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white rounded-xl py-3 text-xs font-bold shadow-lg shadow-emerald-700/25 active:scale-[0.98] transition-all disabled:opacity-50 cursor-pointer"
         >
           {isLoading ? (
             <>

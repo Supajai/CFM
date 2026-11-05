@@ -1,4 +1,4 @@
-// components/admin/BuildingFilterDropdown.tsx
+﻿// components/admin/BuildingFilterDropdown.tsx
 "use client";
 
 import React from "react";
@@ -36,7 +36,7 @@ export default function BuildingFilterDropdown({
         <select
           value={currentBuildingId}
           onChange={handleSelect}
-          className="appearance-none rounded-xl border border-slate-200/90 bg-white/95 backdrop-blur-md py-2 pl-9 pr-9 text-xs font-semibold text-slate-800 shadow-xs hover:border-emerald-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all cursor-pointer"
+          className="appearance-none rounded-md border border-slate-300 bg-white py-2 pl-9 pr-9 text-xs font-medium text-slate-800 shadow-sm hover:border-slate-400 focus:border-emerald-700 focus:outline-none focus:ring-1 focus:ring-emerald-700 transition cursor-pointer"
         >
           <option value="ALL">อาคารทั้งหมด (All Buildings)</option>
           {buildings.map((b) => (

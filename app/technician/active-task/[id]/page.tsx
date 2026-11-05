@@ -8,6 +8,8 @@ import { ArrowLeft, AlertCircle, Wrench } from "lucide-react";
 import ActiveTaskScreen from "@/components/technician/ActiveTaskScreen";
 import { Metadata } from "next";
 
+export const dynamic = "force-dynamic";
+
 interface PageProps {
   params: {
     id: string;

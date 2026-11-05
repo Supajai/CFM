@@ -1,4 +1,4 @@
-// components/admin/BuildingManagementSection.tsx
+﻿// components/admin/BuildingManagementSection.tsx
 "use client";
 
 import React, { useState, useMemo } from "react";
@@ -319,7 +319,7 @@ export default function BuildingManagementSection({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="ค้นหาชื่ออาคาร, รหัส (BLD-..), โซน, หรือผู้ดูแล..."
-              className="w-full h-9 rounded-xl border border-slate-200/90 bg-slate-50/80 pl-9 pr-3 py-1 text-xs font-medium text-slate-900 shadow-xs focus:border-emerald-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 placeholder:text-slate-400"
+              className="w-full h-9 rounded-xl border border-slate-200/90 bg-slate-50/80 pl-9 pr-3 py-1 text-xs font-medium text-slate-900 shadow-sm focus:border-emerald-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 placeholder:text-slate-400"
             />
           </div>
 
@@ -329,7 +329,7 @@ export default function BuildingManagementSection({
               <select
                 value={selectedZoneFilter}
                 onChange={(e) => setSelectedZoneFilter(e.target.value)}
-                className="h-9 appearance-none rounded-xl border border-slate-200/90 bg-white px-3 pr-8 text-xs font-semibold text-slate-800 shadow-xs focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 cursor-pointer"
+                className="h-9 appearance-none rounded-xl border border-slate-200/90 bg-white px-3 pr-8 text-xs font-semibold text-slate-800 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 cursor-pointer"
               >
                 <option value="ALL">ทุกโซนพื้นที่ (All Zones)</option>
                 {uniqueZones.map((z) => (
@@ -439,13 +439,13 @@ export default function BuildingManagementSection({
       {/* Modal: เพิ่ม / แก้ไขอาคาร (Add / Edit Modal) */}
       {/* ========================================================= */}
       {showModal && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/50 p-4 animate-in fade-in duration-200">
           <div className="flex min-h-full items-center justify-center py-6">
             <div className="w-full max-w-lg card-elevated p-6 sm:p-7 shadow-2xl space-y-5 animate-in zoom-in-95 duration-200">
               {/* Header */}
               <div className="flex items-start justify-between border-b border-slate-100 pb-3.5">
                 <div className="flex items-center space-x-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 text-white shadow-md shadow-emerald-500/20">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-md bg-emerald-800 text-white shadow-sm">
                     <Building className="h-5 w-5 stroke-[1.75]" />
                   </div>
                   <div>
@@ -481,7 +481,7 @@ export default function BuildingManagementSection({
                       value={formData.code}
                       onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
                       placeholder="เช่น BLD-03 หรือ WS-04"
-                      className="w-full h-9 rounded-xl border border-slate-200/90 bg-white px-3 py-1 font-mono text-xs font-bold text-slate-900 shadow-xs focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 uppercase"
+                      className="w-full h-9 rounded-xl border border-slate-200/90 bg-white px-3 py-1 font-mono text-xs font-bold text-slate-900 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 uppercase"
                     />
                   </div>
 
@@ -500,7 +500,7 @@ export default function BuildingManagementSection({
                         setFormData({ ...formData, totalFloors: parseInt(e.target.value) || 1 })
                       }
                       placeholder="เช่น 4"
-                      className="w-full h-9 rounded-xl border border-slate-200/90 bg-white px-3 py-1 text-xs font-semibold text-slate-900 shadow-xs focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                      className="w-full h-9 rounded-xl border border-slate-200/90 bg-white px-3 py-1 text-xs font-semibold text-slate-900 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
                     />
                   </div>
 
@@ -515,7 +515,7 @@ export default function BuildingManagementSection({
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       placeholder="เช่น อาคาร 3 - สาขาวิชาช่างเทคนิคคอมพิวเตอร์"
-                      className="w-full h-9 rounded-xl border border-slate-200/90 bg-white px-3 py-1 text-xs font-medium text-slate-900 shadow-xs focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                      className="w-full h-9 rounded-xl border border-slate-200/90 bg-white px-3 py-1 text-xs font-medium text-slate-900 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
                     />
                   </div>
 
@@ -528,7 +528,7 @@ export default function BuildingManagementSection({
                       <select
                         value={formData.zone}
                         onChange={(e) => setFormData({ ...formData, zone: e.target.value })}
-                        className="w-full h-9 appearance-none rounded-xl border border-slate-200/90 bg-white px-3 pr-8 text-xs font-semibold text-slate-900 shadow-xs focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 cursor-pointer"
+                        className="w-full h-9 appearance-none rounded-xl border border-slate-200/90 bg-white px-3 pr-8 text-xs font-semibold text-slate-900 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 cursor-pointer"
                       >
                         {COMMON_ZONES.map((z) => (
                           <option key={z} value={z}>
@@ -551,7 +551,7 @@ export default function BuildingManagementSection({
                         onChange={(e) =>
                           setFormData({ ...formData, adminId: e.target.value || null })
                         }
-                        className="w-full h-9 appearance-none rounded-xl border border-slate-200/90 bg-white px-3 pr-8 text-xs font-semibold text-slate-900 shadow-xs focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 cursor-pointer"
+                        className="w-full h-9 appearance-none rounded-xl border border-slate-200/90 bg-white px-3 pr-8 text-xs font-semibold text-slate-900 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 cursor-pointer"
                       >
                         <option value="">--- ไม่ระบุ / แอดมินกลาง ---</option>
                         {admins.map((a) => (
@@ -575,7 +575,7 @@ export default function BuildingManagementSection({
                         type="button"
                         onClick={handleGetCurrentLocation}
                         disabled={isLocating}
-                        className="flex items-center space-x-1 rounded-xl bg-white px-3 py-1 text-[11px] font-semibold text-slate-700 border border-slate-200/90 hover:bg-slate-50 transition shadow-xs disabled:opacity-50"
+                        className="flex items-center space-x-1 rounded-xl bg-white px-3 py-1 text-[11px] font-semibold text-slate-700 border border-slate-200/90 hover:bg-slate-50 transition shadow-sm disabled:opacity-50"
                       >
                         {isLocating ? (
                           <Loader2 className="h-3 w-3 animate-spin" />
@@ -600,7 +600,7 @@ export default function BuildingManagementSection({
                             })
                           }
                           placeholder="เช่น 15.2284"
-                          className="w-full h-8 rounded-lg border border-slate-200/90 bg-white px-2.5 py-1 font-mono text-xs text-slate-900 shadow-xs focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                          className="w-full h-8 rounded-lg border border-slate-200/90 bg-white px-2.5 py-1 font-mono text-xs text-slate-900 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                         />
                       </div>
                       <div>
@@ -616,7 +616,7 @@ export default function BuildingManagementSection({
                             })
                           }
                           placeholder="เช่น 104.8592"
-                          className="w-full h-8 rounded-lg border border-slate-200/90 bg-white px-2.5 py-1 font-mono text-xs text-slate-900 shadow-xs focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                          className="w-full h-8 rounded-lg border border-slate-200/90 bg-white px-2.5 py-1 font-mono text-xs text-slate-900 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                         />
                       </div>
                     </div>
@@ -628,7 +628,7 @@ export default function BuildingManagementSection({
                   <button
                     type="button"
                     onClick={() => setShowModal(false)}
-                    className="rounded-xl border border-slate-200/90 bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition shadow-xs"
+                    className="rounded-xl border border-slate-200/90 bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition shadow-sm"
                   >
                     ยกเลิก
                   </button>
@@ -651,12 +651,12 @@ export default function BuildingManagementSection({
       {/* Modal: ยืนยันการลบอาคาร (Delete Confirmation Dialog) */}
       {/* ========================================================= */}
       {deletingBuilding && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/50 p-4 animate-in fade-in duration-200">
           <div className="flex min-h-full items-center justify-center py-6">
             <div className="w-full max-w-md card-elevated p-6 shadow-2xl space-y-4 animate-in zoom-in-95 duration-200">
               {/* Header Icon */}
               <div className="flex items-center space-x-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-rose-50 text-rose-600 border border-rose-200/90 shadow-xs">
+                <div className="flex h-10 w-10 items-center justify-center rounded-md bg-rose-50 text-rose-600 border border-rose-200 shadow-sm">
                   <AlertTriangle className="h-5 w-5 stroke-[1.75]" />
                 </div>
                 <div>
@@ -720,7 +720,7 @@ export default function BuildingManagementSection({
                 <button
                   type="button"
                   onClick={() => setDeletingBuilding(null)}
-                  className="rounded-xl border border-slate-200/90 bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition shadow-xs"
+                  className="rounded-xl border border-slate-200/90 bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition shadow-sm"
                 >
                   ยกเลิก
                 </button>
@@ -728,7 +728,7 @@ export default function BuildingManagementSection({
                   type="button"
                   onClick={handleConfirmDelete}
                   disabled={isSubmitting}
-                  className="flex items-center space-x-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 px-4 py-2 text-xs font-bold text-white shadow-xs transition active:scale-95 disabled:opacity-50"
+                  className="flex items-center space-x-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 px-4 py-2 text-xs font-bold text-white shadow-sm transition active:scale-95 disabled:opacity-50"
                 >
                   {isSubmitting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                   <span>{isSubmitting ? "กำลังลบ..." : "ยืนยันการลบอาคาร"}</span>

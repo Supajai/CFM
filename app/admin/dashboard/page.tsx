@@ -191,44 +191,43 @@ export default async function AdminDashboardPage({ searchParams }: AdminDashboar
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto">
-      {/* 1. Header: ศูนย์บริหารจัดการและจ่ายงานซ่อม อาคารแผนกวิชาช่างเทคนิคคอมพิวเตอร์ */}
-      <div className="card-elevated p-6 sm:p-8 relative overflow-hidden bg-gradient-to-r from-white via-white to-emerald-50/30">
-        <div className="absolute top-0 right-0 w-80 h-80 bg-radial-glow pointer-events-none -mr-20 -mt-20 opacity-60" />
-        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+      {/* 1. Header: ศูนย์บริหารจัดการและจ่ายงานซ่อม อาคารแผนกเทคโนโลยีคอมพิวเตอร์ */}
+      <div className="card-elevated p-6 sm:p-7 relative overflow-hidden">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 relative z-10">
           <div className="space-y-3">
             <div className="flex items-center space-x-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 text-white shadow-md shadow-emerald-500/20">
-                <Building2 className="h-5 w-5 stroke-[1.75]" />
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-600 to-teal-700 text-white shadow-md shadow-emerald-700/20">
+                <Building2 className="h-5 w-5" />
               </div>
               <div>
                 <div className="flex items-center space-x-2">
                   <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
                     ศูนย์บริหารจัดการและจ่ายงานซ่อม
                   </h1>
-                  <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200">
-                    <Activity className="w-3 h-3 mr-1 text-emerald-600 animate-pulse stroke-[2]" /> Live Hub
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/80 shadow-2xs">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5 animate-pulse" /> ระบบออนไลน์
                   </span>
                 </div>
-                <p className="text-xs sm:text-sm text-slate-500 font-medium">
-                  อาคารแผนกวิชาช่างเทคนิคคอมพิวเตอร์ • คัดกรอง จ่ายงาน และควบคุม SLA ช่างประจำแผนก
+                <p className="text-xs sm:text-sm text-slate-500 font-normal">
+                  อาคารแผนกเทคโนโลยีคอมพิวเตอร์ • คัดกรอง จ่ายงาน และควบคุม SLA ช่างประจำแผนก
                 </p>
               </div>
             </div>
 
             {/* Department Location Badge */}
             <div className="flex flex-wrap items-center gap-2 pt-1">
-              <div className="inline-flex items-center space-x-2 rounded-xl bg-emerald-50/90 px-3 py-1.5 border border-emerald-200/90 text-emerald-900 shadow-xs">
-                <MapPin className="h-3.5 w-3.5 text-emerald-600 shrink-0 stroke-[1.75]" />
-                <span className="text-xs font-semibold">{DEPARTMENT_BUILDING_NAME}</span>
-                <span className="chip-tech text-[10px] text-emerald-800 bg-white border-emerald-200 py-0.5 px-2">
+              <div className="inline-flex items-center space-x-2 rounded-xl bg-slate-50/80 px-3 py-1.5 border border-slate-200/80 text-slate-700 shadow-2xs">
+                <MapPin className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                <span className="text-xs font-medium">{DEPARTMENT_BUILDING_NAME}</span>
+                <span className="font-mono text-xs text-slate-700 bg-white border border-slate-200 py-0.5 px-2 rounded-lg font-bold shadow-2xs">
                   4 Floors • 12 Rooms
                 </span>
               </div>
 
-              <div className="inline-flex items-center space-x-2 rounded-xl bg-slate-100/80 px-3 py-1.5 border border-slate-200 text-slate-700 text-xs font-medium">
-                <ShieldCheck className="h-3.5 w-3.5 text-emerald-600 stroke-[1.75]" />
+              <div className="inline-flex items-center space-x-2 rounded-xl bg-slate-50/80 px-3 py-1.5 border border-slate-200/80 text-slate-700 text-xs font-medium shadow-2xs">
+                <ShieldCheck className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
                 <span>ผู้ดูแลระบบ: <strong className="text-slate-900">{session.name}</strong></span>
-                <span className="chip-tech text-[10px] py-0.5 px-1.5">{session.role}</span>
+                <span className="font-mono text-xs text-slate-700 bg-white border border-slate-200 py-0.5 px-1.5 rounded-md font-bold">{session.role}</span>
               </div>
             </div>
           </div>
@@ -236,85 +235,87 @@ export default async function AdminDashboardPage({ searchParams }: AdminDashboar
           <div className="flex items-center space-x-3 shrink-0">
             <Link
               href="/admin/triage"
-              className="btn-primary-gradient flex items-center space-x-2 px-5 py-2.5 text-xs sm:text-sm font-semibold tracking-wide"
+              className="flex items-center space-x-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white px-5 py-2.5 text-xs sm:text-sm font-bold shadow-lg shadow-emerald-700/25 active:scale-[0.98] transition-all duration-150 cursor-pointer"
             >
               <span>เปิดคิวจ่ายงานช่าง</span>
-              <ArrowRight className="h-4 w-4 stroke-[1.75]" />
+              <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
         </div>
       </div>
 
-      {/* 2. Operational KPIs */}
+      {/* 2. Operational KPIs - Modern Crafted Accent Glow Cards with Micro-Interactions */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="card-elevated p-5 relative overflow-hidden group">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-              ใบงานทั้งหมดในอาคาร
-            </span>
-            <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-600 group-hover:scale-110 transition-transform">
-              <Layers className="h-4 w-4 stroke-[1.75]" />
+        {/* Total Tickets */}
+        <div className="bg-white/95 backdrop-blur-sm rounded-2xl border border-slate-200/80 border-t-4 border-t-indigo-500 p-5 shadow-[0_2px_10px_-2px_rgba(0,0,0,0.04)] hover:shadow-lg hover:-translate-y-1 transition-all duration-200 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between text-xs text-slate-600 font-semibold mb-2.5">
+              <span>ใบงานทั้งหมดในอาคาร</span>
+              <div className="w-10 h-10 rounded-full bg-indigo-50 text-indigo-600 ring-4 ring-indigo-50/60 flex items-center justify-center shrink-0">
+                <Layers className="h-5 w-5" />
+              </div>
+            </div>
+            <div className="text-3xl font-bold tracking-tight text-slate-900 font-mono">
+              {totalTickets}
             </div>
           </div>
-          <h3 className="mt-3 text-3xl font-extrabold tracking-tight text-slate-900 font-mono">
-            {totalTickets}
-          </h3>
-          <p className="mt-1.5 text-xs text-slate-500">
-            ครอบคลุมทุกห้องแล็บและพื้นที่ชั้น 1-4
-          </p>
-          <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-slate-200 to-slate-400" />
+          <div className="mt-4 rounded-xl bg-slate-50 border border-slate-100 p-2 text-[11px] text-slate-500 font-medium">
+            ครอบคลุมทุกห้องและพื้นที่ชั้น 1-4
+          </div>
         </div>
 
-        <div className="card-elevated p-5 relative overflow-hidden border-rose-200/80 bg-rose-50/30 group">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-rose-700 uppercase tracking-wider">
-              งานเร่งด่วนวิกฤต (SLA 15m)
-            </span>
-            <div className="w-8 h-8 rounded-lg bg-rose-100 flex items-center justify-center text-rose-600 group-hover:scale-110 transition-transform">
-              <Flame className="h-4 w-4 stroke-[1.75] animate-pulse" />
+        {/* Urgent Critical */}
+        <div className="bg-white/95 backdrop-blur-sm rounded-2xl border border-slate-200/80 border-t-4 border-t-rose-500 p-5 shadow-[0_2px_10px_-2px_rgba(0,0,0,0.04)] hover:shadow-lg hover:-translate-y-1 transition-all duration-200 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between text-xs text-rose-700 font-semibold mb-2.5">
+              <span>งานเร่งด่วนวิกฤต (SLA 15m)</span>
+              <div className="w-10 h-10 rounded-full bg-rose-50 text-rose-600 ring-4 ring-rose-50/60 flex items-center justify-center shrink-0">
+                <Flame className="h-5 w-5" />
+              </div>
+            </div>
+            <div className="text-3xl font-bold tracking-tight text-rose-600 font-mono">
+              {urgentCount}
             </div>
           </div>
-          <h3 className="mt-3 text-3xl font-extrabold tracking-tight text-rose-600 font-mono">
-            {urgentCount}
-          </h3>
-          <p className="mt-1.5 text-xs text-rose-600 font-medium">
+          <div className="mt-4 rounded-xl bg-rose-50/50 border border-rose-100 p-2 text-[11px] text-rose-700 font-medium">
             ต้องส่งช่างถึงจุดเกิดเหตุทันที
-          </p>
-          <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-rose-500 to-red-600" />
+          </div>
         </div>
 
-        <div className="card-elevated p-5 relative overflow-hidden border-blue-200/80 bg-blue-50/30 group">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-blue-700 uppercase tracking-wider">
-              กำลังดำเนินการซ่อม
-            </span>
-            <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600 group-hover:scale-110 transition-transform">
-              <Wrench className="h-4 w-4 stroke-[1.75]" />
+        {/* In Progress */}
+        <div className="bg-white/95 backdrop-blur-sm rounded-2xl border border-slate-200/80 border-t-4 border-t-amber-500 p-5 shadow-[0_2px_10px_-2px_rgba(0,0,0,0.04)] hover:shadow-lg hover:-translate-y-1 transition-all duration-200 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between text-xs text-amber-700 font-semibold mb-2.5">
+              <span>กำลังดำเนินการซ่อม</span>
+              <div className="w-10 h-10 rounded-full bg-amber-50 text-amber-600 ring-4 ring-amber-50/60 flex items-center justify-center shrink-0">
+                <Clock className="h-5 w-5" />
+              </div>
+            </div>
+            <div className="text-3xl font-bold tracking-tight text-amber-700 font-mono">
+              {inProgressCount}
             </div>
           </div>
-          <h3 className="mt-3 text-3xl font-extrabold tracking-tight text-blue-600 font-mono">
-            {inProgressCount}
-          </h3>
-          <p className="mt-1.5 text-xs text-blue-600 font-medium">ช่างกำลังปฏิบัติงานหน้างาน</p>
-          <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-400 to-indigo-600" />
+          <div className="mt-4 rounded-xl bg-amber-50/50 border border-amber-100 p-2 text-[11px] text-amber-800 font-medium">
+            ช่างกำลังปฏิบัติงานหน้างาน
+          </div>
         </div>
 
-        <div className="card-elevated p-5 relative overflow-hidden border-emerald-200/80 bg-emerald-50/30 group">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-emerald-700 uppercase tracking-wider">
-              แก้ไขสำเร็จ / ปิดงาน
-            </span>
-            <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-600 group-hover:scale-110 transition-transform">
-              <CheckCircle2 className="h-4 w-4 stroke-[1.75]" />
+        {/* Resolved */}
+        <div className="bg-white/95 backdrop-blur-sm rounded-2xl border border-slate-200/80 border-t-4 border-t-emerald-500 p-5 shadow-[0_2px_10px_-2px_rgba(0,0,0,0.04)] hover:shadow-lg hover:-translate-y-1 transition-all duration-200 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between text-xs text-emerald-800 font-semibold mb-2.5">
+              <span>แก้ไขสำเร็จ / ปิดงาน</span>
+              <div className="w-10 h-10 rounded-full bg-emerald-50 text-emerald-600 ring-4 ring-emerald-50/60 flex items-center justify-center shrink-0">
+                <CheckCircle2 className="h-5 w-5" />
+              </div>
+            </div>
+            <div className="text-3xl font-bold tracking-tight text-emerald-700 font-mono">
+              {resolvedCount}
             </div>
           </div>
-          <h3 className="mt-3 text-3xl font-extrabold tracking-tight text-emerald-600 font-mono">
-            {resolvedCount}
-          </h3>
-          <p className="mt-1.5 text-xs text-emerald-600 font-medium">
-            ส่งมอบงานและผ่านการตรวจรับ
-          </p>
-          <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-teal-600" />
+          <div className="mt-4 rounded-xl bg-emerald-50/50 border border-emerald-100 p-2 text-[11px] text-emerald-800 font-medium">
+            ปิดงานสมบูรณ์เรียบร้อยแล้ว
+          </div>
         </div>
       </div>
 
@@ -371,11 +372,11 @@ export default async function AdminDashboardPage({ searchParams }: AdminDashboar
                   {technicians.map((tech) => (
                     <div
                       key={tech.id}
-                      className="p-3.5 rounded-xl border border-slate-200/80 bg-slate-50/60 hover:bg-white hover:border-emerald-300 hover:shadow-xs transition-all space-y-2"
+                      className="p-3.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-white hover:border-slate-300 hover:shadow-sm transition-all space-y-2"
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-3">
-                          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-600 to-teal-700 text-xs font-bold text-white shadow-xs">
+                          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-emerald-800 text-xs font-bold text-white shadow-sm">
                             {tech.name.charAt(0)}
                           </div>
                           <div>

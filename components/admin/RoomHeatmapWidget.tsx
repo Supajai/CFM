@@ -1,4 +1,4 @@
-// components/admin/RoomHeatmapWidget.tsx
+﻿// components/admin/RoomHeatmapWidget.tsx
 "use client";
 
 import React, { useState, useMemo } from "react";
@@ -45,7 +45,7 @@ export default function RoomHeatmapWidget({ stats, onSelectRoom }: RoomHeatmapWi
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/80 pb-4">
         <div>
           <div className="flex items-center space-x-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 shadow-xs">
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 shadow-sm">
               <TrendingUp className="h-4 w-4" strokeWidth={1.75} />
             </div>
             <div>
@@ -67,7 +67,7 @@ export default function RoomHeatmapWidget({ stats, onSelectRoom }: RoomHeatmapWi
             onClick={() => setSelectedFloor("ALL")}
             className={`rounded-lg px-3 py-1.5 text-xs transition-all ${
               selectedFloor === "ALL"
-                ? "bg-white text-slate-900 shadow-xs font-semibold border border-slate-200/80"
+                ? "bg-white text-slate-900 shadow-sm font-semibold border border-slate-200/80"
                 : "text-slate-600 hover:text-slate-900"
             }`}
           >
@@ -80,7 +80,7 @@ export default function RoomHeatmapWidget({ stats, onSelectRoom }: RoomHeatmapWi
               onClick={() => setSelectedFloor(f)}
               className={`rounded-lg px-3 py-1.5 text-xs transition-all ${
                 selectedFloor === f
-                  ? "bg-white text-slate-900 shadow-xs font-semibold border border-slate-200/80"
+                  ? "bg-white text-slate-900 shadow-sm font-semibold border border-slate-200/80"
                   : "text-slate-600 hover:text-slate-900"
               }`}
             >
@@ -110,7 +110,7 @@ export default function RoomHeatmapWidget({ stats, onSelectRoom }: RoomHeatmapWi
             <div
               key={item.id}
               onClick={() => onSelectRoom?.(item.name)}
-              className="rounded-xl border border-slate-200/90 bg-slate-50/50 hover:bg-white hover:border-emerald-500/40 hover:shadow-xs p-3.5 transition-all space-y-2 cursor-pointer"
+              className="rounded-xl border border-slate-200/90 bg-slate-50/50 hover:bg-white hover:border-emerald-500/40 hover:shadow-sm p-3.5 transition-all space-y-2 cursor-pointer"
             >
               <div className="flex items-center justify-between text-xs">
                 <div className="flex items-center space-x-2.5">

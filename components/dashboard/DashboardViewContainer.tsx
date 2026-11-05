@@ -40,19 +40,19 @@ export default function DashboardViewContainer({
   return (
     <div className="space-y-6">
       {/* View Switcher Header Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white/95 backdrop-blur-md p-3 px-4 rounded-2xl border border-slate-200/90 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.04)]">
+      <div className="card-elevated p-3.5 px-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center space-x-2.5">
-          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-50 to-teal-50 text-emerald-800 border border-emerald-200 shadow-2xs">
             {viewMode === "map" ? (
-              <Building2 className="h-4 w-4" strokeWidth={1.75} />
+              <Building2 className="h-4.5 w-4.5" strokeWidth={1.75} />
             ) : (
-              <LayoutList className="h-4 w-4" strokeWidth={1.75} />
+              <LayoutList className="h-4.5 w-4.5" strokeWidth={1.75} />
             )}
           </div>
           <div>
             <div className="flex items-center space-x-2">
               <span className="text-xs font-bold text-slate-900">
-                {viewMode === "map" ? "มุมมองแผนผังอาคาร 2.5D อัจฉริยะ" : "มุมมองตารางรายการและสรุปผล"}
+                {viewMode === "map" ? "มุมมองแผนผังอาคาร" : "มุมมองตารางรายการและสรุปผล"}
               </span>
               {roleLabel && (
                 <span className="chip-tech text-[10px] py-0.5 px-2 bg-slate-100 text-slate-700">
@@ -69,30 +69,30 @@ export default function DashboardViewContainer({
         </div>
 
         {/* Segmented Mode Control Button */}
-        <div className="flex items-center p-1 rounded-xl bg-slate-100/90 border border-slate-200/80 self-start sm:self-auto">
+        <div className="flex items-center p-1 rounded-xl bg-slate-100 border border-slate-200/80 self-start sm:self-auto shadow-2xs">
           <button
             type="button"
             onClick={() => setViewMode("map")}
-            className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+            className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs transition-all active:scale-[0.98] cursor-pointer ${
               viewMode === "map"
-                ? "bg-white text-slate-900 shadow-xs border border-slate-200/80"
-                : "text-slate-600 hover:text-slate-900"
+                ? "bg-white text-slate-900 shadow-sm border border-slate-200 font-bold"
+                : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/50 font-medium"
             }`}
           >
-            <Layers className="h-3.5 w-3.5 text-emerald-600" strokeWidth={1.75} />
-            <span>🏢 มุมมองผังอาคาร 2.5D</span>
+            <Layers className="h-3.5 w-3.5 text-emerald-700" strokeWidth={2} />
+            <span>มุมมองผังอาคาร</span>
           </button>
           <button
             type="button"
             onClick={() => setViewMode("list")}
-            className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+            className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs transition-all active:scale-[0.98] cursor-pointer ${
               viewMode === "list"
-                ? "bg-white text-slate-900 shadow-xs border border-slate-200/80"
-                : "text-slate-600 hover:text-slate-900"
+                ? "bg-white text-slate-900 shadow-sm border border-slate-200 font-bold"
+                : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/50 font-medium"
             }`}
           >
-            <LayoutList className="h-3.5 w-3.5 text-slate-500" strokeWidth={1.75} />
-            <span>📋 มุมมองตารางรายการ</span>
+            <LayoutList className="h-3.5 w-3.5 text-slate-600" strokeWidth={2} />
+            <span>มุมมองตารางรายการ</span>
           </button>
         </div>
       </div>

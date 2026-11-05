@@ -32,19 +32,19 @@ export default function AdminSidebar({ currentUser }: AdminSidebarProps) {
 
   const navItems = [
     {
-      label: "ภาพรวมงานซ่อม (Dashboard)",
+      label: "ภาพรวมงานซ่อม",
       href: "/admin/dashboard",
       icon: LayoutDashboard,
       exact: true,
     },
     {
-      label: "แผนผังอาคาร 2.5D (Floor Plan)",
+      label: "แผนผังอาคาร",
       href: "/admin/floor-plan",
       icon: Map,
       exact: false,
     },
     {
-      label: "คัดกรองและจ่ายงาน (Triage)",
+      label: "คิวคัดกรองงานแจ้งซ่อม",
       href: "/admin/triage",
       icon: Inbox,
       exact: false,
@@ -76,11 +76,11 @@ export default function AdminSidebar({ currentUser }: AdminSidebarProps) {
   };
 
   return (
-    <aside className="hidden md:flex w-64 shrink-0 flex-col justify-between border-r border-slate-200/90 bg-white/90 backdrop-blur-md p-4 h-screen sticky top-0 select-none shadow-[1px_0_12px_-4px_rgba(0,0,0,0.03)]">
+    <aside className="hidden md:flex w-64 shrink-0 flex-col justify-between border-r border-slate-200/80 bg-white/90 backdrop-blur-md p-4 h-screen sticky top-0 select-none shadow-[2px_0_12px_rgba(0,0,0,0.02)] z-30">
       <div className="space-y-5">
         {/* Brand / Logo */}
         <Link href="/admin/dashboard" className="flex items-center space-x-2.5 px-2 py-1 group">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-[0_2px_8px_rgba(16,185,129,0.3)] transition-transform group-hover:scale-105">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-600 to-teal-700 text-white shadow-md shadow-emerald-700/20 transition-all group-hover:scale-105">
             <Building2 className="h-4.5 w-4.5" />
           </div>
           <div>
@@ -88,24 +88,21 @@ export default function AdminSidebar({ currentUser }: AdminSidebarProps) {
               <h1 className="text-sm font-bold text-slate-900 tracking-tight leading-tight">
                 CampusOps
               </h1>
-              <span className="rounded-md bg-slate-100 px-1.5 py-0.2 text-[10px] font-mono font-semibold text-slate-700 border border-slate-200/80">
+              <span className="rounded-md bg-emerald-50 px-1.5 py-0.5 text-[10px] font-mono font-bold text-emerald-800 border border-emerald-200">
                 ADMIN
               </span>
             </div>
             <p className="text-[11px] text-slate-500 font-normal">
-              แผนกวิชาช่างเทคนิคคอมพิวเตอร์
+              แผนกเทคโนโลยีคอมพิวเตอร์
             </p>
           </div>
         </Link>
 
         {/* Operational Scope Badge */}
-        <div className="rounded-xl border border-slate-200/80 bg-slate-50/80 p-3 space-y-1 shadow-2xs">
+        <div className="rounded-xl border border-slate-200/80 bg-slate-50/80 p-3 space-y-1">
           <div className="flex items-center space-x-2">
-            <span className="relative flex h-2.5 w-2.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-600"></span>
-            </span>
-            <span className="text-xs font-semibold text-slate-800">
+            <span className="h-2 w-2 rounded-full bg-emerald-600 animate-pulse"></span>
+            <span className="text-xs font-bold text-slate-800">
               ศูนย์จ่ายงานอาคารแผนก
             </span>
           </div>
@@ -131,17 +128,14 @@ export default function AdminSidebar({ currentUser }: AdminSidebarProps) {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`relative flex items-center space-x-2.5 rounded-xl px-3 py-2 text-xs font-medium transition-all ${
+                  className={`relative flex items-center space-x-2.5 px-3 py-2 text-xs transition-all ${
                     isActive
-                      ? "bg-emerald-50/90 text-emerald-950 border border-emerald-200/90 font-semibold shadow-2xs"
-                      : "text-slate-600 hover:bg-slate-100/80 hover:text-slate-900"
+                      ? "border-l-4 border-emerald-600 bg-emerald-50/70 text-emerald-900 font-bold shadow-sm rounded-r-xl rounded-l-none"
+                      : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 hover:translate-x-1 rounded-xl"
                   }`}
                 >
-                  {isActive && (
-                    <span className="absolute left-0 top-2 bottom-2 w-1 rounded-r-md bg-emerald-600" />
-                  )}
                   <Icon
-                    className={`h-4 w-4 stroke-[1.75] ${
+                    className={`h-4 w-4 shrink-0 transition-colors ${
                       isActive ? "text-emerald-700" : "text-slate-400"
                     }`}
                   />
@@ -156,7 +150,7 @@ export default function AdminSidebar({ currentUser }: AdminSidebarProps) {
         <div className="border-t border-slate-100 pt-3 px-1">
           <Link
             href="/"
-            className="flex items-center justify-between text-[11px] font-medium text-slate-500 hover:text-slate-900 transition py-1"
+            className="flex items-center justify-between text-[11px] font-medium text-slate-500 hover:text-slate-900 hover:translate-x-0.5 transition-all py-1"
           >
             <span>พอร์ทัลบริการหลัก</span>
             <ExternalLink className="h-3 w-3 text-slate-400" />
@@ -167,7 +161,7 @@ export default function AdminSidebar({ currentUser }: AdminSidebarProps) {
       {/* Footer Profile & Logout */}
       <div className="border-t border-slate-200/80 pt-3 space-y-2.5">
         <div className="flex items-center space-x-2.5 px-1">
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-900 text-xs font-semibold text-white shadow-2xs">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-900 text-xs font-bold text-white shadow-sm ring-2 ring-slate-100">
             {currentUser?.name ? currentUser.name.charAt(0) : "A"}
           </div>
           <div className="flex-1 overflow-hidden">
@@ -184,7 +178,7 @@ export default function AdminSidebar({ currentUser }: AdminSidebarProps) {
           type="button"
           onClick={handleLogout}
           disabled={isLoggingOut}
-          className="flex w-full items-center justify-center space-x-1.5 rounded-xl border border-slate-200/90 bg-white py-2 text-xs font-medium text-slate-600 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 transition shadow-2xs"
+          className="flex w-full items-center justify-center space-x-1.5 rounded-xl border border-slate-200 bg-white py-2 text-xs font-semibold text-slate-600 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200 transition-all duration-150 active:scale-[0.98] shadow-sm cursor-pointer"
         >
           <LogOut className="h-3.5 w-3.5" />
           <span>{isLoggingOut ? "กำลังออก..." : "ออกจากระบบ"}</span>

@@ -78,7 +78,7 @@ function BottomNavContent({ currentUser }: TechnicianBottomNavProps) {
     <>
       <nav
         aria-label="เมนูหลักสำหรับอุปกรณ์เคลื่อนที่"
-        className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/90 md:hidden shadow-[0_-4px_20px_rgba(0,0,0,0.06)] px-1 sm:px-2 py-1.5 pb-[calc(env(safe-area-inset-bottom,0px)+6px)] transition-all"
+        className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-lg border-t border-slate-200/80 md:hidden shadow-[0_-8px_20px_rgba(0,0,0,0.04)] px-1 sm:px-2 py-1.5 pb-[calc(env(safe-area-inset-bottom,0px)+6px)] transition-all"
       >
         <div className="grid grid-cols-5 gap-0.5 sm:gap-1 items-center max-w-lg mx-auto">
           {navItems.map((item) => {
@@ -90,7 +90,7 @@ function BottomNavContent({ currentUser }: TechnicianBottomNavProps) {
                 onClick={() => setIsProfileOpen(false)}
                 className={`flex flex-col items-center justify-center py-1.5 px-0.5 sm:px-1 rounded-xl transition-all duration-200 group relative ${
                   item.isActive
-                    ? "text-emerald-600 font-bold bg-emerald-50/70"
+                    ? "text-emerald-700 font-bold bg-emerald-50/80 shadow-xs"
                     : "text-slate-500 hover:text-slate-800 font-medium hover:bg-slate-50"
                 }`}
               >
@@ -101,7 +101,7 @@ function BottomNavContent({ currentUser }: TechnicianBottomNavProps) {
                 <Icon
                   className={`h-5 w-5 mb-0.5 transition-transform duration-200 ${
                     item.isActive
-                      ? "stroke-[2.25] scale-105"
+                      ? "stroke-[2.25] scale-110 text-emerald-600"
                       : "stroke-[1.75] group-hover:scale-105"
                   }`}
                 />
@@ -118,7 +118,7 @@ function BottomNavContent({ currentUser }: TechnicianBottomNavProps) {
             onClick={() => setIsProfileOpen(true)}
             className={`flex flex-col items-center justify-center py-1.5 px-0.5 sm:px-1 rounded-xl transition-all duration-200 group relative cursor-pointer ${
               isProfileOpen
-                ? "text-emerald-600 font-bold bg-emerald-50/70"
+                ? "text-emerald-700 font-bold bg-emerald-50/80 shadow-xs"
                 : "text-slate-500 hover:text-slate-800 font-medium hover:bg-slate-50"
             }`}
           >
@@ -128,7 +128,7 @@ function BottomNavContent({ currentUser }: TechnicianBottomNavProps) {
             <User
               className={`h-5 w-5 mb-0.5 transition-transform duration-200 ${
                 isProfileOpen
-                  ? "stroke-[2.25] scale-105"
+                  ? "stroke-[2.25] scale-110 text-emerald-600"
                   : "stroke-[1.75] group-hover:scale-105"
               }`}
             />

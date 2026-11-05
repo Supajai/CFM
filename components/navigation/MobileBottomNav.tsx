@@ -73,7 +73,7 @@ export default function MobileBottomNav({ currentUser }: MobileBottomNavProps) {
         return <span className="bg-amber-50 text-amber-700 text-[10px] font-medium px-2 py-0.5 rounded-md border border-amber-200">ช่างเทคนิค</span>;
       case "USER":
       default:
-        return <span className="bg-emerald-50 text-emerald-700 text-[10px] font-medium px-2 py-0.5 rounded-md border border-emerald-200">นักศึกษา/บุคลากร</span>;
+        return <span className="bg-emerald-50 text-emerald-800 text-[10px] font-medium px-2 py-0.5 rounded-md border border-emerald-200">นักศึกษา/บุคลากร</span>;
     }
   };
 
@@ -82,19 +82,19 @@ export default function MobileBottomNav({ currentUser }: MobileBottomNavProps) {
       {/* 1. Sticky Bottom Navigation Bar (Visible on mobile screens < md) */}
       <nav
         aria-label="Mobile Navigation Bar"
-        className="fixed bottom-0 inset-x-0 z-50 block md:hidden border-t border-slate-200/80 bg-white/85 backdrop-blur-lg shadow-[0_-2px_12px_rgba(0,0,0,0.05)]"
+        className="fixed bottom-0 inset-x-0 z-50 block md:hidden border-t border-slate-200/80 bg-white/95 backdrop-blur-lg shadow-[0_-8px_20px_rgba(0,0,0,0.04)]"
       >
         <div className="mx-auto flex h-14 max-w-md items-center justify-around px-2">
           {/* Tab 1: หน้าหลัก */}
           <Link
             href={homeHref}
-            className={`flex flex-col items-center justify-center py-1 px-3 rounded-xl transition-colors ${
+            className={`flex flex-col items-center justify-center py-1 px-3 rounded-xl transition-all ${
               isHomeActive
-                ? "text-emerald-700 font-semibold"
+                ? "text-emerald-700 font-bold"
                 : "text-slate-500 font-medium hover:text-slate-900"
             }`}
           >
-            <div className={`p-1 rounded-lg transition ${isHomeActive ? "bg-emerald-50 text-emerald-700" : ""}`}>
+            <div className={`p-1 rounded-lg transition-transform ${isHomeActive ? "bg-emerald-50 text-emerald-600 scale-110" : ""}`}>
               <Home className="h-4 w-4" />
             </div>
             <span className="text-[10px] mt-0.5">หน้าหลัก</span>
@@ -106,15 +106,15 @@ export default function MobileBottomNav({ currentUser }: MobileBottomNavProps) {
             className="flex flex-col items-center justify-center -mt-4 group"
           >
             <div
-              className={`flex h-11 w-11 items-center justify-center rounded-full shadow-[0_4px_12px_rgba(16,185,129,0.35)] transition-all active:scale-95 ${
+              className={`flex h-11 w-11 items-center justify-center rounded-full shadow-md shadow-emerald-700/20 transition-all active:scale-95 ${
                 isReportActive
-                  ? "bg-gradient-to-b from-emerald-600 to-emerald-700 text-white ring-2 ring-emerald-200"
-                  : "bg-gradient-to-b from-emerald-500 to-emerald-600 text-white hover:from-emerald-600 hover:to-emerald-700"
+                  ? "bg-gradient-to-r from-emerald-600 to-teal-700 text-white ring-4 ring-emerald-500/20"
+                  : "bg-gradient-to-r from-emerald-600 to-teal-700 text-white hover:from-emerald-500 hover:to-teal-600"
               }`}
             >
               <PlusCircle className="h-5 w-5" />
             </div>
-            <span className={`text-[10px] mt-0.5 font-medium ${isReportActive ? "text-emerald-700" : "text-slate-600"}`}>
+            <span className={`text-[10px] mt-0.5 font-bold ${isReportActive ? "text-emerald-700" : "text-slate-600"}`}>
               แจ้งซ่อม
             </span>
           </Link>
@@ -122,13 +122,13 @@ export default function MobileBottomNav({ currentUser }: MobileBottomNavProps) {
           {/* Tab 3: ประวัติแจ้งซ่อม */}
           <Link
             href={currentUser ? "/student/dashboard#history" : "/tracking/REP-089"}
-            className={`flex flex-col items-center justify-center py-1 px-3 rounded-xl transition-colors ${
+            className={`flex flex-col items-center justify-center py-1 px-3 rounded-xl transition-all ${
               isHistoryActive
-                ? "text-emerald-700 font-semibold"
+                ? "text-emerald-700 font-bold"
                 : "text-slate-500 font-medium hover:text-slate-900"
             }`}
           >
-            <div className={`p-1 rounded-lg transition ${isHistoryActive ? "bg-emerald-50 text-emerald-700" : ""}`}>
+            <div className={`p-1 rounded-lg transition-transform ${isHistoryActive ? "bg-emerald-50 text-emerald-600 scale-110" : ""}`}>
               <ClipboardList className="h-4 w-4" />
             </div>
             <span className="text-[10px] mt-0.5">ประวัติงาน</span>
@@ -139,7 +139,7 @@ export default function MobileBottomNav({ currentUser }: MobileBottomNavProps) {
             <button
               type="button"
               onClick={() => setShowProfileSheet(true)}
-              className="flex flex-col items-center justify-center py-1 px-3 rounded-md text-zinc-500 font-medium hover:text-zinc-900 transition"
+              className="flex flex-col items-center justify-center py-1 px-3 rounded-md text-zinc-500 font-medium hover:text-zinc-900 transition-colors"
             >
               <div className="flex h-6 w-6 items-center justify-center rounded-md bg-zinc-100 text-zinc-800 text-[11px] font-semibold border border-zinc-200">
                 {currentUser.name.charAt(0)}
@@ -153,7 +153,7 @@ export default function MobileBottomNav({ currentUser }: MobileBottomNavProps) {
               href="/login"
               className={`flex flex-col items-center justify-center py-1 px-3 rounded-md transition-colors ${
                 pathname === "/login"
-                  ? "text-emerald-700 font-semibold"
+                  ? "text-emerald-800 font-semibold"
                   : "text-zinc-500 font-medium hover:text-zinc-900"
               }`}
             >
@@ -168,10 +168,10 @@ export default function MobileBottomNav({ currentUser }: MobileBottomNavProps) {
 
       {/* 2. Mobile Profile Bottom Sheet Modal */}
       {showProfileSheet && currentUser && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-zinc-950/40 backdrop-blur-xs md:hidden animate-in fade-in duration-200">
-          <div className="w-full max-w-md rounded-t-lg border-t border-zinc-200 bg-white p-5 shadow-lg space-y-4 animate-in slide-in-from-bottom duration-300">
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/40 md:hidden animate-in fade-in duration-200">
+          <div className="w-full max-w-md rounded-t-lg border-t border-slate-200 bg-white p-5 shadow-lg space-y-4 animate-in slide-in-from-bottom duration-200">
             {/* Sheet Handle */}
-            <div className="mx-auto h-1 w-10 rounded-full bg-zinc-300" />
+            <div className="mx-auto h-1 w-10 rounded-full bg-slate-300" />
 
             {/* Profile Info Header */}
             <div className="flex items-center justify-between border-b border-zinc-100 pb-3">
@@ -293,7 +293,7 @@ export default function MobileBottomNav({ currentUser }: MobileBottomNavProps) {
               type="button"
               onClick={handleLogout}
               disabled={isLoggingOut}
-              className="flex w-full items-center justify-center space-x-1.5 rounded-md border border-zinc-200 bg-white py-2 text-xs font-medium text-zinc-700 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 transition shadow-xs"
+              className="flex w-full items-center justify-center space-x-1.5 rounded-md border border-zinc-200 bg-white py-2 text-xs font-medium text-zinc-700 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 transition shadow-sm"
             >
               <LogOut className="h-3.5 w-3.5" />
               <span>{isLoggingOut ? "กำลังออกจากระบบ..." : "ออกจากระบบ"}</span>

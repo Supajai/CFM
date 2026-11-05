@@ -27,6 +27,8 @@ import DashboardViewContainer from "@/components/dashboard/DashboardViewContaine
 import { getRoomHeatmapStatsAction } from "@/actions/room";
 import { Metadata } from "next";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "แดชบอร์ดนักศึกษา / ประวัติการแจ้งซ่อม | CampusOps",
   description: "จัดการและติดตามประวัติการแจ้งซ่อมบำรุงของนักศึกษาและบุคลากร",
@@ -184,21 +186,21 @@ export default async function StudentDashboardPage() {
 
       <main className="flex-1 mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8 py-8 space-y-6 pb-28">
         {/* 1. Header: Student Profile Card */}
-        <div className="rounded-2xl border border-slate-200/90 bg-white/95 backdrop-blur-md p-6 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] hover:border-emerald-500/40 transition-all flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
+        <div className="card-elevated p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5 relative overflow-hidden">
           <div className="flex items-center space-x-4">
-            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-b from-emerald-500 to-emerald-600 text-xl font-bold text-white shadow-[0_2px_10px_rgba(16,185,129,0.35)]">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-700 text-lg font-bold text-white shadow-md shadow-emerald-700/20">
               {user.name.charAt(0)}
             </div>
             <div className="space-y-1">
               <div className="flex items-center space-x-2">
                 <h1 className="text-xl font-bold tracking-tight text-slate-900">{user.name}</h1>
-                <span className="rounded-xl bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-800 border border-emerald-200/80 shadow-2xs">
+                <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-800 border border-emerald-200/80 shadow-2xs">
                   นักศึกษา / บุคลากร
                 </span>
               </div>
               <p className="text-xs text-slate-500">
                 {user.studentId ? `รหัสประจำตัว: ${user.studentId}` : user.email}{" "}
-                • {user.department || "แผนกวิชาช่างเทคนิคคอมพิวเตอร์"}
+                • {user.department || "แผนกเทคโนโลยีคอมพิวเตอร์"}
               </p>
               {user.phone && (
                 <p className="text-xs text-slate-400 font-mono">
@@ -210,68 +212,68 @@ export default async function StudentDashboardPage() {
 
           <Link
             href="/report"
-            className="flex items-center justify-center space-x-2 h-10 rounded-xl bg-gradient-to-b from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 px-5 text-xs font-semibold text-white shadow-[0_2px_10px_rgba(16,185,129,0.35)] transition-all active:scale-[0.98]"
+            className="flex items-center justify-center space-x-2 h-10 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 px-5 text-xs font-bold text-white shadow-lg shadow-emerald-700/25 transition-all duration-150 active:scale-[0.98] cursor-pointer shrink-0"
           >
-            <Plus className="h-4 w-4 stroke-[1.75]" />
+            <Plus className="h-4 w-4 stroke-[2]" />
             <span>แจ้งปัญหา / ส่งคำร้องซ่อมใหม่</span>
           </Link>
         </div>
 
-        {/* 2. KPI Mini Cards */}
+        {/* 2. KPI Mini Cards with Accent Glow & Hover Physics */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="rounded-2xl border border-slate-200/90 bg-white/90 backdrop-blur-md p-5 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.06)] hover:border-emerald-500/40 hover:shadow-md transition-all flex items-center justify-between">
+          <div className="bg-white/95 backdrop-blur-sm rounded-2xl border border-slate-200/80 border-t-4 border-t-indigo-500 p-5 shadow-[0_2px_10px_-2px_rgba(0,0,0,0.04)] hover:shadow-lg hover:-translate-y-1 transition-all duration-200 flex items-center justify-between">
             <div>
-              <p className="text-xs font-medium text-slate-500">
+              <p className="text-xs font-semibold text-slate-500">
                 งานของฉันทั้งหมด
               </p>
               <h3 className="mt-1 font-mono text-3xl font-bold tracking-tight text-slate-900">
                 {totalCount}
               </h3>
             </div>
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-100 text-slate-700 border border-slate-200/80 shadow-2xs">
-              <Activity className="h-5 w-5 stroke-[1.75]" />
+            <div className="w-10 h-10 rounded-full bg-indigo-50 text-indigo-600 ring-4 ring-indigo-50/60 flex items-center justify-center shrink-0">
+              <Activity className="h-5 w-5 stroke-[2]" />
             </div>
           </div>
 
-          <div className="rounded-2xl border border-slate-200/90 bg-white/90 backdrop-blur-md p-5 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.06)] hover:border-amber-500/40 hover:shadow-md transition-all flex items-center justify-between">
+          <div className="bg-white/95 backdrop-blur-sm rounded-2xl border border-slate-200/80 border-t-4 border-t-amber-500 p-5 shadow-[0_2px_10px_-2px_rgba(0,0,0,0.04)] hover:shadow-lg hover:-translate-y-1 transition-all duration-200 flex items-center justify-between">
             <div>
-              <p className="text-xs font-medium text-slate-500">
+              <p className="text-xs font-semibold text-amber-700">
                 รอดำเนินการ
               </p>
-              <h3 className="mt-1 font-mono text-3xl font-bold tracking-tight text-amber-600">
+              <h3 className="mt-1 font-mono text-3xl font-bold tracking-tight text-amber-700">
                 {pendingCount}
               </h3>
             </div>
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-50 text-amber-700 border border-amber-200/80 shadow-2xs">
-              <Clock className="h-5 w-5 stroke-[1.75]" />
+            <div className="w-10 h-10 rounded-full bg-amber-50 text-amber-600 ring-4 ring-amber-50/60 flex items-center justify-center shrink-0">
+              <Clock className="h-5 w-5 stroke-[2]" />
             </div>
           </div>
 
-          <div className="rounded-2xl border border-slate-200/90 bg-white/90 backdrop-blur-md p-5 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.06)] hover:border-blue-500/40 hover:shadow-md transition-all flex items-center justify-between">
+          <div className="bg-white/95 backdrop-blur-sm rounded-2xl border border-slate-200/80 border-t-4 border-t-blue-500 p-5 shadow-[0_2px_10px_-2px_rgba(0,0,0,0.04)] hover:shadow-lg hover:-translate-y-1 transition-all duration-200 flex items-center justify-between">
             <div>
-              <p className="text-xs font-medium text-slate-500">
+              <p className="text-xs font-semibold text-blue-700">
                 กำลังดำเนินการซ่อม
               </p>
-              <h3 className="mt-1 font-mono text-3xl font-bold tracking-tight text-blue-600">
+              <h3 className="mt-1 font-mono text-3xl font-bold tracking-tight text-blue-700">
                 {inProgressCount}
               </h3>
             </div>
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-50 text-blue-700 border border-blue-200/80 shadow-2xs">
-              <Wrench className="h-5 w-5 stroke-[1.75]" />
+            <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 ring-4 ring-blue-50/60 flex items-center justify-center shrink-0">
+              <Wrench className="h-5 w-5 stroke-[2]" />
             </div>
           </div>
 
-          <div className="rounded-2xl border border-slate-200/90 bg-white/90 backdrop-blur-md p-5 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.06)] hover:border-emerald-500/40 hover:shadow-md transition-all flex items-center justify-between">
+          <div className="bg-white/95 backdrop-blur-sm rounded-2xl border border-slate-200/80 border-t-4 border-t-emerald-500 p-5 shadow-[0_2px_10px_-2px_rgba(0,0,0,0.04)] hover:shadow-lg hover:-translate-y-1 transition-all duration-200 flex items-center justify-between">
             <div>
-              <p className="text-xs font-medium text-slate-500">
+              <p className="text-xs font-semibold text-emerald-800">
                 ซ่อมเสร็จสิ้น / ปิดงาน
               </p>
-              <h3 className="mt-1 font-mono text-3xl font-bold tracking-tight text-emerald-600">
+              <h3 className="mt-1 font-mono text-3xl font-bold tracking-tight text-emerald-700">
                 {resolvedCount}
               </h3>
             </div>
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700 border border-emerald-200/80 shadow-2xs">
-              <CheckCircle2 className="h-5 w-5 stroke-[1.75]" />
+            <div className="w-10 h-10 rounded-full bg-emerald-50 text-emerald-600 ring-4 ring-emerald-50/60 flex items-center justify-center shrink-0">
+              <CheckCircle2 className="h-5 w-5 stroke-[2]" />
             </div>
           </div>
         </div>
@@ -295,7 +297,7 @@ export default async function StudentDashboardPage() {
           }
           listView={
             /* My Ticket History Table */
-            <div id="history" className="rounded-2xl border border-slate-200/90 bg-white/95 backdrop-blur-md shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] overflow-hidden scroll-mt-6">
+            <div id="history" className="rounded-lg border border-slate-200 bg-white shadow-xs overflow-hidden scroll-mt-6">
               <div className="border-b border-slate-200/80 p-5 flex flex-wrap items-center justify-between gap-4 bg-slate-50/60">
                 <div>
                   <h2 className="text-xs font-bold uppercase tracking-wider text-slate-700">

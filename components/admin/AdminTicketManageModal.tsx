@@ -1,4 +1,4 @@
-// components/admin/AdminTicketManageModal.tsx
+﻿// components/admin/AdminTicketManageModal.tsx
 "use client";
 
 import React, { useState, useEffect, useTransition } from "react";
@@ -287,7 +287,7 @@ export default function AdminTicketManageModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 overflow-y-auto animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 overflow-y-auto animate-in fade-in duration-200"
       onClick={(e) => {
         if (e.target === e.currentTarget && !isPending) {
           onClose();
@@ -295,7 +295,7 @@ export default function AdminTicketManageModal({
       }}
     >
       <div
-        className="relative w-full max-w-3xl bg-white rounded-3xl shadow-2xl border border-slate-200 flex flex-col max-h-[92vh] overflow-hidden animate-in zoom-in-95 duration-200"
+        className="relative w-full max-w-3xl bg-white rounded-lg shadow-xl border border-slate-200 flex flex-col max-h-[92vh] overflow-hidden animate-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
@@ -322,12 +322,12 @@ export default function AdminTicketManageModal({
               </span>
               {ticket.isUrgent && (
                 <span className="chip-tech text-[10px] bg-rose-50 text-rose-700 border-rose-200 font-bold py-0.5 px-2">
-                  🚨 ด่วน SLA {ticket.slaTargetMinutes || 15}m
+                  ด่วน SLA {ticket.slaTargetMinutes || 15}m
                 </span>
               )}
             </div>
             <h2 className="text-base sm:text-lg font-bold text-slate-900 leading-snug">
-              ศูนย์ตรวจสอบและบริหารจัดการตั๋ว (Admin Dispatch & Triage)
+              ศูนย์ตรวจสอบและบริหารจัดการตั๋ว
             </h2>
             <p className="text-xs text-slate-500 font-medium">
               แจ้งเมื่อ: {formatDateThai(ticket.createdAt)} ({timeAgoThai(ticket.createdAt)})
@@ -552,11 +552,11 @@ export default function AdminTicketManageModal({
                               "https://images.unsplash.com/photo-1588702547919-26089e690ecc?w=800&auto=format&fit=crop&q=80";
                           }}
                         />
-                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-semibold gap-1.5 backdrop-blur-xs">
+                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-medium gap-1.5">
                           <Maximize2 className="h-4 w-4" />
                           <span>แตะเพื่อดูภาพขยาย</span>
                         </div>
-                        <div className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-black/70 text-white text-[10px] font-mono flex items-center gap-1 shadow-xs">
+                        <div className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-black/70 text-white text-[10px] font-mono flex items-center gap-1 shadow-sm">
                           <Camera className="h-3 w-3 text-amber-300" />
                           <span>Before</span>
                         </div>
@@ -601,11 +601,11 @@ export default function AdminTicketManageModal({
                               "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800&auto=format&fit=crop&q=80";
                           }}
                         />
-                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-semibold gap-1.5 backdrop-blur-xs">
+                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-medium gap-1.5">
                           <Maximize2 className="h-4 w-4" />
                           <span>แตะเพื่อดูภาพขยาย</span>
                         </div>
-                        <div className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-emerald-900/90 text-white text-[10px] font-mono flex items-center gap-1 shadow-xs">
+                        <div className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-emerald-900/90 text-white text-[10px] font-mono flex items-center gap-1 shadow-sm">
                           <CheckCircle2 className="h-3 w-3 text-emerald-400" />
                           <span>After</span>
                         </div>
@@ -641,7 +641,7 @@ export default function AdminTicketManageModal({
                             "https://images.unsplash.com/photo-1588702547919-26089e690ecc?w=800&auto=format&fit=crop&q=80";
                         }}
                       />
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-semibold gap-1.5 backdrop-blur-xs">
+                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-medium gap-1.5">
                         <Maximize2 className="h-4 w-4" />
                         <span>แตะเพื่อเปิดดูภาพขยาย</span>
                       </div>
@@ -664,7 +664,7 @@ export default function AdminTicketManageModal({
           {/* ========================================================
               โซนที่ 2: ปรับปรุงการจัดการ (Triage & Reassign Controls)
              ======================================================== */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 space-y-4 shadow-xs">
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 space-y-4 shadow-sm">
             <div className="flex items-center space-x-2">
               <Wrench className="h-4 w-4 text-emerald-600" />
               <span className="text-xs font-bold text-slate-900">
@@ -684,10 +684,10 @@ export default function AdminTicketManageModal({
                   onChange={(e) => setTechnicianId(e.target.value)}
                   className="w-full text-xs rounded-xl border border-slate-300 bg-white p-2.5 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:opacity-60"
                 >
-                  <option value="">⚪ ยังไม่ระบุช่าง (งานกองกลาง / Unassigned)</option>
+                  <option value="">ยังไม่ระบุช่าง (งานกองกลาง)</option>
                   {technicians.map((t) => (
                     <option key={t.id} value={t.id}>
-                      👤 {t.name} (รหัส: {t.technicianCode || "-"})
+                      {t.name} (รหัส: {t.technicianCode || "-"})
                     </option>
                   ))}
                 </select>
@@ -791,7 +791,7 @@ export default function AdminTicketManageModal({
                   ) : (
                     <>
                       <Save className="h-4 w-4" />
-                      <span>💾 บันทึกการเปลี่ยนแปลง (Save Changes)</span>
+                      <span>บันทึกการเปลี่ยนแปลง</span>
                     </>
                   )}
                 </button>
@@ -834,14 +834,14 @@ export default function AdminTicketManageModal({
                   className="px-4 py-2 rounded-xl border border-rose-300 bg-white hover:bg-rose-100 text-rose-700 font-bold text-xs shadow-2xs transition cursor-pointer shrink-0 flex items-center justify-center gap-1.5"
                 >
                   <Ban className="h-3.5 w-3.5" />
-                  <span>🚫 ยกเลิก/ปฏิเสธคำร้องนี้</span>
+                  <span>ยกเลิก/ปฏิเสธคำร้องนี้</span>
                 </button>
               </div>
             ) : (
               /* Expanded Cancellation Form */
               <div className="bg-white p-4 rounded-xl border border-rose-200 space-y-3.5 animate-in fade-in text-xs">
                 <div className="rounded-lg bg-rose-50 p-2.5 border border-rose-200/80 text-[11px] text-rose-800">
-                  ⚠️ กรุณาเลือกหมวดหมู่และระบุเหตุผลการยกเลิกคำร้องอย่างชัดเจน
+                  กรุณาเลือกหมวดหมู่และระบุเหตุผลการยกเลิกคำร้องอย่างชัดเจน
                   เพื่อเป็นหลักฐานอ้างอิงและแจ้งให้ผู้ส่งคำร้องทราบ
                 </div>
 
@@ -929,7 +929,7 @@ export default function AdminTicketManageModal({
       {/* Lightbox Zoom Modal for Before / After Photos */}
       {zoomedImage && (
         <div
-          className="fixed inset-0 z-60 flex items-center justify-center bg-black/90 p-4 backdrop-blur-xs animate-in fade-in"
+          className="fixed inset-0 z-60 flex items-center justify-center bg-black/90 p-4 animate-in fade-in"
           onClick={() => setZoomedImage(null)}
         >
           <div

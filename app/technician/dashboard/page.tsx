@@ -21,6 +21,8 @@ import BuildingFloorMap, { TicketSummary } from "@/components/building/BuildingF
 import DashboardViewContainer from "@/components/dashboard/DashboardViewContainer";
 import { Metadata } from "next";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "แดชบอร์ดงานช่างเทคนิคภาคสนาม (Technician) | CampusOps",
   description: "จัดการรายการงานซ่อมแซมภาคสนามที่ได้รับมอบหมายและบันทึกปิดงาน",
@@ -123,133 +125,131 @@ export default async function TechnicianDashboardPage() {
   return (
     <div className="p-4 pt-4 sm:pt-6 sm:p-6 lg:p-8 pb-28 md:pb-8 space-y-6 max-w-6xl mx-auto">
       {/* 1. Header & Live Duty Status Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="card-elevated p-6 relative overflow-hidden flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
         <div>
-          <div className="flex items-center space-x-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 text-white shadow-[0_2px_8px_rgba(245,158,11,0.3)]">
-              <Hammer className="h-4.5 w-4.5" />
+          <div className="flex items-center space-x-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-600 to-teal-700 text-white shadow-md shadow-emerald-700/20">
+              <Hammer className="h-5 w-5" />
             </div>
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
-              งานซ่อมบำรุงของฉัน (Assigned to Me)
-            </h1>
+            <div>
+              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
+                งานซ่อมบำรุงของฉัน (Assigned to Me)
+              </h1>
+              <p className="mt-0.5 text-xs text-slate-500 font-normal">
+                ช่างผู้ปฏิบัติการ:{" "}
+                <span className="font-semibold text-slate-800">
+                  {techUser?.name || session.name}
+                </span>{" "}
+                (รหัส: {techUser?.technicianCode || session.technicianCode || "#04"})
+                • ประจำอาคารแผนกเทคโนโลยีคอมพิวเตอร์
+              </p>
+            </div>
           </div>
-          <p className="mt-1 text-xs text-slate-500 font-normal">
-            ช่างผู้ปฏิบัติการ:{" "}
-            <span className="font-semibold text-slate-800">
-              {techUser?.name || session.name}
-            </span>{" "}
-            (รหัส: {techUser?.technicianCode || session.technicianCode || "#04"})
-            • ประจำอาคารแผนกวิชาช่างเทคนิคคอมพิวเตอร์
-          </p>
         </div>
 
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-3 shrink-0">
           {/* Duty Status Badge */}
-          <div className="flex items-center space-x-2 rounded-xl border border-emerald-200 bg-emerald-50/80 px-3.5 py-1.5 shadow-2xs">
-            <span className="relative flex h-2.5 w-2.5">
+          <div className="flex items-center space-x-2 rounded-xl border border-emerald-200/80 bg-emerald-50/80 px-3.5 py-1.5 shadow-2xs">
+            <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-600"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-600"></span>
             </span>
-            <span className="text-xs font-semibold text-emerald-900">พร้อมปฏิบัติการ</span>
+            <span className="text-xs font-bold text-emerald-900">พร้อมปฏิบัติการ</span>
           </div>
 
           <Link
             href="/technician/kanban"
-            className="flex items-center space-x-2 h-9 rounded-xl bg-gradient-to-b from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 px-4 text-xs font-medium text-white shadow-[0_2px_8px_rgba(16,185,129,0.3)] transition active:scale-[0.98]"
+            className="flex items-center space-x-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white px-4 py-2 text-xs font-bold shadow-md shadow-emerald-700/20 active:scale-[0.98] transition-all duration-150 cursor-pointer"
           >
-            <KanbanSquare className="h-4 w-4 stroke-[1.75]" />
-            <span>กระดานคันบัน</span>
+            <KanbanSquare className="h-4 w-4 stroke-[2]" />
+            <span>กระดานงานช่าง</span>
           </Link>
         </div>
       </div>
 
-      {/* 2. KPI Summary Cards with Mini Trend Bars */}
+      {/* 2. KPI Summary Cards with Accent Glow & Hover Micro-Interactions */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="rounded-2xl border border-slate-200/90 bg-white/95 backdrop-blur-md p-5 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.06)] hover:shadow-[0_8px_24px_-6px_rgba(0,0,0,0.08)] hover:border-amber-400 transition-all flex flex-col justify-between space-y-3">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs font-medium text-slate-500">
-                งานที่รอดำเนินการ
-              </span>
-              <h3 className="mt-1 text-2xl font-bold tracking-tight text-amber-600 font-mono">
+        {/* Card 1: Assigned */}
+        <div className="bg-white/95 backdrop-blur-sm rounded-2xl border border-slate-200/80 border-t-4 border-t-amber-500 p-5 shadow-[0_2px_10px_-2px_rgba(0,0,0,0.04)] hover:shadow-lg hover:-translate-y-1 transition-all duration-200 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between text-xs text-amber-700 font-semibold mb-2.5">
+              <span>งานที่รอดำเนินการ</span>
+              <div className="w-10 h-10 rounded-full bg-amber-50 text-amber-600 ring-4 ring-amber-50/60 flex items-center justify-center shrink-0">
+                <Clock className="h-5 w-5" />
+              </div>
+            </div>
+            <div className="flex items-baseline justify-between">
+              <h3 className="text-3xl font-bold tracking-tight text-slate-900 font-mono">
                 {assignedCount}
               </h3>
-            </div>
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-700 border border-amber-200/80 shadow-2xs">
-              <Clock className="h-5 w-5 stroke-[1.75]" />
+              <span className="text-xs text-slate-500 font-medium">รายการ</span>
             </div>
           </div>
-          <div className="space-y-1">
-            <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-              <div className="h-full bg-amber-500 rounded-full" style={{ width: `${Math.min(100, assignedCount * 25)}%` }} />
-            </div>
-            <span className="text-[10px] text-slate-400 font-mono">คิวงานรอเข้าซ่อม</span>
+          <div className="mt-4 rounded-xl bg-amber-50/50 border border-amber-100 p-2 text-[11px] text-amber-800 font-medium">
+            คิวงานรอเข้าซ่อม
           </div>
         </div>
 
-        <div className="rounded-2xl border border-slate-200/90 bg-white/95 backdrop-blur-md p-5 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.06)] hover:shadow-[0_8px_24px_-6px_rgba(0,0,0,0.08)] hover:border-blue-400 transition-all flex flex-col justify-between space-y-3">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs font-medium text-slate-500">
-                กำลังดำเนินการซ่อม
-              </span>
-              <h3 className="mt-1 text-2xl font-bold tracking-tight text-blue-600 font-mono">
+        {/* Card 2: In Progress */}
+        <div className="bg-white/95 backdrop-blur-sm rounded-2xl border border-slate-200/80 border-t-4 border-t-blue-500 p-5 shadow-[0_2px_10px_-2px_rgba(0,0,0,0.04)] hover:shadow-lg hover:-translate-y-1 transition-all duration-200 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between text-xs text-blue-700 font-semibold mb-2.5">
+              <span>กำลังดำเนินการซ่อม</span>
+              <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 ring-4 ring-blue-50/60 flex items-center justify-center shrink-0">
+                <Wrench className="h-5 w-5" />
+              </div>
+            </div>
+            <div className="flex items-baseline justify-between">
+              <h3 className="text-3xl font-bold tracking-tight text-blue-700 font-mono">
                 {inProgressCount}
               </h3>
-            </div>
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-700 border border-blue-200/80 shadow-2xs">
-              <Wrench className="h-5 w-5 stroke-[1.75]" />
+              <span className="text-xs text-blue-600 font-medium">รายการ</span>
             </div>
           </div>
-          <div className="space-y-1">
-            <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-              <div className="h-full bg-blue-500 rounded-full" style={{ width: `${Math.min(100, inProgressCount * 33)}%` }} />
-            </div>
-            <span className="text-[10px] text-slate-400 font-mono">ปฏิบัติงานหน้างาน</span>
+          <div className="mt-4 rounded-xl bg-blue-50/50 border border-blue-100 p-2 text-[11px] text-blue-800 font-medium">
+            ปฏิบัติงานหน้างาน
           </div>
         </div>
 
-        <div className="rounded-2xl border border-slate-200/90 bg-white/95 backdrop-blur-md p-5 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.06)] hover:shadow-[0_8px_24px_-6px_rgba(0,0,0,0.08)] hover:border-emerald-400 transition-all flex flex-col justify-between space-y-3">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs font-medium text-slate-500">
-                ซ่อมเสร็จสิ้นวันนี้
-              </span>
-              <h3 className="mt-1 text-2xl font-bold tracking-tight text-emerald-600 font-mono">
+        {/* Card 3: Resolved */}
+        <div className="bg-white/95 backdrop-blur-sm rounded-2xl border border-slate-200/80 border-t-4 border-t-emerald-500 p-5 shadow-[0_2px_10px_-2px_rgba(0,0,0,0.04)] hover:shadow-lg hover:-translate-y-1 transition-all duration-200 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between text-xs text-emerald-800 font-semibold mb-2.5">
+              <span>ซ่อมเสร็จสิ้นวันนี้</span>
+              <div className="w-10 h-10 rounded-full bg-emerald-50 text-emerald-600 ring-4 ring-emerald-50/60 flex items-center justify-center shrink-0">
+                <CheckCircle2 className="h-5 w-5" />
+              </div>
+            </div>
+            <div className="flex items-baseline justify-between">
+              <h3 className="text-3xl font-bold tracking-tight text-emerald-700 font-mono">
                 {resolvedCount}
               </h3>
-            </div>
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200/80 shadow-2xs">
-              <CheckCircle2 className="h-5 w-5 stroke-[1.75]" />
+              <span className="text-xs text-emerald-600 font-medium">รายการ</span>
             </div>
           </div>
-          <div className="space-y-1">
-            <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-              <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${Math.min(100, resolvedCount * 20)}%` }} />
-            </div>
-            <span className="text-[10px] text-slate-400 font-mono">ส่งมอบงานแล้ว</span>
+          <div className="mt-4 rounded-xl bg-emerald-50/50 border border-emerald-100 p-2 text-[11px] text-emerald-800 font-medium">
+            ส่งมอบงานแล้ว
           </div>
         </div>
 
-        <div className="rounded-2xl border border-rose-200/90 bg-rose-50/50 backdrop-blur-md p-5 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.06)] hover:shadow-[0_8px_24px_-6px_rgba(0,0,0,0.08)] hover:border-rose-400 transition-all flex flex-col justify-between space-y-3">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs font-medium text-rose-700">
-                งานด่วนวิกฤต (SLA 15m)
-              </span>
-              <h3 className="mt-1 text-2xl font-bold tracking-tight text-rose-600 font-mono">
+        {/* Card 4: Urgent */}
+        <div className="bg-white/95 backdrop-blur-sm rounded-2xl border border-slate-200/80 border-t-4 border-t-rose-500 p-5 shadow-[0_2px_10px_-2px_rgba(0,0,0,0.04)] hover:shadow-lg hover:-translate-y-1 transition-all duration-200 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between text-xs text-rose-700 font-semibold mb-2.5">
+              <span>งานด่วนวิกฤต (SLA 15m)</span>
+              <div className="w-10 h-10 rounded-full bg-rose-50 text-rose-600 ring-4 ring-rose-50/60 flex items-center justify-center shrink-0">
+                <Flame className="h-5 w-5" />
+              </div>
+            </div>
+            <div className="flex items-baseline justify-between">
+              <h3 className="text-3xl font-bold tracking-tight text-rose-600 font-mono">
                 {urgentCount}
               </h3>
-            </div>
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-100 text-rose-700 border border-rose-200 shadow-2xs">
-              <Flame className="h-5 w-5 stroke-[1.75] animate-pulse" />
+              <span className="text-xs text-rose-600 font-medium">รายการ</span>
             </div>
           </div>
-          <div className="space-y-1">
-            <div className="h-1.5 w-full bg-rose-100 rounded-full overflow-hidden">
-              <div className="h-full bg-rose-500 rounded-full" style={{ width: `${Math.min(100, urgentCount * 50)}%` }} />
-            </div>
-            <span className="text-[10px] text-rose-600 font-mono font-medium">เข้าหน้างานด่วน</span>
+          <div className="mt-4 rounded-xl bg-rose-50/50 border border-rose-100 p-2 text-[11px] text-rose-700 font-medium">
+            เข้าหน้างานด่วน
           </div>
         </div>
       </div>
@@ -294,7 +294,7 @@ export default async function TechnicianDashboardPage() {
                 ))}
               </div>
             ) : (
-              <div className="rounded-lg border border-zinc-200 bg-white p-12 text-center space-y-3 shadow-xs">
+              <div className="rounded-lg border border-slate-200 bg-white p-12 text-center space-y-3 shadow-sm">
                 <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-md bg-emerald-50 text-emerald-600 border border-emerald-200">
                   <CheckCircle2 className="h-5 w-5 stroke-[1.75]" />
                 </div>

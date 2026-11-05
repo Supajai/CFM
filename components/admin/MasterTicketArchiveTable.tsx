@@ -19,6 +19,8 @@ import {
   User,
   SlidersHorizontal,
   Star,
+  X,
+  Pause,
 } from "lucide-react";
 import { formatDateThai, timeAgoThai } from "@/lib/utils";
 import AdminTicketManageModal, {
@@ -104,15 +106,15 @@ export default function MasterTicketArchiveTable({
         );
       case "ON_HOLD":
         return (
-          <span className="inline-flex items-center space-x-1 bg-amber-50 text-amber-800 border border-amber-300 px-2.5 py-1 rounded-lg text-xs font-semibold">
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-            <span>⏸️ ยกกลับศูนย์ซ่อม</span>
+          <span className="inline-flex items-center space-x-1.5 bg-amber-50 text-amber-800 border border-amber-300 px-2.5 py-1 rounded-lg text-xs font-semibold">
+            <Pause className="w-3 h-3 text-amber-600 stroke-[2.5]" />
+            <span>ยกกลับศูนย์ซ่อม</span>
           </span>
         );
       case "RESOLVED":
       case "CLOSED":
         return (
-          <span className="inline-flex items-center space-x-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200/90 px-2.5 py-1 rounded-lg text-xs font-semibold shadow-2xs">
+          <span className="inline-flex items-center space-x-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200/90 px-2.5 py-1 rounded-lg text-xs font-semibold shadow-sm">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
             <span>ซ่อมเสร็จสิ้น</span>
           </span>
@@ -141,7 +143,7 @@ export default function MasterTicketArchiveTable({
   return (
     <div className="space-y-4">
       {/* Search & Filter Toolbar */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200 shadow-2xs">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200 shadow-sm">
         {/* Search Input */}
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -150,14 +152,14 @@ export default function MasterTicketArchiveTable({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="ค้นหาตามรหัส #REP, ปัญหา, ห้อง, ผู้แจ้ง หรือช่าง..."
-            className="w-full pl-9.5 pr-4 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50/60 focus:bg-white focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 transition"
+            className="w-full pl-9.5 pr-8 py-2 text-xs rounded-md border border-slate-200 bg-white focus:border-emerald-700 focus:outline-none focus:ring-1 focus:ring-emerald-700 transition-colors"
           />
           {searchQuery && (
             <button
               onClick={() => setSearchQuery("")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5"
             >
-              ✕
+              <X className="h-3.5 w-3.5" />
             </button>
           )}
         </div>
@@ -181,7 +183,7 @@ export default function MasterTicketArchiveTable({
                 onClick={() => setStatusFilter(tab.id)}
                 className={`px-3 py-1.5 rounded-xl font-semibold text-xs whitespace-nowrap transition cursor-pointer border ${
                   isSelected
-                    ? "bg-slate-900 text-white border-slate-900 shadow-xs"
+                    ? "bg-slate-900 text-white border-slate-900 shadow-sm"
                     : "bg-slate-100/80 text-slate-600 border-slate-200 hover:bg-slate-200"
                 }`}
               >
@@ -225,10 +227,10 @@ export default function MasterTicketArchiveTable({
                           <p className="font-bold text-slate-900 truncate">{t.title}</p>
                           {t.rating ? (
                             <span
-                              className="shrink-0 inline-flex items-center space-x-0.5 px-1.5 py-0.2 rounded bg-amber-50 border border-amber-200 text-amber-800 text-[10px] font-bold font-mono"
+                              className="shrink-0 inline-flex items-center space-x-1 px-1.5 py-0.5 rounded bg-amber-50 border border-amber-200 text-amber-800 text-[10px] font-bold font-mono"
                               title={t.feedback ? `รีวิว: "${t.feedback}"` : `คะแนน ${t.rating}/5 ดาว`}
                             >
-                              <span>⭐</span>
+                              <Star className="h-3 w-3 fill-amber-400 text-amber-400 shrink-0" />
                               <span>{t.rating}/5</span>
                             </span>
                           ) : null}
@@ -255,10 +257,10 @@ export default function MasterTicketArchiveTable({
                             <div>
                               {t.rating ? (
                                 <span
-                                  className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md bg-amber-50 border border-amber-200 text-amber-800 font-mono text-[11px] font-bold shadow-2xs"
+                                  className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md bg-amber-50 border border-amber-200 text-amber-800 font-mono text-[11px] font-bold shadow-sm"
                                   title={t.feedback ? `ความคิดเห็น: "${t.feedback}"` : `คะแนนประเมิน ${t.rating}/5 ดาว`}
                                 >
-                                  <span className="text-amber-500">⭐</span>
+                                  <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400 shrink-0" />
                                   <span>{t.rating}/5</span>
                                 </span>
                               ) : (
@@ -293,7 +295,7 @@ export default function MasterTicketArchiveTable({
                         <button
                           type="button"
                           onClick={() => setSelectedTicketForManage(t)}
-                          className="inline-flex items-center space-x-1.5 rounded-xl bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-300 border border-slate-200/90 px-3 py-1.5 font-semibold text-slate-700 shadow-xs transition-all active:scale-95 cursor-pointer"
+                          className="inline-flex items-center space-x-1.5 rounded-xl bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-300 border border-slate-200/90 px-3 py-1.5 font-semibold text-slate-700 shadow-sm transition-all active:scale-95 cursor-pointer"
                         >
                           <span>ตรวจสอบ</span>
                           <ExternalLink className="h-3.5 w-3.5 stroke-[1.75]" />

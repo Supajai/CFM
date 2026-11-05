@@ -1,4 +1,4 @@
-// components/auth/RegisterForm.tsx
+﻿// components/auth/RegisterForm.tsx
 "use client";
 
 import React, { useState } from "react";
@@ -73,16 +73,16 @@ export default function RegisterForm() {
   };
 
   return (
-    <div className="w-full max-w-lg rounded-2xl border border-slate-200/90 bg-white/95 backdrop-blur-md p-6 sm:p-8 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] hover:border-emerald-500/40 transition-all space-y-5">
+    <div className="w-full max-w-lg rounded-lg border border-slate-200 bg-white p-6 sm:p-8 shadow-sm space-y-5">
       <div className="text-center space-y-2">
-        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-b from-emerald-500 to-emerald-600 text-white shadow-[0_2px_10px_rgba(16,185,129,0.35)]">
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-md bg-emerald-800 text-white shadow-sm">
           <GraduationCap className="h-6 w-6 stroke-[1.75]" />
         </div>
         <h1 className="text-xl font-bold tracking-tight text-slate-900">
           ลงทะเบียนสมาชิกใหม่
         </h1>
         <p className="text-xs text-slate-500">
-          สำหรับนักศึกษาและบุคลากร แผนกวิชาช่างเทคนิคคอมพิวเตอร์
+          สำหรับนักศึกษาและบุคลากร แผนกเทคโนโลยีคอมพิวเตอร์
         </p>
       </div>
 
@@ -210,7 +210,7 @@ export default function RegisterForm() {
         <button
           type="submit"
           disabled={isLoading}
-          className="mt-2 flex w-full items-center justify-center space-x-2 h-10 rounded-xl bg-gradient-to-b from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-xs font-semibold text-white shadow-[0_2px_10px_rgba(16,185,129,0.3)] transition-all active:scale-[0.98] disabled:opacity-50 cursor-pointer"
+          className="mt-2 flex w-full items-center justify-center space-x-2 h-10 rounded-md bg-emerald-800 hover:bg-emerald-900 text-xs font-medium text-white shadow-sm transition-colors disabled:opacity-50 cursor-pointer"
         >
           {isLoading ? (
             <>

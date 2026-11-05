@@ -4,6 +4,8 @@ import KanbanBoard from "@/components/kanban/KanbanBoard";
 import KanbanSidebar from "@/components/kanban/KanbanSidebar";
 import { Metadata } from "next";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "กระดานคันบันจัดการงานซ่อมบำรุง | CampusOps",
   description: "ศูนย์กลางคัดกรอง กระจายงาน และจัดการสถานะงานซ่อมบำรุงในสถานศึกษา",

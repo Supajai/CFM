@@ -72,6 +72,13 @@ export default function KanbanTaskCard({
   const isUrgent =
     task.isUrgent || task.priority === "CRITICAL" || task.priority === "URGENT";
 
+  const getBorderColor = () => {
+    if (isUrgent) return "border-l-4 border-l-rose-500 border-slate-200";
+    if (task.status === "IN_PROGRESS") return "border-l-4 border-l-amber-500 border-slate-200";
+    if (task.status === "RESOLVED" || task.status === "CLOSED") return "border-l-4 border-l-emerald-600 border-slate-200";
+    return "border-l-4 border-l-slate-300 border-slate-200";
+  };
+
   const handleDragStart = (e: React.DragEvent) => {
     if (!isMyTask && !isUnassigned) {
       e.preventDefault();
@@ -128,98 +135,99 @@ export default function KanbanTaskCard({
       draggable={isMyTask || isUnassigned}
       onDragStart={handleDragStart}
       onClick={() => onSelect(task)}
-      className={`group relative w-full min-w-0 rounded-2xl border bg-white/95 backdrop-blur-md p-3.5 sm:p-4 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] transition-all hover:shadow-md ${
+      className={`group relative w-full min-w-0 rounded-2xl border bg-white/95 backdrop-blur-sm p-4 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-200 active:scale-[0.99] ${
         isMyTask || isUnassigned
-          ? "cursor-grab active:cursor-grabbing hover:border-emerald-500/50"
-          : "cursor-pointer hover:border-slate-300 opacity-90"
-      } ${
-        isUrgent
-          ? "border-l-4 border-l-rose-500 border-slate-200/90"
-          : isMyTask
-          ? "border-slate-200/90 ring-1 ring-emerald-500/20"
-          : "border-slate-200/90"
-      }`}
+          ? "cursor-grab active:cursor-grabbing"
+          : "cursor-pointer opacity-90"
+      } ${getBorderColor()} ${isMyTask ? "ring-2 ring-emerald-500/20" : ""}`}
     >
       {/* Top Row: Ticket Number, Category, and Priority Badge */}
       <div className="flex items-center justify-between gap-1.5 text-xs min-w-0">
         <div className="flex items-center space-x-1.5 min-w-0 overflow-hidden">
-          <span className="chip-tech text-[11px] py-0.5 px-2 bg-slate-100 text-slate-800 border-slate-200 font-bold font-mono shrink-0">
+          <span className="font-mono text-xs bg-slate-100 border border-slate-200 px-2 py-0.5 rounded text-slate-700 font-semibold shrink-0">
             {task.ticketNumber}
           </span>
-          <span className="rounded-lg bg-slate-100/80 px-2 py-0.5 text-[10px] font-semibold text-slate-600 border border-slate-200/80 truncate">
+          <span className="rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-600 border border-slate-200 truncate">
             {getCategoryShort(task.category)}
           </span>
         </div>
 
         <div className="shrink-0">
           {isUrgent ? (
-            <span className="flex items-center space-x-1 rounded-full bg-rose-50 px-2 py-0.5 text-[10px] font-bold text-rose-700 border border-rose-200">
-              <span className="h-1.5 w-1.5 rounded-full bg-rose-500 animate-pulse" />
+            <span className="flex items-center space-x-1 rounded-md bg-rose-50 px-2 py-0.5 text-[10px] font-semibold text-rose-700 border border-rose-200">
+              <span className="h-1.5 w-1.5 rounded-full bg-rose-600 shrink-0" />
               <span>เร่งด่วน</span>
             </span>
           ) : isMyTask ? (
-            <span className="flex items-center space-x-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 border border-emerald-200">
-              <UserCheck className="h-3 w-3 text-emerald-600" />
+            <span className="flex items-center space-x-1 rounded-md bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-800 border border-emerald-200">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-600 shrink-0" />
               <span>งานของฉัน</span>
             </span>
           ) : isUnassigned ? (
-            <span className="flex items-center space-x-1 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-700 border border-amber-200">
-              <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
+            <span className="flex items-center space-x-1 rounded-md bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700 border border-amber-200">
+              <span className="h-1.5 w-1.5 rounded-full bg-amber-600 shrink-0" />
               <span>งานกองกลาง</span>
             </span>
           ) : (
-            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600 border border-slate-200">
-              {task.priority === "LOW" ? "ความสำคัญต่ำ" : "ปกติ"}
+            <span className="flex items-center space-x-1 rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600 border border-slate-200">
+              <span className="h-1.5 w-1.5 rounded-full bg-slate-400 shrink-0" />
+              <span>{task.priority === "LOW" ? "ความสำคัญต่ำ" : "ปกติ"}</span>
             </span>
           )}
         </div>
       </div>
 
-      {/* Main Title */}
-      <h3 className="mt-2 text-xs font-bold leading-snug text-slate-900 group-hover:text-emerald-700 transition line-clamp-2 break-words">
-        {task.title}
-      </h3>
+      {/* Main Content: Title & Location with Compact Thumbnail at Right */}
+      <div className="mt-2.5 flex items-start justify-between gap-3">
+        <div className="flex-1 min-w-0">
+          <h3 className="text-xs font-semibold leading-snug text-slate-900 group-hover:text-emerald-800 transition-colors line-clamp-2 break-words">
+            {task.title}
+          </h3>
+        </div>
 
-      {/* Location */}
-      <div className="mt-2 flex items-center space-x-1.5 text-[11px] text-slate-600 min-w-0">
-        <MapPin className="h-3.5 w-3.5 shrink-0 text-emerald-600 stroke-[1.75]" />
-        <span className="truncate font-semibold text-slate-800">
-          ชั้น {task.floor || 1} • {task.roomName || task.room}
-        </span>
-        {task.specificPoint && (
-          <span className="text-[10px] text-emerald-700 font-semibold truncate font-mono">
-            ({task.specificPoint})
-          </span>
+        {/* Compact Square Thumbnail (48x48px) */}
+        {task.attachments && task.attachments.length > 0 && (
+          <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-md border border-slate-200 bg-slate-50">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={task.attachments[0].url}
+              alt={task.attachments[0].fileName || "ภาพหลักฐาน"}
+              className="h-full w-full object-cover"
+            />
+            {task.attachments.length > 1 && (
+              <span className="absolute bottom-0.5 right-0.5 rounded bg-black/75 px-1 text-[8px] font-medium text-white">
+                +{task.attachments.length - 1}
+              </span>
+            )}
+          </div>
         )}
       </div>
 
-      {/* Thumbnail if any */}
-      {task.attachments && task.attachments.length > 0 && (
-        <div className="mt-2 relative aspect-[16/9] w-full overflow-hidden rounded-xl border border-slate-200/90 bg-slate-50">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={task.attachments[0].url}
-            alt={task.attachments[0].fileName || "ภาพหลักฐาน"}
-            className="h-full w-full object-cover"
-          />
-          {task.attachments.length > 1 && (
-            <span className="absolute bottom-1.5 right-1.5 rounded-lg bg-black/75 px-1.5 py-0.5 text-[9px] font-semibold text-white backdrop-blur-xs">
-              +{task.attachments.length - 1} รูป
+      {/* Location Sub-box with Layering */}
+      <div className="mt-2 rounded-md bg-slate-50 border border-slate-100 p-2">
+        <div className="flex items-center space-x-1.5 text-[11px] text-slate-600 min-w-0">
+          <MapPin className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+          <span className="truncate font-medium text-slate-700">
+            ชั้น {task.floor || 1} • {task.roomName || task.room}
+          </span>
+          {task.specificPoint && (
+            <span className="text-[10px] text-slate-500 truncate font-mono">
+              ({task.specificPoint})
             </span>
           )}
         </div>
-      )}
+      </div>
 
       {/* Meta Footer */}
       <div className="mt-2.5 flex items-center justify-between border-t border-slate-100 pt-2 text-[10px] text-slate-500">
         <div className="flex items-center space-x-1.5 min-w-0">
           <Clock className="h-3 w-3 shrink-0 text-slate-400" />
-          <span className="font-medium">{timeAgoThai(task.createdAt)}</span>
+          <span className="font-medium text-slate-400">{timeAgoThai(task.createdAt)}</span>
         </div>
 
         {task.attachments?.length > 0 && (
           <span className="flex items-center space-x-0.5 text-slate-400 font-mono">
-            <Paperclip className="h-3 w-3 stroke-[1.75]" />
+            <Paperclip className="h-3 w-3" />
             <span>{task.attachments.length}</span>
           </span>
         )}
@@ -233,7 +241,7 @@ export default function KanbanTaskCard({
             type="button"
             onClick={handleClaim}
             disabled={isClaiming}
-            className="w-full flex items-center justify-center space-x-1.5 rounded-xl bg-gradient-to-b from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white py-2 px-3 text-xs font-bold shadow-[0_2px_8px_rgba(245,158,11,0.3)] transition active:scale-[0.98] disabled:opacity-50"
+            className="w-full flex items-center justify-center space-x-1.5 rounded-md bg-emerald-800 text-white hover:bg-emerald-900 py-1.5 px-3 text-xs font-medium shadow-sm transition-colors disabled:opacity-50"
           >
             {isClaiming ? (
               <>
@@ -243,7 +251,7 @@ export default function KanbanTaskCard({
             ) : (
               <>
                 <Hand className="h-3.5 w-3.5" />
-                <span>✋ กดรับงานนี้เข้าคิวฉัน</span>
+                <span>กดรับงานนี้เข้าคิวฉัน</span>
               </>
             )}
           </button>
@@ -251,11 +259,11 @@ export default function KanbanTaskCard({
 
         {/* กรณีที่ 2: งานของช่างท่านอื่น (!isUnassigned && !isMyTask) -> Read-only + Badge */}
         {!isUnassigned && !isMyTask && (
-          <div className="flex items-center justify-between gap-1 rounded-xl bg-slate-100/90 border border-slate-200/80 px-2.5 py-1.5 text-[10px] text-slate-600 min-w-0">
-            <span className="flex items-center space-x-1 font-semibold text-slate-700 truncate min-w-0">
+          <div className="flex items-center justify-between gap-1 rounded-md bg-slate-50 border border-slate-200 px-2.5 py-1.5 text-[10px] text-slate-600 min-w-0">
+            <span className="flex items-center space-x-1 font-medium text-slate-700 truncate min-w-0">
               <Lock className="h-3 w-3 text-slate-400 shrink-0" />
               <span className="shrink-0">ช่างผู้ดูแล:</span>
-              <span className="text-slate-900 font-bold truncate">
+              <span className="text-slate-900 font-semibold truncate">
                 {task.technician?.name || "ช่างท่านอื่น"}
               </span>
             </span>
@@ -274,7 +282,7 @@ export default function KanbanTaskCard({
                 type="button"
                 onClick={handleStartWork}
                 disabled={isStarting}
-                className="w-full flex items-center justify-center space-x-1.5 rounded-xl bg-gradient-to-b from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white py-2 px-3 text-xs font-semibold shadow-[0_2px_8px_rgba(37,99,235,0.25)] transition active:scale-[0.98] disabled:opacity-50"
+                className="w-full flex items-center justify-center space-x-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 text-white hover:from-emerald-500 hover:to-teal-600 py-2 px-3.5 text-xs font-bold shadow-md shadow-emerald-700/20 active:scale-[0.98] transition-all disabled:opacity-50 cursor-pointer"
               >
                 {isStarting ? (
                   <>
@@ -284,7 +292,7 @@ export default function KanbanTaskCard({
                 ) : (
                   <>
                     <Rocket className="h-3.5 w-3.5" />
-                    <span>🚀 เริ่มเข้าหน้างาน</span>
+                    <span>เริ่มเข้าหน้างาน</span>
                   </>
                 )}
               </button>
@@ -298,21 +306,21 @@ export default function KanbanTaskCard({
                   e.stopPropagation();
                   onOpenResolveModal(task);
                 }}
-                className="w-full flex items-center justify-center space-x-1.5 rounded-xl bg-gradient-to-b from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white py-2 px-3 text-xs font-bold shadow-[0_2px_8px_rgba(16,185,129,0.3)] transition active:scale-[0.98]"
+                className="w-full flex items-center justify-center space-x-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 text-white hover:from-emerald-500 hover:to-teal-600 py-2 px-3.5 text-xs font-bold shadow-md shadow-emerald-700/20 active:scale-[0.98] transition-all cursor-pointer"
               >
                 <Camera className="h-3.5 w-3.5" />
-                <span>📷 แนบรูป & ปิดงาน</span>
+                <span>แนบรูปและปิดงาน</span>
               </button>
             )}
 
             {/* สถานะ "เสร็จสิ้น / ซ่อมเสร็จแล้ว" (RESOLVED หรือ CLOSED) */}
             {(task.status === "RESOLVED" || task.status === "CLOSED") && (
-              <div className="flex items-center justify-center space-x-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 py-1.5 px-3 text-[11px] font-semibold">
-                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+              <div className="flex items-center justify-center space-x-1.5 rounded-xl bg-emerald-50 border border-emerald-200/80 text-emerald-800 py-1.5 px-3 text-xs font-bold shadow-2xs">
+                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-700" />
                 <span>
                   {task.status === "CLOSED"
                     ? "ปิดงานสมบูรณ์แล้ว"
-                    : "ซ่อมเสร็จสิ้น (RESOLVED)"}
+                    : "ซ่อมเสร็จสิ้น"}
                 </span>
               </div>
             )}

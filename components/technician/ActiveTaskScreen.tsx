@@ -39,6 +39,7 @@ import {
   startWorkAction,
 } from "@/actions/ticket";
 import { formatDateThai, timeAgoThai } from "@/lib/utils";
+import TicketMilestoneStepper from "@/components/ticket/TicketMilestoneStepper";
 
 export interface ActiveTaskTicket {
   id: string;
@@ -339,14 +340,14 @@ export default function ActiveTaskScreen({
     setValidationError(null);
 
     if (!afterPhotoUrl) {
-      setValidationError("⚠️ กรุณาถ่ายภาพหรือแนบรูปหลักฐานหลังการซ่อมแซม (After Photo)");
+      setValidationError("กรุณาถ่ายภาพหรือแนบรูปหลักฐานหลังการซ่อมแซม (After Photo)");
       // Scroll to upload section
       document.getElementById("after-photo-section")?.scrollIntoView({ behavior: "smooth" });
       return;
     }
 
     if (!resolutionNotes.trim() || resolutionNotes.trim().length < 8) {
-      setValidationError("⚠️ กรุณาระบุรายละเอียดการแก้ไขหรืออะไหล่ที่ใช้อย่างน้อย 8 ตัวอักษร");
+      setValidationError("กรุณาระบุรายละเอียดการแก้ไขหรืออะไหล่ที่ใช้อย่างน้อย 8 ตัวอักษร");
       document.getElementById("resolution-notes-section")?.scrollIntoView({ behavior: "smooth" });
       return;
     }
@@ -402,9 +403,9 @@ export default function ActiveTaskScreen({
         );
       case "ON_HOLD":
         return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-900 border border-amber-300 shadow-2xs">
-            <span className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
-            <span>⏸️ อยู่ระหว่างดำเนินการ (ยกกลับศูนย์ซ่อม)</span>
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-900 border border-amber-300 shadow-sm">
+            <Pause className="h-3 w-3 stroke-[2.5] text-amber-700" />
+            <span>อยู่ระหว่างดำเนินการ (ยกกลับศูนย์ซ่อม)</span>
           </span>
         );
       case "RESOLVED":
@@ -438,14 +439,14 @@ export default function ActiveTaskScreen({
   return (
     <div className="min-h-screen bg-slate-100/70 font-sans pb-12 md:pb-16">
       {/* 1. Sticky Top Header (Mobile Optimized Field Bar) */}
-      <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200/90 shadow-xs px-4 py-3 sm:px-6">
+      <header className="sticky top-0 z-30 bg-white border-b border-slate-200 shadow-sm px-4 py-3 sm:px-6">
         <div className="max-w-3xl mx-auto flex items-center justify-between gap-3">
           <Link
             href="/technician/dashboard"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200 transition active:scale-95 shrink-0"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200 transition shrink-0"
           >
             <ArrowLeft className="h-4 w-4" />
-            <span>แผนผัง 2.5D</span>
+            <span>แผนผังอาคาร</span>
           </Link>
 
           <div className="text-center min-w-0 flex-1">
@@ -470,76 +471,25 @@ export default function ActiveTaskScreen({
 
       {/* Main Container */}
       <main className="max-w-3xl mx-auto p-4 sm:p-6 space-y-4">
-        {/* Step Progression Bar */}
-        <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-xs">
-          <div className="grid grid-cols-4 gap-2 text-center text-xs">
-            <div className="space-y-1">
-              <div className="h-2 rounded-full bg-emerald-500" />
-              <span className="font-medium text-slate-600 text-[11px]">1. แจ้งซ่อม</span>
-            </div>
-            <div className="space-y-1">
-              <div
-                className={`h-2 rounded-full ${
-                  isAssigned || isInProgress || isOnHold || isResolvedOrClosed
-                    ? "bg-emerald-500"
-                    : "bg-slate-200"
-                }`}
-              />
-              <span className="font-medium text-slate-600 text-[11px]">2. มอบหมายช่าง</span>
-            </div>
-            <div className="space-y-1">
-              <div
-                className={`h-2 rounded-full ${
-                  isInProgress
-                    ? "bg-blue-600 animate-pulse"
-                    : isOnHold
-                    ? "bg-amber-500 animate-pulse"
-                    : isResolvedOrClosed
-                    ? "bg-emerald-500"
-                    : "bg-slate-200"
-                }`}
-              />
-              <span
-                className={`text-[11px] font-semibold ${
-                  isInProgress
-                    ? "text-blue-700"
-                    : isOnHold
-                    ? "text-amber-800"
-                    : "text-slate-600"
-                }`}
-              >
-                {isOnHold ? "3. พักงาน / ยกกลับศูนย์" : "3. ดำเนินการซ่อม"}
-              </span>
-            </div>
-            <div className="space-y-1">
-              <div
-                className={`h-2 rounded-full ${
-                  isResolvedOrClosed ? "bg-emerald-500" : "bg-slate-200"
-                }`}
-              />
-              <span
-                className={`text-[11px] font-semibold ${
-                  isResolvedOrClosed ? "text-emerald-700" : "text-slate-400"
-                }`}
-              >
-                4. ปิดงานสำเร็จ
-              </span>
-            </div>
-          </div>
-        </div>
+        {/* Interactive Milestone Stepper with Radar Ping Pulse */}
+        <TicketMilestoneStepper
+          status={currentStatus}
+          isOnHold={isOnHold}
+        />
 
         {/* Banner แจ้งเตือนเมื่อตั๋วถูกปรับเป็น ON_HOLD */}
         {isOnHold && (
-          <div className="rounded-2xl border border-amber-300 bg-amber-50/95 p-4 sm:p-5 shadow-xs space-y-3 animate-in fade-in">
+          <div className="rounded-2xl border border-amber-300 bg-amber-50/95 p-4 sm:p-5 shadow-sm space-y-3 animate-in fade-in">
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-start gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-white shadow-xs">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-white shadow-sm">
                   <Clock className="h-5 w-5" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-200/80 text-amber-900 border border-amber-300">
-                      ⏸️ อยู่ระหว่างดำเนินการ (ยกกลับศูนย์ซ่อม)
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-200/80 text-amber-900 border border-amber-300">
+                      <Pause className="h-3 w-3 stroke-[2.5] text-amber-800" />
+                      <span>อยู่ระหว่างดำเนินการ (ยกกลับศูนย์ซ่อม)</span>
                     </span>
                     <span className="text-[11px] text-amber-700 font-medium">
                       ปลดล็อกแถบงานด้านล่างแล้ว
@@ -573,7 +523,7 @@ export default function ActiveTaskScreen({
         )}
 
         {/* 2. ข้อมูลสถานที่และพิกัดหน้างาน (Location & Coordinates) */}
-        <section className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-xs space-y-3">
+        <section className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-sm space-y-3">
           <div className="flex items-center justify-between border-b border-slate-100 pb-3">
             <div className="flex items-center gap-2">
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-600 border border-blue-200/60">
@@ -620,7 +570,7 @@ export default function ActiveTaskScreen({
         </section>
 
         {/* 3. การ์ดผู้แจ้งซ่อม พร้อมปุ่มโทรออกทันที (Reporter & Contact) */}
-        <section className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-xs space-y-3">
+        <section className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-sm space-y-3">
           <div className="flex items-center justify-between border-b border-slate-100 pb-3">
             <div className="flex items-center gap-2">
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-200/60">
@@ -674,7 +624,7 @@ export default function ActiveTaskScreen({
         </section>
 
         {/* 4. ข้อมูลปัญหาและรูปภาพความเสียหาย (Before Photo) */}
-        <section className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-xs space-y-4">
+        <section className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-sm space-y-4">
           <div className="border-b border-slate-100 pb-3">
             <div className="flex items-center justify-between gap-2">
               <span className="chip-tech text-[11px] py-1 px-3 bg-blue-50 text-blue-800 border-blue-200 font-semibold shadow-2xs">
@@ -716,11 +666,11 @@ export default function ActiveTaskScreen({
                   alt="ภาพถ่ายจุดชำรุด (Before Photo)"
                   className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                 />
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-bold gap-2 backdrop-blur-[2px]">
+                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-medium gap-2">
                   <Maximize2 className="h-5 w-5" />
                   <span>แตะเพื่อเปิดดูภาพขยาย</span>
                 </div>
-                <div className="absolute top-3 left-3 px-2.5 py-1 rounded-lg bg-black/70 text-white text-[10px] font-bold backdrop-blur-xs flex items-center gap-1.5">
+                <div className="absolute top-3 left-3 px-2.5 py-1 rounded-md bg-slate-900/80 text-white text-[10px] font-medium flex items-center gap-1.5">
                   <Camera className="h-3.5 w-3.5" />
                   <span>รูปถ่ายสภาพก่อนซ่อม</span>
                 </div>
@@ -737,7 +687,7 @@ export default function ActiveTaskScreen({
         {/* 5. ส่วนบันทึกผลงานปิดจ็อบ (Resolution & After Photo Upload) */}
         <section
           id="resolution-section"
-          className={`rounded-2xl border p-5 shadow-xs space-y-4 transition-all ${
+          className={`rounded-2xl border p-5 shadow-sm space-y-4 transition-all ${
             isResolvedOrClosed
               ? "bg-emerald-50/40 border-emerald-200"
               : isInProgress
@@ -770,8 +720,9 @@ export default function ActiveTaskScreen({
               </div>
             </div>
             {isResolvedOrClosed && (
-              <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
-                ✓ บันทึกสำเร็จ
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium bg-emerald-50 text-emerald-800 border border-emerald-200">
+                <Check className="h-3 w-3" />
+                <span>บันทึกสำเร็จ</span>
               </span>
             )}
           </div>
@@ -806,8 +757,9 @@ export default function ActiveTaskScreen({
                 {/* Quick Templates */}
                 {isInProgress && (
                   <div className="space-y-1.5 pt-1">
-                    <span className="text-[11px] font-semibold text-slate-500 block">
-                      ⚡ ข้อความสำเร็จรูป (แตะเพื่อนำไปใช้):
+                    <span className="text-[11px] font-semibold text-slate-500 flex items-center gap-1">
+                      <FileText className="h-3.5 w-3.5 text-slate-400" />
+                      <span>ข้อความสำเร็จรูป (คลิกเพื่อนำไปใช้):</span>
                     </span>
                     <div className="flex flex-wrap gap-1.5">
                       {RESOLUTION_TEMPLATES.map((tmpl, idx) => (
@@ -815,7 +767,7 @@ export default function ActiveTaskScreen({
                           key={idx}
                           type="button"
                           onClick={() => setResolutionNotes(tmpl)}
-                          className="px-2.5 py-1 rounded-lg text-[11px] font-medium bg-slate-100 text-slate-700 hover:bg-blue-50 hover:text-blue-700 border border-slate-200 hover:border-blue-200 transition text-left cursor-pointer active:scale-95"
+                          className="px-2.5 py-1 rounded-lg text-[11px] font-medium bg-slate-100 text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 border border-slate-200 hover:border-emerald-200 transition text-left cursor-pointer active:scale-95"
                         >
                           {tmpl}
                         </button>
@@ -868,11 +820,11 @@ export default function ActiveTaskScreen({
                     alt="ภาพถ่ายหลังซ่อมเสร็จ (After Photo)"
                     className="w-full h-full object-cover"
                   />
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-bold gap-2 backdrop-blur-[2px]">
+                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-medium gap-2">
                     <Maximize2 className="h-5 w-5" />
                     <span>แตะเพื่อเปิดดูภาพขยาย</span>
                   </div>
-                  <div className="absolute top-3 left-3 px-2.5 py-1 rounded-lg bg-emerald-600 text-white text-[10px] font-bold flex items-center gap-1.5 shadow-xs">
+                  <div className="absolute top-3 left-3 px-2.5 py-1 rounded-lg bg-emerald-600 text-white text-[10px] font-bold flex items-center gap-1.5 shadow-sm">
                     <CheckCircle2 className="h-3.5 w-3.5" />
                     <span>ภาพถ่ายหลักฐานหลังซ่อม (After Photo)</span>
                   </div>
@@ -928,9 +880,9 @@ export default function ActiveTaskScreen({
 
                 {/* Quick Presets for Demo / Testing */}
                 {isInProgress && (
-                  <div className="rounded-xl bg-slate-50 p-2.5 border border-slate-200/80 space-y-1.5">
+                  <div className="rounded-lg bg-slate-50 p-2.5 border border-slate-200 space-y-1.5">
                     <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide block">
-                      📷 หรือเลือกภาพตัวอย่างสำเร็จรูป (สำหรับทดสอบระบบ):
+                      หรือเลือกภาพตัวอย่างสำเร็จรูป (สำหรับทดสอบระบบ):
                     </span>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
                       {PRESET_AFTER_PHOTOS.map((p, idx) => (
@@ -941,7 +893,7 @@ export default function ActiveTaskScreen({
                             setAfterPhotoUrl(p.url);
                             setValidationError(null);
                           }}
-                          className="p-1.5 rounded-lg border border-slate-200 bg-white hover:border-blue-400 hover:bg-blue-50/50 text-[11px] font-medium text-slate-700 flex items-center gap-1.5 transition text-left cursor-pointer"
+                          className="p-1.5 rounded-md border border-slate-200 bg-white hover:border-emerald-500 hover:bg-emerald-50/50 text-[11px] font-medium text-slate-700 flex items-center gap-1.5 transition text-left cursor-pointer"
                         >
                           <img
                             src={p.url}
@@ -962,7 +914,7 @@ export default function ActiveTaskScreen({
           {isInProgress && (
             <div className="mt-8 pt-6 border-t border-slate-200 space-y-3">
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-                {/* ปุ่มตัวเลือก "ยกกลับศูนย์ซ่อม / ต้องรออะไหล่" (สีเหลืองอำพัน) */}
+                {/* ปุ่มตัวเลือก "ยกกลับศูนย์ซ่อม / ต้องรออะไหล่" */}
                 <button
                   type="button"
                   onClick={() => {
@@ -971,10 +923,10 @@ export default function ActiveTaskScreen({
                     }
                     setIsOnHoldModalOpen(true);
                   }}
-                  className="py-4 px-5 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-sm sm:text-base shadow-md shadow-amber-500/20 transition flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99] shrink-0 sm:w-auto"
+                  className="py-2.5 px-4 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-medium text-xs shadow-sm transition flex items-center justify-center gap-1.5 cursor-pointer shrink-0 sm:w-auto"
                 >
-                  <Pause className="h-5 w-5 fill-current" />
-                  <span>⏸️ พักงาน / นำกลับศูนย์ซ่อม</span>
+                  <Pause className="h-4 w-4 fill-current" />
+                  <span>พักงาน / นำกลับศูนย์ซ่อม</span>
                 </button>
 
                 {/* ปุ่มยืนยันหลักฐาน & ปิดงานซ่อม */}
@@ -982,21 +934,21 @@ export default function ActiveTaskScreen({
                   type="button"
                   onClick={handleCompleteRepair}
                   disabled={isSubmitting || !afterPhotoUrl}
-                  className={`flex-1 py-4 px-6 rounded-2xl font-bold text-sm sm:text-base flex items-center justify-center gap-2 shadow-lg transition-all cursor-pointer ${
+                  className={`flex-1 py-2.5 px-4 rounded-lg font-medium text-xs flex items-center justify-center gap-1.5 shadow-sm transition cursor-pointer ${
                     afterPhotoUrl
-                      ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/20 active:scale-[0.99]"
+                      ? "bg-emerald-800 hover:bg-emerald-900 text-white"
                       : "bg-slate-200 text-slate-400 cursor-not-allowed"
                   }`}
                 >
                   {isSubmitting ? (
                     <>
-                      <Loader2 className="h-5 w-5 animate-spin" />
+                      <Loader2 className="h-4 w-4 animate-spin" />
                       <span>กำลังบันทึกปิดงาน...</span>
                     </>
                   ) : (
                     <>
-                      <span>📷</span>
-                      <span>ยืนยันหลักฐาน & ปิดงานซ่อม (Complete Task)</span>
+                      <Check className="h-4 w-4" />
+                      <span>ยืนยันหลักฐานและปิดงานซ่อม</span>
                     </>
                   )}
                 </button>
@@ -1017,17 +969,17 @@ export default function ActiveTaskScreen({
                   type="button"
                   disabled={isSubmitting || isPending}
                   onClick={handleStartRepair}
-                  className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-sm sm:text-base shadow-lg shadow-blue-600/20 transition flex items-center justify-center gap-2 active:scale-[0.99] cursor-pointer disabled:opacity-60"
+                  className="w-full py-2.5 px-4 rounded-lg bg-emerald-800 hover:bg-emerald-900 text-white font-medium text-xs shadow-sm transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-60"
                 >
                   {isSubmitting || isPending ? (
                     <>
-                      <Loader2 className="h-5 w-5 animate-spin" />
+                      <Loader2 className="h-4 w-4 animate-spin" />
                       <span>กำลังตรวจสอบสถานะ...</span>
                     </>
                   ) : (
                     <>
-                      <Play className="h-5 w-5 fill-current" />
-                      <span>▶️ กลับมาดำเนินงานต่อ (Resume Task)</span>
+                      <Play className="h-4 w-4 fill-current" />
+                      <span>กลับมาดำเนินงานต่อ</span>
                     </>
                   )}
                 </button>
@@ -1036,14 +988,14 @@ export default function ActiveTaskScreen({
                   type="button"
                   onClick={handleCompleteRepair}
                   disabled={isSubmitting || !afterPhotoUrl}
-                  className={`w-full py-4 px-6 rounded-2xl font-bold text-sm sm:text-base flex items-center justify-center gap-2 shadow-lg transition-all cursor-pointer ${
+                  className={`w-full py-2.5 px-4 rounded-lg font-medium text-xs flex items-center justify-center gap-1.5 shadow-sm transition cursor-pointer ${
                     afterPhotoUrl
-                      ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/20 active:scale-[0.99]"
+                      ? "bg-emerald-800 hover:bg-emerald-900 text-white"
                       : "bg-slate-200 text-slate-400 cursor-not-allowed"
                   }`}
                 >
-                  <span>📷</span>
-                  <span>ปิดงานซ่อมเมื่อเสร็จสิ้น (Complete)</span>
+                  <Check className="h-4 w-4" />
+                  <span>ปิดงานซ่อมเมื่อเสร็จสิ้น</span>
                 </button>
               </div>
               {!afterPhotoUrl && (
@@ -1061,16 +1013,16 @@ export default function ActiveTaskScreen({
                 type="button"
                 disabled={isSubmitting || isPending}
                 onClick={handleStartRepair}
-                className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-base shadow-lg shadow-blue-600/25 transition-all flex items-center justify-center gap-2 active:scale-[0.99] cursor-pointer disabled:opacity-60"
+                className="w-full py-3 px-4 rounded-lg bg-emerald-800 hover:bg-emerald-900 text-white font-medium text-sm shadow-sm transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
               >
                 {isSubmitting || isPending ? (
                   <>
-                    <Loader2 className="h-5 w-5 animate-spin" />
+                    <Loader2 className="h-4 w-4 animate-spin" />
                     <span>กำลังบันทึกเช็กอินเข้าพื้นที่...</span>
                   </>
                 ) : (
                   <>
-                    <span className="text-lg">🚀</span>
+                    <Play className="h-4 w-4 fill-current" />
                     <span>เช็กอินเข้าพื้นที่ / เริ่มลงมือซ่อม</span>
                   </>
                 )}
@@ -1080,7 +1032,7 @@ export default function ActiveTaskScreen({
 
           {/* กรณี 3: RESOLVED หรือ CLOSED -> แสดงสถานะพร้อมปุ่มกลับ */}
           {isResolvedOrClosed && (
-            <div className="mt-8 pt-6 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 p-4 rounded-2xl bg-emerald-50/80 border border-emerald-200">
+            <div className="mt-8 pt-6 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 p-4 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200">
               <div className="flex items-center gap-2 text-xs font-bold text-emerald-800">
                 <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0" />
                 <span>งานนี้ได้รับการซ่อมแซมเสร็จสิ้นแล้ว</span>
@@ -1108,7 +1060,7 @@ export default function ActiveTaskScreen({
       {/* Lightbox Zoom Modal for Photos */}
       {zoomedImage && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4 backdrop-blur-xs animate-in fade-in"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4 animate-in fade-in"
           onClick={() => setZoomedImage(null)}
         >
           <div
@@ -1133,22 +1085,22 @@ export default function ActiveTaskScreen({
 
       {/* Success Modal */}
       {successModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-in fade-in">
-          <div className="relative w-full max-w-sm rounded-3xl bg-white p-6 text-center shadow-2xl space-y-4 animate-in zoom-in-95 duration-200">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-600">
-              <CheckCircle2 className="h-10 w-10 animate-bounce" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 animate-in fade-in">
+          <div className="relative w-full max-w-sm rounded-lg bg-white p-6 text-center shadow-xl border border-slate-200 space-y-4 animate-in zoom-in-95 duration-200">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200">
+              <CheckCircle2 className="h-8 w-8" />
             </div>
 
             <div className="space-y-1">
-              <h3 className="text-lg font-bold text-slate-900">
-                🎉 บันทึกปิดงานซ่อมสำเร็จ!
+              <h3 className="text-base font-bold text-slate-900">
+                บันทึกปิดงานซ่อมสำเร็จ
               </h3>
               <p className="text-xs text-slate-500">
                 ระบบได้บันทึกหลักฐานและเปลี่ยนสถานะเป็น RESOLVED เรียบร้อยแล้ว
               </p>
             </div>
 
-            <div className="rounded-xl bg-slate-50 p-3 border border-slate-200/80 text-xs font-mono text-slate-700">
+            <div className="rounded-md bg-slate-50 p-2.5 border border-slate-200 text-xs font-mono text-slate-700">
               {ticket.ticketNumber} • {ticket.room}
             </div>
 
@@ -1158,7 +1110,7 @@ export default function ActiveTaskScreen({
 
             <Link
               href="/technician/dashboard"
-              className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition"
+              className="w-full py-2.5 rounded-md bg-emerald-800 hover:bg-emerald-900 text-white font-medium text-xs flex items-center justify-center gap-1.5 transition"
             >
               <span>กลับสู่แดชบอร์ดทันที</span>
             </Link>
@@ -1168,15 +1120,15 @@ export default function ActiveTaskScreen({
 
       {/* On-Hold Modal (ยกกลับศูนย์ซ่อม / ต้องรออะไหล่) */}
       {isOnHoldModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs animate-in fade-in">
-          <div className="relative w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl border border-slate-200 space-y-4 animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 animate-in fade-in">
+          <div className="relative w-full max-w-lg rounded-lg bg-white p-6 shadow-xl border border-slate-200 space-y-4 animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center gap-2.5">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100 text-amber-700 border border-amber-200">
-                  <Pause className="h-5 w-5 fill-current" />
+                <div className="flex h-9 w-9 items-center justify-center rounded-md bg-amber-50 text-amber-700 border border-amber-200">
+                  <Pause className="h-4 w-4 fill-current" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-slate-900">
+                  <h3 className="text-sm font-bold text-slate-900">
                     พักงาน / นำอุปกรณ์กลับศูนย์ซ่อม
                   </h3>
                   <p className="text-xs text-slate-500">
@@ -1187,7 +1139,7 @@ export default function ActiveTaskScreen({
               <button
                 type="button"
                 onClick={() => setIsOnHoldModalOpen(false)}
-                className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition cursor-pointer"
+                className="flex h-8 w-8 items-center justify-center rounded-md hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition cursor-pointer"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -1196,14 +1148,14 @@ export default function ActiveTaskScreen({
             {/* Input: datetime-local */}
             <div className="space-y-2">
               <label className="block text-xs font-bold text-slate-800">
-                📅 วันที่และเวลาคาดว่าจะดำเนินการแล้วเสร็จ (ETA) <span className="text-rose-500">*</span>
+                วันที่และเวลาคาดว่าจะดำเนินการแล้วเสร็จ (ETA) <span className="text-rose-500">*</span>
               </label>
               <input
                 type="datetime-local"
                 value={etaDateInput}
                 min={new Date().toISOString().slice(0, 16)}
                 onChange={(e) => setEtaDateInput(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-slate-50 focus:bg-white focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 text-sm font-mono text-slate-900 transition outline-hidden"
+                className="w-full px-3 py-2 rounded-md border border-slate-300 bg-slate-50 focus:bg-white focus:border-amber-500 focus:ring-1 focus:ring-amber-500 text-xs font-mono text-slate-900 transition outline-none"
               />
 
               {/* Quick ETA Chips */}
@@ -1212,28 +1164,28 @@ export default function ActiveTaskScreen({
                 <button
                   type="button"
                   onClick={() => setQuickEtaHours(3)}
-                  className="px-2 py-1 rounded-lg bg-slate-100 hover:bg-amber-100 text-slate-700 hover:text-amber-900 text-[11px] font-semibold border border-slate-200 transition"
+                  className="px-2 py-1 rounded-md bg-slate-100 hover:bg-amber-50 text-slate-700 hover:text-amber-800 text-[11px] font-medium border border-slate-200 transition"
                 >
                   +3 ชั่วโมง
                 </button>
                 <button
                   type="button"
                   onClick={() => setQuickEtaHours(24)}
-                  className="px-2 py-1 rounded-lg bg-slate-100 hover:bg-amber-100 text-slate-700 hover:text-amber-900 text-[11px] font-semibold border border-slate-200 transition"
+                  className="px-2 py-1 rounded-md bg-slate-100 hover:bg-amber-50 text-slate-700 hover:text-amber-800 text-[11px] font-medium border border-slate-200 transition"
                 >
                   พรุ่งนี้ (+24 ชม.)
                 </button>
                 <button
                   type="button"
                   onClick={() => setQuickEtaHours(72)}
-                  className="px-2 py-1 rounded-lg bg-slate-100 hover:bg-amber-100 text-slate-700 hover:text-amber-900 text-[11px] font-semibold border border-slate-200 transition"
+                  className="px-2 py-1 rounded-md bg-slate-100 hover:bg-amber-50 text-slate-700 hover:text-amber-800 text-[11px] font-medium border border-slate-200 transition"
                 >
                   อีก 3 วัน
                 </button>
                 <button
                   type="button"
                   onClick={() => setQuickEtaHours(168)}
-                  className="px-2 py-1 rounded-lg bg-slate-100 hover:bg-amber-100 text-slate-700 hover:text-amber-900 text-[11px] font-semibold border border-slate-200 transition"
+                  className="px-2 py-1 rounded-md bg-slate-100 hover:bg-amber-50 text-slate-700 hover:text-amber-800 text-[11px] font-medium border border-slate-200 transition"
                 >
                   อีก 7 วัน (รออะไหล่)
                 </button>
@@ -1243,14 +1195,14 @@ export default function ActiveTaskScreen({
             {/* Input: เหตุผลที่พักงาน */}
             <div className="space-y-2">
               <label className="block text-xs font-bold text-slate-800">
-                📝 เหตุผลในการพักงาน / ยกกลับศูนย์ซ่อม <span className="text-rose-500">*</span>
+                เหตุผลในการพักงาน / ยกกลับศูนย์ซ่อม <span className="text-rose-500">*</span>
               </label>
               <textarea
                 rows={3}
                 value={holdReasonInput}
                 onChange={(e) => setHoldReasonInput(e.target.value)}
                 placeholder="เช่น ยกเครื่องเคสไปลง Windows ใหม่ที่ศูนย์ซ่อม Lab 101 หรือ รอเบิกพาวเวอร์ซัพพลายตัวใหม่"
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-slate-50 focus:bg-white focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 text-xs sm:text-sm text-slate-900 transition outline-hidden resize-none"
+                className="w-full px-3 py-2 rounded-md border border-slate-300 bg-slate-50 focus:bg-white focus:border-amber-500 focus:ring-1 focus:ring-amber-500 text-xs text-slate-900 transition outline-none resize-none"
               />
 
               {/* Preset reason recommendation buttons */}
@@ -1262,7 +1214,7 @@ export default function ActiveTaskScreen({
                       key={idx}
                       type="button"
                       onClick={() => setHoldReasonInput(r)}
-                      className="p-2 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-amber-50 hover:border-amber-300 text-left text-[11px] text-slate-700 transition"
+                      className="p-2 rounded-md border border-slate-200 bg-slate-50/70 hover:bg-amber-50/50 hover:border-amber-300 text-left text-[11px] text-slate-700 transition"
                     >
                       • {r}
                     </button>
@@ -1272,11 +1224,11 @@ export default function ActiveTaskScreen({
             </div>
 
             {/* Modal Actions */}
-            <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-100">
+            <div className="flex items-center justify-end gap-2 pt-4 border-t border-slate-100">
               <button
                 type="button"
                 onClick={() => setIsOnHoldModalOpen(false)}
-                className="px-4 py-2.5 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-100 text-xs font-bold transition cursor-pointer"
+                className="px-3.5 py-2 rounded-md border border-slate-300 text-slate-700 hover:bg-slate-100 text-xs font-medium transition cursor-pointer"
               >
                 ยกเลิก
               </button>
@@ -1284,16 +1236,16 @@ export default function ActiveTaskScreen({
                 type="button"
                 disabled={isSubmitting || isPending || !etaDateInput || !holdReasonInput.trim()}
                 onClick={handlePutOnHold}
-                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white text-xs font-bold shadow-md shadow-amber-500/20 transition flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                className="px-4 py-2 rounded-md bg-amber-600 hover:bg-amber-700 text-white text-xs font-medium shadow-sm transition flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
               >
                 {isSubmitting || isPending ? (
                   <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
                     <span>กำลังบันทึก...</span>
                   </>
                 ) : (
                   <>
-                    <Pause className="h-4 w-4 fill-current" />
+                    <Pause className="h-3.5 w-3.5 fill-current" />
                     <span>บันทึกและพักงานนี้</span>
                   </>
                 )}

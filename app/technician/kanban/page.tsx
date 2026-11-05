@@ -4,6 +4,8 @@ import { getSession } from "@/lib/auth";
 import TechnicianKanbanBoard from "@/components/technician/TechnicianKanbanBoard";
 import { Metadata } from "next";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "กระดานคันบันงานช่างเทคนิค | CampusOps",
   description: "จัดการลำดับงานซ่อม อัปเดตสถานะงาน และติดตามความคืบหน้าระดับช่าง",

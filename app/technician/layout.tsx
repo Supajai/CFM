@@ -48,21 +48,21 @@ export default async function TechnicianLayout({
   });
 
   return (
-    <div className="flex h-screen bg-slate-50/75 font-sans overflow-hidden">
+    <div className="flex h-screen bg-slate-100/90 font-sans overflow-hidden">
       {/* 1. Dedicated Technician Sidebar (Desktop) */}
       <TechnicianSidebar currentUser={session} />
 
       {/* 2. Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
         {/* Mobile Top Navigation */}
-        <header className="md:hidden flex items-center justify-between border-b border-slate-200/80 bg-white/85 backdrop-blur-md px-4 py-3 shrink-0 shadow-2xs">
+        <header className="md:hidden flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3 shrink-0">
           <Link href="/technician/dashboard" className="flex items-center space-x-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-b from-amber-500 to-amber-600 text-white shadow-[0_2px_8px_rgba(245,158,11,0.3)]">
+            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-emerald-800 text-white shadow-xs">
               <Hammer className="h-4 w-4" />
             </div>
             <div>
               <span className="text-sm font-bold text-slate-900">CampusOps</span>
-              <span className="ml-1.5 font-mono text-[9px] font-bold text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded border border-amber-200/80">
+              <span className="ml-1.5 font-mono text-[9px] font-semibold text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
                 TECH
               </span>
             </div>
@@ -71,13 +71,13 @@ export default async function TechnicianLayout({
           <div className="flex items-center space-x-2">
             <Link
               href="/technician/kanban"
-              className="rounded-xl bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white shadow-2xs"
+              className="rounded-md bg-slate-900 px-3 py-1.5 text-xs font-medium text-white shadow-xs"
             >
-              คันบัน
+              กระดานงานช่าง
             </Link>
             <Link
               href="/technician/dashboard"
-              className="rounded-xl border border-slate-200/80 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-2xs"
+              className="rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-xs"
             >
               งานของฉัน
             </Link>

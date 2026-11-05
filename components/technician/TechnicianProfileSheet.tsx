@@ -1,4 +1,4 @@
-// components/technician/TechnicianProfileSheet.tsx
+﻿// components/technician/TechnicianProfileSheet.tsx
 "use client";
 
 import React, { useState } from "react";
@@ -53,7 +53,7 @@ export default function TechnicianProfileSheet({
     <div className="fixed inset-0 z-50 flex items-end justify-center md:hidden animate-in fade-in duration-200">
       {/* Translucent Backdrop */}
       <div
-        className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity cursor-pointer"
+        className="fixed inset-0 bg-black/50 transition-opacity cursor-pointer"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -143,7 +143,7 @@ export default function TechnicianProfileSheet({
             type="button"
             disabled={isLoggingOut}
             onClick={handleSignOut}
-            className="w-full py-3.5 px-4 bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold text-sm rounded-2xl border border-rose-200 flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-[0.99] disabled:opacity-50 shadow-xs"
+            className="w-full py-3.5 px-4 bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold text-sm rounded-2xl border border-rose-200 flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-[0.99] disabled:opacity-50 shadow-sm"
           >
             {isLoggingOut ? (
               <Loader2 className="h-4 w-4 animate-spin" />

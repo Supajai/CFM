@@ -1,4 +1,4 @@
-// components/admin/UserManagementTable.tsx
+﻿// components/admin/UserManagementTable.tsx
 "use client";
 
 import React, { useState, useMemo } from "react";
@@ -482,15 +482,15 @@ export default function UserManagementTable({
         )}
 
         {/* Search & Filters */}
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200/90 bg-white/90 backdrop-blur-md p-4 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.06)]">
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
           <div className="relative flex-1 min-w-[260px]">
-            <Search className="pointer-events-none absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
+            <Search className="pointer-events-none absolute left-3.5 top-2.5 h-4 w-4 text-slate-400" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="ค้นหาชื่อ, อีเมล, รหัสนักศึกษา, สังกัด, ตำแหน่ง..."
-              className="w-full h-10 rounded-xl border border-slate-300/80 bg-white pl-10 pr-4 py-1 text-xs text-slate-900 shadow-2xs focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 placeholder:text-slate-400"
+              className="w-full h-9 rounded-md border border-slate-300 bg-white pl-10 pr-4 py-1 text-xs text-slate-900 shadow-sm focus:border-emerald-700 focus:outline-none focus:ring-1 focus:ring-emerald-700 placeholder:text-slate-400"
             />
           </div>
 
@@ -499,7 +499,7 @@ export default function UserManagementTable({
             <select
               value={selectedRoleFilter}
               onChange={(e) => setSelectedRoleFilter(e.target.value)}
-              className="h-10 rounded-xl border border-slate-300/80 bg-white px-3 py-1 text-xs font-medium text-slate-800 shadow-2xs focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 cursor-pointer"
+              className="h-9 rounded-md border border-slate-300 bg-white px-3 py-1 text-xs font-normal text-slate-800 shadow-sm focus:border-emerald-700 focus:outline-none focus:ring-1 focus:ring-emerald-700 cursor-pointer"
             >
               <option value="ALL">ทุกบทบาท (All Roles)</option>
               <option value={Role.SUPER_ADMIN}>เฉพาะ Super Admin</option>
@@ -512,7 +512,7 @@ export default function UserManagementTable({
       </div>
 
       {/* 2. Users Table */}
-      <div className="mt-5 rounded-2xl border border-slate-200/90 bg-white/90 backdrop-blur-md shadow-[0_2px_12px_-4px_rgba(0,0,0,0.06)] overflow-hidden">
+      <div className="mt-5 rounded-lg border border-slate-200 bg-white shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs text-zinc-700">
             <thead className="border-b border-zinc-200 bg-zinc-50/75 text-[11px] font-medium text-zinc-600 uppercase tracking-wider">
@@ -721,13 +721,13 @@ export default function UserManagementTable({
       {/* 3. Modal: สร้างผู้ใช้งานใหม่ (Dynamic Role-Based Create Modal) */}
       {/* ========================================================= */}
       {showCreateModal && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/50 p-4 animate-in fade-in duration-200">
           <div className="flex min-h-full items-center justify-center py-6">
-            <div className="w-full max-w-xl rounded-2xl border border-slate-200/90 bg-white/95 backdrop-blur-xl p-6 shadow-2xl space-y-5 animate-in zoom-in-95 duration-200">
+            <div className="w-full max-w-xl rounded-lg border border-slate-200 bg-white p-6 shadow-xl space-y-5 animate-in zoom-in-95 duration-200">
             {/* Header */}
-            <div className="flex items-start justify-between border-b border-slate-200/80 pb-4">
+            <div className="flex items-start justify-between border-b border-slate-100 pb-4">
               <div className="flex items-center space-x-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-b from-emerald-500 to-emerald-600 text-white shadow-[0_2px_8px_rgba(16,185,129,0.35)]">
+                <div className="flex h-10 w-10 items-center justify-center rounded-md bg-emerald-800 text-white shadow-sm">
                   <UserPlus className="h-5 w-5" />
                 </div>
                 <div>
@@ -785,14 +785,14 @@ export default function UserManagementTable({
                     }
                     className={`flex flex-col items-center justify-center p-3.5 rounded-md border text-center transition cursor-pointer ${
                       createForm.role === Role.USER
-                        ? "border-emerald-600 bg-emerald-50/70 text-emerald-950 ring-1 ring-emerald-500/20 shadow-xs"
+                        ? "border-emerald-600 bg-emerald-50/70 text-emerald-950 ring-1 ring-emerald-500/20 shadow-sm"
                         : "border-zinc-200 bg-white text-zinc-600 hover:border-zinc-300 hover:bg-zinc-50"
                     }`}
                   >
                     <div
                       className={`flex h-9 w-9 items-center justify-center rounded-md mb-2 transition ${
                         createForm.role === Role.USER
-                          ? "bg-emerald-600 text-white shadow-xs"
+                          ? "bg-emerald-600 text-white shadow-sm"
                           : "bg-zinc-100 text-zinc-500"
                       }`}
                     >
@@ -818,14 +818,14 @@ export default function UserManagementTable({
                     }
                     className={`flex flex-col items-center justify-center p-3.5 rounded-md border text-center transition cursor-pointer ${
                       createForm.role === Role.TECHNICIAN
-                        ? "border-amber-600 bg-amber-50/70 text-amber-950 ring-1 ring-amber-500/20 shadow-xs"
+                        ? "border-amber-600 bg-amber-50/70 text-amber-950 ring-1 ring-amber-500/20 shadow-sm"
                         : "border-zinc-200 bg-white text-zinc-600 hover:border-zinc-300 hover:bg-zinc-50"
                     }`}
                   >
                     <div
                       className={`flex h-9 w-9 items-center justify-center rounded-md mb-2 transition ${
                         createForm.role === Role.TECHNICIAN
-                          ? "bg-amber-600 text-white shadow-xs"
+                          ? "bg-amber-600 text-white shadow-sm"
                           : "bg-zinc-100 text-zinc-500"
                       }`}
                     >
@@ -853,14 +853,14 @@ export default function UserManagementTable({
                     }
                     className={`flex flex-col items-center justify-center p-3.5 rounded-md border text-center transition cursor-pointer ${
                       createForm.role === Role.ADMIN
-                        ? "border-emerald-600 bg-emerald-50/70 text-emerald-950 ring-1 ring-emerald-500/20 shadow-xs"
+                        ? "border-emerald-600 bg-emerald-50/70 text-emerald-950 ring-1 ring-emerald-500/20 shadow-sm"
                         : "border-zinc-200 bg-white text-zinc-600 hover:border-zinc-300 hover:bg-zinc-50"
                     }`}
                   >
                     <div
                       className={`flex h-9 w-9 items-center justify-center rounded-md mb-2 transition ${
                         createForm.role === Role.ADMIN
-                          ? "bg-emerald-600 text-white shadow-xs"
+                          ? "bg-emerald-600 text-white shadow-sm"
                           : "bg-zinc-100 text-zinc-500"
                       }`}
                     >
@@ -950,7 +950,7 @@ export default function UserManagementTable({
                               });
                             }
                           }}
-                          className="w-full appearance-none h-9 rounded-md border border-zinc-300 bg-white px-3 text-xs font-normal text-zinc-900 shadow-xs focus:border-emerald-600 focus:outline-none focus:ring-1 focus:ring-emerald-600 cursor-pointer"
+                          className="w-full appearance-none h-9 rounded-md border border-zinc-300 bg-white px-3 text-xs font-normal text-zinc-900 shadow-sm focus:border-emerald-600 focus:outline-none focus:ring-1 focus:ring-emerald-600 cursor-pointer"
                         >
                           <optgroup label="ระดับประกาศนียบัตรวิชาชีพ (ปวช.)">
                             {DEPARTMENT_USER_GROUPS.filter((g) => g.groupType === "VOCATIONAL_CERT").map((g) => (
@@ -1424,13 +1424,13 @@ export default function UserManagementTable({
       {/* 4. Modal: แก้ไขข้อมูลผู้ใช้ (Edit User Modal) */}
       {/* ========================================================= */}
       {editingUser && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-zinc-950/40 backdrop-blur-xs p-4 animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/50 p-4 animate-in fade-in duration-200">
           <div className="flex min-h-full items-center justify-center py-6">
             <div className="w-full max-w-xl rounded-lg border border-zinc-200 bg-white p-5 sm:p-6 shadow-xl space-y-5 animate-in zoom-in-95 duration-200">
             {/* Header */}
             <div className="flex items-start justify-between border-b border-slate-100 pb-4">
               <div className="flex items-center space-x-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-md bg-emerald-600 text-white shadow-xs">
+                <div className="flex h-9 w-9 items-center justify-center rounded-md bg-emerald-800 text-white shadow-sm">
                   <Edit3 className="h-5 w-5" />
                 </div>
                 <div>
@@ -1505,7 +1505,7 @@ export default function UserManagementTable({
                     disabled={editingUser.id === currentUserId}
                     value={editForm.role}
                     onChange={(e) => setEditForm({ ...editForm, role: e.target.value as Role })}
-                    className="w-full h-9 rounded-md border border-zinc-300 bg-white px-3 py-1 text-xs font-normal text-zinc-900 shadow-xs focus:border-emerald-600 focus:outline-none focus:ring-1 focus:ring-emerald-600 cursor-pointer disabled:cursor-not-allowed disabled:bg-zinc-100"
+                    className="w-full h-9 rounded-md border border-zinc-300 bg-white px-3 py-1 text-xs font-normal text-zinc-900 shadow-sm focus:border-emerald-600 focus:outline-none focus:ring-1 focus:ring-emerald-600 cursor-pointer disabled:cursor-not-allowed disabled:bg-zinc-100"
                   >
                     <option value={Role.USER}>USER (นักศึกษา / บุคลากร)</option>
                     <option value={Role.TECHNICIAN}>TECHNICIAN (ช่างซ่อมบำรุง)</option>
@@ -1792,7 +1792,7 @@ export default function UserManagementTable({
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="flex items-center space-x-2 rounded-md bg-emerald-600 px-4 py-2 text-xs font-medium text-white shadow-xs hover:bg-emerald-700 transition disabled:opacity-50"
+                  className="flex items-center space-x-2 rounded-md bg-emerald-600 px-4 py-2 text-xs font-medium text-white shadow-sm hover:bg-emerald-700 transition disabled:opacity-50"
                 >
                   {isSubmitting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                   <span>{isSubmitting ? "กำลังบันทึก..." : "บันทึกการแก้ไข"}</span>
@@ -1808,7 +1808,7 @@ export default function UserManagementTable({
       {/* 5. Modal: ยืนยันการลบผู้ใช้ (Delete Confirmation Dialog) */}
       {/* ========================================================= */}
       {deletingUser && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-zinc-950/40 backdrop-blur-xs p-4 animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/50 p-4 animate-in fade-in duration-200">
           <div className="flex min-h-full items-center justify-center py-6">
             <div className="w-full max-w-md rounded-lg border border-zinc-200 bg-white p-5 sm:p-6 shadow-xl space-y-4 animate-in zoom-in-95 duration-200">
             {/* Header Icon */}

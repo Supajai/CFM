@@ -24,6 +24,8 @@ import BuildingFloorMap, { TicketSummary } from "@/components/building/BuildingF
 import DashboardViewContainer from "@/components/dashboard/DashboardViewContainer";
 import { getRoomHeatmapStatsAction } from "@/actions/room";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "ศูนย์ควบคุมระบบและความปลอดภัย (Super Admin) | CampusOps",
   description: "ศูนย์ควบคุมระบบ สถานะฐานข้อมูล และการกำกับดูแลสิทธิ์ผู้ใช้งาน",
@@ -187,14 +189,14 @@ export default async function SuperAdminDashboardPage() {
                     </p>
                   </div>
                 </div>
-                <span className="flex items-center space-x-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 border border-emerald-200 shadow-xs">
+                <span className="flex items-center space-x-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 border border-emerald-200 shadow-sm">
                   <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
                   <span>All Systems Operational</span>
                 </span>
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5 pt-1">
-                <div className="rounded-xl border border-slate-200/80 bg-slate-50/60 hover:bg-white p-3.5 space-y-1.5 transition-all shadow-xs">
+                <div className="rounded-xl border border-slate-200/80 bg-slate-50/60 hover:bg-white p-3.5 space-y-1.5 transition-all shadow-sm">
                   <div className="flex items-center space-x-1.5 text-slate-600 text-xs font-semibold">
                     <Database className="h-3.5 w-3.5 text-emerald-600 stroke-[1.75]" />
                     <span>ฐานข้อมูลหลัก</span>
@@ -203,7 +205,7 @@ export default async function SuperAdminDashboardPage() {
                   <p className="text-[10px] text-emerald-600 font-semibold">● Localhost :5432 (Connected)</p>
                 </div>
 
-                <div className="rounded-xl border border-slate-200/80 bg-slate-50/60 hover:bg-white p-3.5 space-y-1.5 transition-all shadow-xs">
+                <div className="rounded-xl border border-slate-200/80 bg-slate-50/60 hover:bg-white p-3.5 space-y-1.5 transition-all shadow-sm">
                   <div className="flex items-center space-x-1.5 text-slate-600 text-xs font-semibold">
                     <Cpu className="h-3.5 w-3.5 text-blue-600 stroke-[1.75]" />
                     <span>เว็บเฟรมเวิร์ก</span>
@@ -212,7 +214,7 @@ export default async function SuperAdminDashboardPage() {
                   <p className="text-[10px] text-slate-500 font-medium">App Router & Server Actions</p>
                 </div>
 
-                <div className="rounded-xl border border-slate-200/80 bg-slate-50/60 hover:bg-white p-3.5 space-y-1.5 transition-all shadow-xs">
+                <div className="rounded-xl border border-slate-200/80 bg-slate-50/60 hover:bg-white p-3.5 space-y-1.5 transition-all shadow-sm">
                   <div className="flex items-center space-x-1.5 text-slate-600 text-xs font-semibold">
                     <Lock className="h-3.5 w-3.5 text-amber-600 stroke-[1.75]" />
                     <span>ความปลอดภัย</span>
@@ -221,7 +223,7 @@ export default async function SuperAdminDashboardPage() {
                   <p className="text-[10px] text-slate-500 font-medium">HTTP-Only Edge Cookie</p>
                 </div>
 
-                <div className="rounded-xl border border-slate-200/80 bg-slate-50/60 hover:bg-white p-3.5 space-y-1.5 transition-all shadow-xs">
+                <div className="rounded-xl border border-slate-200/80 bg-slate-50/60 hover:bg-white p-3.5 space-y-1.5 transition-all shadow-sm">
                   <div className="flex items-center space-x-1.5 text-slate-600 text-xs font-semibold">
                     <Layers className="h-3.5 w-3.5 text-emerald-600 stroke-[1.75]" />
                     <span>ORM & Data Synced</span>
@@ -244,52 +246,48 @@ export default async function SuperAdminDashboardPage() {
               </div>
 
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="card-elevated p-5 relative overflow-hidden group">
+                <div className="bg-white/95 backdrop-blur-sm rounded-2xl border border-slate-200/80 border-t-4 border-t-purple-600 p-5 shadow-[0_2px_10px_-2px_rgba(0,0,0,0.04)] hover:shadow-lg hover:-translate-y-1 transition-all duration-200 relative overflow-hidden group">
                   <div className="flex items-center justify-between text-xs font-bold text-slate-600 uppercase tracking-wider">
                     <span>Super Admin</span>
-                    <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-700 flex items-center justify-center">
-                      <Crown className="h-4 w-4 stroke-[1.75]" />
+                    <div className="w-10 h-10 rounded-full bg-purple-50 text-purple-700 ring-4 ring-purple-50/60 flex items-center justify-center shrink-0">
+                      <Crown className="h-5 w-5 stroke-[1.75]" />
                     </div>
                   </div>
                   <h3 className="mt-3 text-3xl font-extrabold tracking-tight text-purple-700 font-mono">{superAdminCount}</h3>
                   <p className="mt-1 text-xs text-slate-500 font-medium">สิทธิ์สูงสุด จัดการระบบ & สิทธิ์</p>
-                  <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 to-indigo-600" />
                 </div>
 
-                <div className="card-elevated p-5 relative overflow-hidden group">
+                <div className="bg-white/95 backdrop-blur-sm rounded-2xl border border-slate-200/80 border-t-4 border-t-slate-600 p-5 shadow-[0_2px_10px_-2px_rgba(0,0,0,0.04)] hover:shadow-lg hover:-translate-y-1 transition-all duration-200 relative overflow-hidden group">
                   <div className="flex items-center justify-between text-xs font-bold text-slate-600 uppercase tracking-wider">
                     <span>Admin แผนก</span>
-                    <div className="w-8 h-8 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center">
-                      <Users className="h-4 w-4 stroke-[1.75]" />
+                    <div className="w-10 h-10 rounded-full bg-slate-100 text-slate-700 ring-4 ring-slate-100/60 flex items-center justify-center shrink-0">
+                      <Users className="h-5 w-5 stroke-[1.75]" />
                     </div>
                   </div>
                   <h3 className="mt-3 text-3xl font-extrabold tracking-tight text-slate-900 font-mono">{adminCount}</h3>
                   <p className="mt-1 text-xs text-slate-500 font-medium">คัดกรอง จ่ายงาน และดูสถิติ SLA</p>
-                  <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-slate-400 to-slate-600" />
                 </div>
 
-                <div className="card-elevated p-5 relative overflow-hidden group">
+                <div className="bg-white/95 backdrop-blur-sm rounded-2xl border border-slate-200/80 border-t-4 border-t-amber-500 p-5 shadow-[0_2px_10px_-2px_rgba(0,0,0,0.04)] hover:shadow-lg hover:-translate-y-1 transition-all duration-200 relative overflow-hidden group">
                   <div className="flex items-center justify-between text-xs font-bold text-amber-700 uppercase tracking-wider">
                     <span>Technician ช่าง</span>
-                    <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
-                      <Activity className="h-4 w-4 stroke-[1.75]" />
+                    <div className="w-10 h-10 rounded-full bg-amber-50 text-amber-600 ring-4 ring-amber-50/60 flex items-center justify-center shrink-0">
+                      <Activity className="h-5 w-5 stroke-[1.75]" />
                     </div>
                   </div>
                   <h3 className="mt-3 text-3xl font-extrabold tracking-tight text-amber-600 font-mono">{technicianCount}</h3>
                   <p className="mt-1 text-xs text-amber-700 font-medium">ปฏิบัติงานภาคสนาม & คันบัน</p>
-                  <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-400 to-amber-500" />
                 </div>
 
-                <div className="card-elevated p-5 relative overflow-hidden group">
+                <div className="bg-white/95 backdrop-blur-sm rounded-2xl border border-slate-200/80 border-t-4 border-t-emerald-500 p-5 shadow-[0_2px_10px_-2px_rgba(0,0,0,0.04)] hover:shadow-lg hover:-translate-y-1 transition-all duration-200 relative overflow-hidden group">
                   <div className="flex items-center justify-between text-xs font-bold text-emerald-700 uppercase tracking-wider">
                     <span>User ทั่วไป</span>
-                    <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
-                      <CheckCircle2 className="h-4 w-4 stroke-[1.75]" />
+                    <div className="w-10 h-10 rounded-full bg-emerald-50 text-emerald-600 ring-4 ring-emerald-50/60 flex items-center justify-center shrink-0">
+                      <CheckCircle2 className="h-5 w-5 stroke-[1.75]" />
                     </div>
                   </div>
                   <h3 className="mt-3 text-3xl font-extrabold tracking-tight text-emerald-600 font-mono">{studentCount}</h3>
                   <p className="mt-1 text-xs text-emerald-700 font-medium">แจ้งซ่อมและติดตามประวัติตัวเอง</p>
-                  <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-teal-600" />
                 </div>
               </div>
             </div>
@@ -301,7 +299,7 @@ export default async function SuperAdminDashboardPage() {
                 className="card-elevated p-5 hover:border-emerald-500/60 transition-all group space-y-3"
               >
                 <div className="flex items-center justify-between">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-700 group-hover:bg-emerald-600 group-hover:text-white transition-all shadow-xs">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-700 group-hover:bg-emerald-600 group-hover:text-white transition-all shadow-sm">
                     <Shield className="h-5 w-5 stroke-[1.75]" />
                   </div>
                   <ArrowRight className="h-4 w-4 text-slate-400 group-hover:text-emerald-600 group-hover:translate-x-1 transition-all stroke-[1.75]" />
@@ -321,7 +319,7 @@ export default async function SuperAdminDashboardPage() {
                 className="card-elevated p-5 hover:border-emerald-500/60 transition-all group space-y-3"
               >
                 <div className="flex items-center justify-between">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-700 group-hover:bg-emerald-600 group-hover:text-white transition-all shadow-xs">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-700 group-hover:bg-emerald-600 group-hover:text-white transition-all shadow-sm">
                     <Sliders className="h-5 w-5 stroke-[1.75]" />
                   </div>
                   <ArrowRight className="h-4 w-4 text-slate-400 group-hover:text-emerald-600 group-hover:translate-x-1 transition-all stroke-[1.75]" />
@@ -341,7 +339,7 @@ export default async function SuperAdminDashboardPage() {
                 className="card-elevated p-5 hover:border-emerald-500/60 transition-all group space-y-3"
               >
                 <div className="flex items-center justify-between">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-700 group-hover:bg-emerald-600 group-hover:text-white transition-all shadow-xs">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-700 group-hover:bg-emerald-600 group-hover:text-white transition-all shadow-sm">
                     <History className="h-5 w-5 stroke-[1.75]" />
                   </div>
                   <ArrowRight className="h-4 w-4 text-slate-400 group-hover:text-emerald-600 group-hover:translate-x-1 transition-all stroke-[1.75]" />

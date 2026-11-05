@@ -6,6 +6,8 @@ import { ArrowLeft, AlertCircle, Search, Sparkles } from "lucide-react";
 import { Metadata } from "next";
 import { getSession } from "@/lib/auth";
 
+export const dynamic = "force-dynamic";
+
 interface PageProps {
   params: {
     id: string;
@@ -39,7 +41,7 @@ export default async function TrackingPage({ params }: PageProps) {
     return (
       <main className="min-h-screen flex items-center justify-center p-4">
         <div className="w-full max-w-md card-elevated p-8 text-center space-y-4">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-50 text-rose-600 border border-rose-200/90 shadow-xs">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-50 text-rose-600 border border-rose-200/90 shadow-sm">
             <AlertCircle className="h-6 w-6 stroke-[1.75]" />
           </div>
           <div>
@@ -60,7 +62,7 @@ export default async function TrackingPage({ params }: PageProps) {
             </Link>
             <Link
               href={session?.role === "USER" ? "/student/dashboard" : session?.role === "TECHNICIAN" ? "/technician/kanban" : session?.role === "ADMIN" ? "/admin/dashboard" : "/"}
-              className="flex items-center justify-center space-x-2 rounded-xl border border-slate-200/90 bg-white py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition shadow-xs"
+              className="flex items-center justify-center space-x-2 rounded-xl border border-slate-200/90 bg-white py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition shadow-sm"
             >
               <ArrowLeft className="h-4 w-4 stroke-[1.75]" />
               <span>กลับสู่หน้าหลัก</span>
@@ -81,7 +83,7 @@ export default async function TrackingPage({ params }: PageProps) {
     return (
       <main className="min-h-screen flex items-center justify-center p-4">
         <div className="w-full max-w-md card-elevated p-8 text-center space-y-4">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-50 text-rose-600 border border-rose-200/90 shadow-xs">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-50 text-rose-600 border border-rose-200/90 shadow-sm">
             <AlertCircle className="h-6 w-6 stroke-[1.75]" />
           </div>
           <h2 className="text-base sm:text-lg font-bold text-slate-900">เกิดข้อผิดพลาดในการโหลดข้อมูล</h2>

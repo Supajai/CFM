@@ -4,6 +4,8 @@ import { History, ShieldCheck, User, Clock, CheckCircle2, Lock, Activity, Shield
 import { formatDateThai, timeAgoThai } from "@/lib/utils";
 import { Metadata } from "next";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "บันทึกระบบและความปลอดภัย (Audit Logs) | Super Admin",
   description: "ประวัติการแก้ไขข้อมูล การเปลี่ยนสถานะตั๋ว และความปลอดภัยในระบบ",
@@ -50,7 +52,7 @@ export default async function SuperAdminAuditPage() {
           </div>
 
           <div className="shrink-0 flex items-center">
-            <span className="chip-tech text-xs font-bold text-slate-800 bg-slate-100/90 border-slate-200/90 px-3 py-1.5 rounded-xl shadow-xs">
+            <span className="chip-tech text-xs font-bold text-slate-800 bg-slate-100/90 border-slate-200/90 px-3 py-1.5 rounded-xl shadow-sm">
               แสดงล่าสุด <strong className="text-emerald-700 font-mono text-sm">{auditHistories.length}</strong> รายการ
             </span>
           </div>
@@ -78,7 +80,7 @@ export default async function SuperAdminAuditPage() {
               className="p-4 sm:p-5 hover:bg-emerald-50/20 even:bg-slate-50/35 transition flex items-center justify-between gap-4"
             >
               <div className="flex items-start space-x-3.5">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 text-white font-bold font-mono text-xs shadow-xs">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 text-white font-bold font-mono text-xs shadow-sm">
                   {h.step}
                 </div>
                 <div className="space-y-1">

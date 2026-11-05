@@ -25,8 +25,10 @@ import {
   ExternalLink,
   ChevronRight,
   AlertCircle,
+  Pause,
 } from "lucide-react";
 import { rateTicketAction } from "@/actions/ticket";
+import TicketMilestoneStepper from "@/components/ticket/TicketMilestoneStepper";
 import { formatDateThai } from "@/lib/utils";
 import SmartPageHeader from "@/components/navigation/SmartPageHeader";
 import MobileBottomNav from "@/components/navigation/MobileBottomNav";
@@ -188,28 +190,28 @@ export default function TrackingView({ ticket, currentUser }: TrackingViewProps)
       />
 
       {/* 2. Banner แสดงสถานะคำร้อง */}
-      <div className={`mx-4 mt-3 flex items-start justify-between rounded-2xl border p-4 shadow-2xs backdrop-blur-sm ${
+      <div className={`mx-4 mt-3 flex items-start justify-between rounded-lg border p-4 shadow-sm ${
         ticket.status === "RESOLVED" || ticket.status === "CLOSED"
-          ? "bg-emerald-50/90 border-emerald-200/90"
+          ? "bg-emerald-50 border-emerald-200"
           : ticket.status === "ON_HOLD"
-          ? "bg-amber-50/90 border-amber-300"
+          ? "bg-amber-50 border-amber-300"
           : ticket.status === "IN_PROGRESS"
-          ? "bg-blue-50/90 border-blue-200/90"
+          ? "bg-blue-50 border-blue-200"
           : ticket.status === "ASSIGNED"
-          ? "bg-indigo-50/90 border-indigo-200/90"
-          : "bg-emerald-50/90 border-emerald-200/90"
+          ? "bg-indigo-50 border-indigo-200"
+          : "bg-emerald-50 border-emerald-200"
       }`}>
         <div className="flex items-start space-x-3">
-          <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-white shadow-sm mt-0.5 ${
+          <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-white shadow-sm mt-0.5 ${
             ticket.status === "RESOLVED" || ticket.status === "CLOSED"
-              ? "bg-gradient-to-b from-emerald-500 to-emerald-600 shadow-[0_2px_8px_rgba(16,185,129,0.35)]"
+              ? "bg-emerald-800"
               : ticket.status === "ON_HOLD"
-              ? "bg-gradient-to-b from-amber-500 to-amber-600 shadow-[0_2px_8px_rgba(245,158,11,0.35)]"
+              ? "bg-amber-600"
               : ticket.status === "IN_PROGRESS"
-              ? "bg-gradient-to-b from-blue-500 to-blue-600 shadow-[0_2px_8px_rgba(37,99,235,0.35)]"
+              ? "bg-blue-600"
               : ticket.status === "ASSIGNED"
-              ? "bg-gradient-to-b from-indigo-500 to-indigo-600 shadow-[0_2px_8px_rgba(99,102,241,0.35)]"
-              : "bg-gradient-to-b from-emerald-500 to-emerald-600 shadow-[0_2px_8px_rgba(16,185,129,0.35)]"
+              ? "bg-indigo-600"
+              : "bg-emerald-800"
           }`}>
             <CheckCircle2 className="h-5 w-5" />
           </div>
@@ -272,15 +274,16 @@ export default function TrackingView({ ticket, currentUser }: TrackingViewProps)
 
       {/* แถบสีส้มแจ้งเตือนผู้แจ้งซ่อมเมื่อตั๋วถูกปรับเป็น ON_HOLD */}
       {ticket.status === "ON_HOLD" && (
-        <div className="mx-4 mt-3 rounded-2xl border border-amber-300 bg-gradient-to-br from-amber-50 via-orange-50/60 to-amber-100/70 p-4 shadow-sm backdrop-blur-sm animate-in fade-in">
+        <div className="mx-4 mt-3 rounded-lg border border-amber-300 bg-amber-50 p-4 shadow-sm animate-in fade-in">
           <div className="flex items-start space-x-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-b from-amber-500 to-amber-600 text-white shadow-[0_2px_8px_rgba(245,158,11,0.35)] mt-0.5">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-amber-600 text-white shadow-sm mt-0.5">
               <Clock className="h-5 w-5" />
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1.5 flex-wrap">
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-200/80 text-amber-950 border border-amber-300 font-mono">
-                  ⏸️ นำอุปกรณ์กลับศูนย์ซ่อมบำรุง
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-amber-200 text-amber-950 border border-amber-300 font-mono">
+                  <Pause className="h-3 w-3 fill-current inline" />
+                  <span>นำอุปกรณ์กลับศูนย์ซ่อมบำรุง</span>
                 </span>
               </div>
               <h3 className="text-xs sm:text-sm font-bold text-amber-950 mt-1.5 leading-snug">
@@ -306,8 +309,14 @@ export default function TrackingView({ ticket, currentUser }: TrackingViewProps)
       )}
 
       <div className="px-4 pt-3 space-y-4">
+        {/* Interactive Milestone Stepper with Radar Ping Pulse */}
+        <TicketMilestoneStepper
+          status={ticket.status}
+          isOnHold={ticket.status === "ON_HOLD"}
+        />
+
         {/* 3. Ticket Summary Card ข้อมูลสรุปเคส */}
-        <div className="rounded-2xl border border-slate-200/90 bg-white/90 backdrop-blur-md p-5 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.06)] space-y-3.5">
+        <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm space-y-3.5">
           {/* Badge Chips Row */}
           <div className="flex flex-wrap items-center gap-1.5">
             <span className="font-mono text-xs font-semibold bg-slate-100 border border-slate-200/80 text-slate-800 px-2.5 py-0.5 rounded-md shadow-2xs">
@@ -381,7 +390,7 @@ export default function TrackingView({ ticket, currentUser }: TrackingViewProps)
         </div>
 
         {/* 4. Timeline Stepper Card (ติดตามสถานะแบบเรียลไทม์ 4 ขั้นตอน) */}
-        <div className="rounded-2xl border border-slate-200/90 bg-white/90 backdrop-blur-md p-5 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.06)]">
+        <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
           <div className="flex items-center justify-between pb-3 border-b border-slate-100">
             <div className="flex items-center space-x-2">
               <Activity className="h-4 w-4 text-slate-700" />
@@ -573,7 +582,7 @@ export default function TrackingView({ ticket, currentUser }: TrackingViewProps)
 
         {/* 5. การ์ดช่างผู้รับผิดชอบ (รองรับ Empty State ตามเงื่อนไข ticket.technician) */}
         {ticket.technician ? (
-          <div className="rounded-2xl border border-slate-200/90 bg-white/90 backdrop-blur-md p-5 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.06)] space-y-3.5">
+          <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm space-y-3.5">
             <div className="flex items-center justify-between">
               <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                 ช่างผู้รับผิดชอบ
@@ -676,10 +685,10 @@ export default function TrackingView({ ticket, currentUser }: TrackingViewProps)
 
         {/* 6. กล่องแสดงผลการซ่อมเสร็จ & ภาพหลักฐานหลังซ่อม (Resolution Proof) */}
         {(ticket.resolutionDetail || ticket.afterImageUrl || ticket.status === "RESOLVED" || ticket.status === "CLOSED") && (
-          <div className="rounded-2xl border border-emerald-200/90 bg-emerald-50/70 backdrop-blur-md p-5 shadow-2xs space-y-3.5">
+          <div className="rounded-lg border border-emerald-200 bg-emerald-50/50 p-5 shadow-sm space-y-3.5">
             <div className="flex items-center justify-between border-b border-emerald-200/70 pb-3">
               <div className="flex items-center space-x-2.5">
-                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-2xs">
+                <div className="flex h-8 w-8 items-center justify-center rounded-md bg-emerald-800 text-white shadow-sm">
                   <CheckCircle2 className="h-4 w-4" />
                 </div>
                 <div>
@@ -691,13 +700,13 @@ export default function TrackingView({ ticket, currentUser }: TrackingViewProps)
                   </p>
                 </div>
               </div>
-              <span className="rounded-xl bg-emerald-100 px-2.5 py-1 text-[10px] font-bold text-emerald-800 shadow-2xs">
+              <span className="rounded-md bg-emerald-100 px-2.5 py-1 text-[10px] font-medium text-emerald-800">
                 {ticket.status === "CLOSED" ? "ปิดงานสมบูรณ์" : "ซ่อมเสร็จสิ้น"}
               </span>
             </div>
 
             {ticket.resolutionDetail && (
-              <div className="rounded-xl bg-white/90 p-3.5 border border-emerald-100 text-xs text-slate-800 space-y-1 shadow-2xs">
+              <div className="rounded-lg bg-white p-3.5 border border-emerald-100 text-xs text-slate-800 space-y-1 shadow-sm">
                 <span className="text-[10px] font-bold text-slate-400 block uppercase">
                   รายละเอียดการแก้ไข / อะไหล่ที่ใช้
                 </span>
@@ -710,14 +719,14 @@ export default function TrackingView({ ticket, currentUser }: TrackingViewProps)
                 <span className="text-[10px] font-bold text-slate-500 block">
                   รูปถ่ายหลักฐานหลังการซ่อมเสร็จ:
                 </span>
-                <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl border border-emerald-200 bg-white shadow-2xs">
+                <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg border border-emerald-200 bg-white shadow-sm">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={ticket.afterImageUrl}
                     alt="Proof of work after repair"
                     className="h-full w-full object-cover"
                   />
-                  <div className="absolute bottom-2.5 left-2.5 rounded-xl bg-black/80 px-2.5 py-1 text-[10px] font-bold text-white flex items-center space-x-1.5 shadow-sm">
+                  <div className="absolute bottom-2.5 left-2.5 rounded-md bg-slate-900/90 px-2.5 py-1 text-[10px] font-medium text-white flex items-center space-x-1.5 shadow-sm">
                     <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
                     <span>รูปถ่ายหลังการซ่อมเสร็จ (After Photo)</span>
                   </div>
@@ -729,18 +738,18 @@ export default function TrackingView({ ticket, currentUser }: TrackingViewProps)
 
         {/* 7. การ์ดรีวิวบริการและความพึงพอใจ (Review / Feedback Section) */}
         {(ticket.status === "RESOLVED" || ticket.status === "CLOSED") && (
-          <div className="rounded-2xl border border-amber-200/90 bg-white/95 backdrop-blur-md p-5 shadow-[0_2px_12px_-4px_rgba(245,158,11,0.08)] space-y-4">
-            <div className="flex items-start justify-between gap-2 border-b border-amber-200/60 pb-3">
+          <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm space-y-4">
+            <div className="flex items-start justify-between gap-2 border-b border-slate-100 pb-3">
               <div className="flex items-center space-x-2.5">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-amber-500 text-white shadow-[0_2px_8px_rgba(245,158,11,0.3)] shrink-0">
-                  <Star className="h-5 w-5 fill-white text-white" />
+                <div className="flex h-8 w-8 items-center justify-center rounded-md bg-amber-500 text-white shadow-sm shrink-0">
+                  <Star className="h-4 w-4 fill-white text-white" />
                 </div>
                 <div>
                   <h3 className="text-xs sm:text-sm font-bold text-slate-900 leading-snug">
-                    ⭐ ความคิดเห็นและความพึงพอใจการให้บริการ (ทางเลือก)
+                    ความคิดเห็นและความพึงพอใจการให้บริการ (ทางเลือก)
                   </h3>
                   <p className="text-[11px] text-slate-600 mt-0.5 leading-relaxed">
-                    คุณสามารถร่วมให้คะแนนการทำงานของช่างเพื่อนำไปพัฒนาคุณภาพการบริการของแผนกวิชา
+                    คุณสามารถร่วมให้คะแนนการทำงานของช่างเพื่อนำไปพัฒนาคุณภาพการบริการของแผนกเทคโนโลยีคอมพิวเตอร์
                   </p>
                 </div>
               </div>
@@ -761,7 +770,7 @@ export default function TrackingView({ ticket, currentUser }: TrackingViewProps)
                       key={i}
                       className={`h-5 w-5 ${
                         i < (submittedRating || ticket.rating || rating)
-                          ? "fill-amber-400 text-amber-400 drop-shadow-xs"
+                          ? "fill-amber-400 text-amber-400 drop-shadow-sm"
                           : "text-slate-300"
                       }`}
                     />
@@ -800,7 +809,7 @@ export default function TrackingView({ ticket, currentUser }: TrackingViewProps)
                         <Star
                           className={`h-7 w-7 transition-colors ${
                             star <= rating
-                              ? "fill-amber-400 text-amber-400 drop-shadow-xs"
+                              ? "fill-amber-400 text-amber-400 drop-shadow-sm"
                               : "text-slate-300 hover:text-amber-300"
                           }`}
                         />
@@ -850,8 +859,9 @@ export default function TrackingView({ ticket, currentUser }: TrackingViewProps)
             ) : (
               /* กรณีที่ 3: ช่าง/แอดมินเปิดดู หรือผู้ใช้ทั่วไป และยังไม่มีการประเมิน */
               <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-3.5 text-center text-xs text-slate-500 space-y-1">
-                <p className="font-semibold text-slate-600">
-                  ⏳ อยู่ระหว่างรอผู้แจ้งซ่อมร่วมส่งรีวิวความพึงพอใจ
+                <p className="font-semibold text-slate-600 inline-flex items-center justify-center gap-1.5">
+                  <Clock className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                  <span>อยู่ระหว่างรอผู้แจ้งซ่อมร่วมส่งรีวิวความพึงพอใจ</span>
                 </p>
                 <p className="text-[11px] text-slate-400">
                   (การให้คะแนนเป็นทางเลือกเสริม ไม่กระทบต่อสถานะการซ่อมเสร็จสิ้นของตั๋ว)
@@ -862,7 +872,7 @@ export default function TrackingView({ ticket, currentUser }: TrackingViewProps)
         )}
 
         {/* 7. หลักฐานรูปถ่ายแนบ */}
-        <div className="rounded-2xl border border-slate-200/90 bg-white/90 backdrop-blur-md p-5 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.06)] space-y-3.5">
+        <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm space-y-3.5">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-1.5">
               <ImageIcon className="h-4 w-4 text-slate-600" />
@@ -882,7 +892,7 @@ export default function TrackingView({ ticket, currentUser }: TrackingViewProps)
               {attachmentsList.map((att: any, idx: number) => (
                 <div
                   key={idx}
-                  className="relative aspect-[4/3] overflow-hidden rounded-xl border border-slate-200 bg-slate-100"
+                  className="relative aspect-[4/3] overflow-hidden rounded-md border border-slate-200 bg-slate-100"
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
@@ -890,7 +900,7 @@ export default function TrackingView({ ticket, currentUser }: TrackingViewProps)
                     alt={att.fileName || `รูปภาพ ${idx + 1}`}
                     className="h-full w-full object-cover"
                   />
-                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent px-2.5 py-1.5 text-[10px] text-white flex justify-between items-center">
+                  <div className="absolute inset-x-0 bottom-0 bg-slate-900/80 px-2.5 py-1.5 text-[10px] text-white flex justify-between items-center">
                     <span className="truncate pr-1">{att.fileName || `ภาพถ่าย ${idx + 1}`}</span>
                     {att.fileSize && <span className="shrink-0">{att.fileSize}</span>}
                   </div>
@@ -898,14 +908,14 @@ export default function TrackingView({ ticket, currentUser }: TrackingViewProps)
               ))}
             </div>
           ) : (
-            <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/50 p-4 text-center">
+            <div className="rounded-md border border-dashed border-slate-200 bg-slate-50/50 p-4 text-center">
               <p className="text-xs text-slate-400">ไม่มีรูปภาพแนบในคำร้องนี้</p>
             </div>
           )}
         </div>
 
         {/* 8. Notification Banner */}
-        <div className="flex items-center justify-between rounded-2xl bg-white/90 backdrop-blur-md border border-slate-200/90 p-4 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.06)]">
+        <div className="flex items-center justify-between rounded-lg bg-white border border-slate-200 p-4 shadow-sm">
           <div className="flex items-center space-x-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-700 shadow-2xs">
               <Bell className="h-4.5 w-4.5" />

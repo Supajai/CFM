@@ -95,16 +95,16 @@ export default function TechnicianResolveModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="relative w-full max-w-xl rounded-2xl border border-slate-200/90 bg-white/95 p-6 shadow-2xl backdrop-blur-md space-y-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="relative w-full max-w-xl rounded-2xl border border-slate-200/90 bg-white/95 p-6 shadow-2xl backdrop-blur-md space-y-4 animate-in zoom-in-95 duration-200">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-200 pb-3.5">
           <div className="flex items-center space-x-2.5">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-[0_2px_8px_rgba(16,185,129,0.3)]">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-600 to-teal-700 text-white shadow-md shadow-emerald-700/20">
               <CheckCircle2 className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="text-base font-semibold text-slate-900 tracking-tight">
+              <h3 className="text-base font-bold text-slate-900 tracking-tight">
                 บันทึกเสร็จสิ้นงานซ่อม (Resolve Work Order)
               </h3>
               <p className="text-xs text-slate-500 font-mono">
@@ -115,7 +115,7 @@ export default function TechnicianResolveModal({
 
           <button
             onClick={onClose}
-            className="rounded-xl p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition"
+            className="rounded-xl p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition cursor-pointer"
           >
             <X className="h-4 w-4" />
           </button>
@@ -151,7 +151,7 @@ export default function TechnicianResolveModal({
               value={resolutionDetail}
               onChange={(e) => setResolutionDetail(e.target.value)}
               placeholder="ระบุสาเหตุที่พบ วิธีการซ่อมแซม รหัสอะไหล่ที่เปลี่ยน หรือผลการทดสอบระบบ..."
-              className="w-full rounded-xl border border-slate-200 bg-white p-3 text-xs font-normal text-slate-900 shadow-xs focus:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 placeholder:text-slate-400"
+              className="w-full rounded-xl border border-slate-200 bg-white p-3 text-xs font-normal text-slate-900 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 placeholder:text-slate-400 transition-all"
             />
 
             {/* Quick Templates Chips */}
@@ -265,14 +265,14 @@ export default function TechnicianResolveModal({
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 transition shadow-2xs"
+              className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition shadow-2xs active:scale-[0.98] cursor-pointer"
             >
               ยกเลิก
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex items-center space-x-1.5 rounded-xl bg-gradient-to-b from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 px-5 py-2 text-xs font-semibold text-white shadow-[0_2px_8px_rgba(16,185,129,0.3)] transition active:scale-[0.98] disabled:opacity-50"
+              className="flex items-center space-x-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 px-5 py-2.5 text-xs font-bold text-white shadow-lg shadow-emerald-700/25 transition active:scale-[0.98] disabled:opacity-50 cursor-pointer"
             >
               {isSubmitting ? (
                 <>

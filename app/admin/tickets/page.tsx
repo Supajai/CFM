@@ -1,4 +1,4 @@
-// app/admin/tickets/page.tsx
+﻿// app/admin/tickets/page.tsx
 import prisma from "@/lib/prisma";
 import Link from "next/link";
 import {
@@ -194,7 +194,7 @@ export default async function AdminTicketsPage({ searchParams }: AdminTicketsPag
             {/* Scoped Badge */}
             <div className="pt-2 flex flex-wrap items-center gap-2">
               {!isSuperAdmin ? (
-                <div className="inline-flex items-center space-x-2 rounded-xl bg-emerald-50/90 px-3 py-1.5 border border-emerald-200/90 text-emerald-900 shadow-xs">
+                <div className="inline-flex items-center space-x-2 rounded-xl bg-emerald-50/90 px-3 py-1.5 border border-emerald-200/90 text-emerald-900 shadow-sm">
                   <MapPin className="h-3.5 w-3.5 text-emerald-600 shrink-0 stroke-[1.75]" />
                   <span className="text-xs font-medium text-emerald-800">อาคารที่รับผิดชอบ:</span>
                   <span className="text-xs font-bold text-emerald-950">
@@ -206,7 +206,7 @@ export default async function AdminTicketsPage({ searchParams }: AdminTicketsPag
                 </div>
               ) : (
                 <div className="flex flex-wrap items-center gap-2.5">
-                  <div className="inline-flex items-center space-x-2 rounded-xl bg-slate-100/80 px-3 py-1.5 border border-slate-200 text-slate-800 shadow-xs">
+                  <div className="inline-flex items-center space-x-2 rounded-xl bg-slate-100/80 px-3 py-1.5 border border-slate-200 text-slate-800 shadow-sm">
                     <ShieldCheck className="h-4 w-4 text-emerald-600 stroke-[1.75]" />
                     <span className="text-xs font-semibold text-slate-800">
                       {selectedBuildingObj
@@ -224,7 +224,7 @@ export default async function AdminTicketsPage({ searchParams }: AdminTicketsPag
           </div>
 
           <div className="shrink-0 flex items-center">
-            <span className="chip-tech text-xs font-bold text-slate-800 bg-slate-100/90 border-slate-200/90 px-3 py-1.5 rounded-xl shadow-xs">
+            <span className="chip-tech text-xs font-bold text-slate-800 bg-slate-100/90 border-slate-200/90 px-3 py-1.5 rounded-xl shadow-sm">
               พบทั้งหมด <strong className="text-emerald-700 font-mono text-sm">{allTickets.length}</strong> รายการ
             </span>
           </div>

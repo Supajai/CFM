@@ -15,6 +15,8 @@ import {
 } from "lucide-react";
 import { Metadata } from "next";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "รายงานสถิติและประสิทธิภาพ SLA | CampusOps",
   description: "รายงานวิเคราะห์เวลาเฉลี่ยการซ่อมบำรุงและอัตราความสำเร็จตาม SLA",
@@ -80,7 +82,7 @@ export default async function AdminReportsPage() {
           </div>
 
           <div className="shrink-0 flex items-center space-x-2">
-            <span className="chip-tech text-xs font-mono text-emerald-800 bg-emerald-50/90 border-emerald-200 px-3 py-1.5 rounded-xl shadow-xs">
+            <span className="chip-tech text-xs font-mono text-emerald-800 bg-emerald-50/90 border-emerald-200 px-3 py-1.5 rounded-xl shadow-sm">
               SLA Standard: 15m / 60m / 24h
             </span>
           </div>
@@ -170,7 +172,7 @@ export default async function AdminReportsPage() {
             const count = c._count.id;
             const pct = Math.round((count / (totalTickets || 1)) * 100);
             return (
-              <div key={i} className="p-3.5 rounded-xl border border-slate-200/80 bg-slate-50/50 hover:bg-white hover:border-emerald-300 hover:shadow-xs transition-all space-y-2">
+              <div key={i} className="p-3.5 rounded-xl border border-slate-200/80 bg-slate-50/50 hover:bg-white hover:border-emerald-300 hover:shadow-sm transition-all space-y-2">
                 <div className="flex items-center justify-between text-xs font-semibold">
                   <span className="text-slate-900 font-medium">{getCategoryNameThai(c.category)}</span>
                   <div className="flex items-center space-x-2">
@@ -180,7 +182,7 @@ export default async function AdminReportsPage() {
                 </div>
                 <div className="h-2 w-full rounded-full bg-slate-200/80 overflow-hidden">
                   <div
-                    className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 transition-all duration-500 shadow-xs"
+                    className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 transition-all duration-500 shadow-sm"
                     style={{ width: `${pct}%` }}
                   />
                 </div>

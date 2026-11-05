@@ -1,4 +1,4 @@
-// components/admin/RoomManagementSection.tsx - Rooms & Facilities Management
+﻿// components/admin/RoomManagementSection.tsx - Rooms & Facilities Management
 "use client";
 
 import React, { useState, useMemo } from "react";
@@ -157,12 +157,12 @@ export default function RoomManagementSection({ initialRooms }: RoomManagementSe
   };
 
   return (
-    <div className="rounded-2xl border border-slate-200/90 bg-white/90 backdrop-blur-md p-6 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.06)] space-y-5">
+    <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm space-y-5">
       {/* 1. Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-200/80 pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-100 pb-4">
         <div>
           <div className="flex items-center space-x-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-b from-emerald-500 to-emerald-600 text-white shadow-[0_2px_8px_rgba(16,185,129,0.35)]">
+            <div className="flex h-9 w-9 items-center justify-center rounded-md bg-emerald-800 text-white shadow-sm">
               <DoorClosed className="h-4.5 w-4.5" />
             </div>
             <h2 className="text-base font-bold text-slate-900 tracking-tight">
@@ -231,7 +231,7 @@ export default function RoomManagementSection({ initialRooms }: RoomManagementSe
             onClick={() => setSelectedFloorFilter("ALL")}
             className={`rounded-lg px-3 py-1.5 text-xs transition-all ${
               selectedFloorFilter === "ALL"
-                ? "bg-white text-slate-900 shadow-xs font-semibold"
+                ? "bg-white text-slate-900 shadow-sm font-semibold"
                 : "text-slate-600 hover:text-slate-900"
             }`}
           >
@@ -244,7 +244,7 @@ export default function RoomManagementSection({ initialRooms }: RoomManagementSe
               onClick={() => setSelectedFloorFilter(f)}
               className={`rounded-lg px-3 py-1.5 text-xs transition-all ${
                 selectedFloorFilter === f
-                  ? "bg-white text-slate-900 shadow-xs font-semibold"
+                  ? "bg-white text-slate-900 shadow-sm font-semibold"
                   : "text-slate-600 hover:text-slate-900"
               }`}
             >
@@ -331,11 +331,11 @@ export default function RoomManagementSection({ initialRooms }: RoomManagementSe
 
       {/* 4. Add / Edit Modal */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="relative w-full max-w-lg rounded-2xl border border-slate-200/90 bg-white/95 backdrop-blur-xl p-6 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-200/80 pb-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 animate-in fade-in duration-200">
+          <div className="relative w-full max-w-lg rounded-lg border border-slate-200 bg-white p-6 shadow-xl space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center space-x-2.5">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-b from-emerald-500 to-emerald-600 text-white shadow-[0_2px_8px_rgba(16,185,129,0.35)]">
+                <div className="flex h-9 w-9 items-center justify-center rounded-md bg-emerald-800 text-white shadow-sm">
                   <DoorClosed className="h-4.5 w-4.5" />
                 </div>
                 <div>
@@ -343,7 +343,7 @@ export default function RoomManagementSection({ initialRooms }: RoomManagementSe
                     {editingRoom ? "แก้ไขข้อมูลห้อง/พื้นที่" : "เพิ่มห้อง/พื้นที่ใหม่ในแผนก"}
                   </h3>
                   <p className="text-xs text-slate-500">
-                    อาคารแผนกวิชาช่างเทคนิคคอมพิวเตอร์
+                    อาคารแผนกเทคโนโลยีคอมพิวเตอร์
                   </p>
                 </div>
               </div>
@@ -465,10 +465,10 @@ export default function RoomManagementSection({ initialRooms }: RoomManagementSe
 
       {/* 5. Delete Confirmation Modal */}
       {deletingRoom && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="relative w-full max-w-md rounded-2xl border border-slate-200/90 bg-white/95 backdrop-blur-xl p-6 shadow-2xl space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 animate-in fade-in duration-200">
+          <div className="relative w-full max-w-md rounded-lg border border-slate-200 bg-white p-6 shadow-xl space-y-4">
             <div className="flex items-center space-x-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-50 text-rose-600 border border-rose-200/80 shadow-2xs">
+              <div className="flex h-10 w-10 items-center justify-center rounded-md bg-rose-50 text-rose-600 border border-rose-200">
                 <AlertTriangle className="h-5 w-5" />
               </div>
               <div>

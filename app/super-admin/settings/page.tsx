@@ -1,4 +1,4 @@
-// app/super-admin/settings/page.tsx
+﻿// app/super-admin/settings/page.tsx
 import { Sliders, DoorClosed, Layers, Building } from "lucide-react";
 import { Metadata } from "next";
 import { getDepartmentRoomsAction } from "@/actions/room";
@@ -39,14 +39,14 @@ export default async function SuperAdminSettingsPage() {
       <RoomManagementSection initialRooms={rooms} />
 
       {/* 2. 7 Main Repair Categories & SLA Targets */}
-      <div className="rounded-2xl border border-slate-200/90 bg-white/90 backdrop-blur-md p-6 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.06)] space-y-5">
+      <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm space-y-5">
         <div className="flex items-center justify-between border-b border-slate-200/80 pb-3.5">
           <div>
             <h2 className="text-sm sm:text-base font-bold text-slate-900">
               หมวดหมู่งานซ่อมบำรุง 7 หมวดหมู่หลัก และเป้าหมายเวลา SLA
             </h2>
             <p className="text-xs text-slate-500">
-              เกณฑ์เวลา SLA ตอบสนองงานซ่อมประจำอาคารแผนกวิชาช่างเทคนิคคอมพิวเตอร์
+              เกณฑ์เวลา SLA ตอบสนองงานซ่อมประจำอาคารแผนกเทคโนโลยีคอมพิวเตอร์
             </p>
           </div>
           <span className="font-mono text-xs font-semibold bg-slate-100 border border-slate-200/80 text-slate-800 px-3 py-1 rounded-xl shadow-2xs">
