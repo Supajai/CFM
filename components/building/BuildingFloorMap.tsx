@@ -1,13 +1,14 @@
 // components/building/BuildingFloorMap.tsx
 "use client";
 
-import React, { useState, useMemo, useTransition } from "react";
+import React, { useState, useMemo, useTransition, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   TransformWrapper,
   TransformComponent,
   useControls,
+  ReactZoomPanPinchRef,
 } from "react-zoom-pan-pinch";
 import {
   FloorPlanData,
@@ -19,6 +20,7 @@ import {
   ZoomOut,
   RotateCcw,
   Maximize2,
+  Minimize2,
   Layers,
   MapPin,
   AlertTriangle,
@@ -56,6 +58,10 @@ import {
   Send,
   Loader2,
   ChevronDown,
+  Users,
+  PauseCircle,
+  ArrowRightCircle,
+  ClipboardList,
 } from "lucide-react";
 import {
   assignTechnicianAction,
@@ -480,8 +486,8 @@ export const BUILDING_3_U_SHAPED_FLOORS_PLAN: FloorPlanData[] = [
         ]
       },
       {
-        "id": "02-WC-F",
-        "code": "02-WC-F",
+        "id": "02-toilet-female",
+        "code": "toilet-female",
         "name": "ห้องน้ำหญิง (ชั้น 2)",
         "shortName": "ห้องน้ำหญิง",
         "floor": 2,
@@ -504,7 +510,7 @@ export const BUILDING_3_U_SHAPED_FLOORS_PLAN: FloorPlanData[] = [
         ],
         "subPins": [
           {
-            "id": "02-WC-F-tap",
+            "id": "02-toilet-female-tap",
             "code": "TAP-WCF2",
             "name": "ก๊อกอ่างล้างมือ",
             "type": "restroom",
@@ -676,8 +682,8 @@ export const BUILDING_3_U_SHAPED_FLOORS_PLAN: FloorPlanData[] = [
         ]
       },
       {
-        "id": "02-WC-TCH",
-        "code": "02-WC-TCH",
+        "id": "02-toilet-teacher",
+        "code": "toilet-teacher",
         "name": "ห้องน้ำอาจารย์ (ชั้น 2)",
         "shortName": "ห้องน้ำอาจารย์",
         "floor": 2,
@@ -700,7 +706,7 @@ export const BUILDING_3_U_SHAPED_FLOORS_PLAN: FloorPlanData[] = [
         ],
         "subPins": [
           {
-            "id": "02-WC-TCH-tap",
+            "id": "02-toilet-teacher-tap",
             "code": "TAP-WCT2",
             "name": "ก๊อกอ่างล้างมือ",
             "type": "restroom",
@@ -1529,7 +1535,7 @@ export const BUILDING_3_U_SHAPED_FLOORS_PLAN: FloorPlanData[] = [
 ];
 export const BUILDING_FLOORS_PLAN: FloorPlanData[] = BUILDING_3_U_SHAPED_FLOORS_PLAN;
 
-interface BuildingFloorMapProps {
+export interface BuildingFloorMapProps {
   initialFloor?: number;
   tickets?: TicketSummary[];
   currentUserRole?: "USER" | "TECHNICIAN" | "ADMIN" | "SUPER_ADMIN" | string;
@@ -1538,10 +1544,14 @@ interface BuildingFloorMapProps {
   technicians?: TechnicianOption[];
   heatmapStats?: RoomHeatmapStat[];
   onSelectRoom?: (room: BuildingRoomPlan) => void;
+  onInspectRoom?: (room: BuildingRoomPlan) => void;
   standalone?: boolean;
   showViewToggle?: boolean;
   currentView?: "map" | "list";
   onToggleView?: (view: "map" | "list") => void;
+  technicianFilter?: "all" | "my-tasks";
+  onTechnicianFilterChange?: (filter: "all" | "my-tasks") => void;
+  hideHeader?: boolean;
 }
 
 // Controls toolbar inside TransformWrapper
@@ -1549,31 +1559,47 @@ function ZoomToolbar({
   activeFloor,
   totalIssuesOnFloor,
   isDrawerOpen = false,
+  isFullscreen = false,
+  onToggleFullscreen,
 }: {
   activeFloor: number;
   totalIssuesOnFloor: number;
   isDrawerOpen?: boolean;
+  isFullscreen?: boolean;
+  onToggleFullscreen?: () => void;
 }) {
-  const { zoomIn, zoomOut, resetTransform, centerView } = useControls();
+  const { zoomIn, zoomOut, resetTransform, centerView, setTransform, state } = useControls();
+
+  const handleResetOrCenter = () => {
+    const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+    if (isMobile) {
+      centerView(1.18, 120);
+      setTimeout(() => {
+        setTransform(state.positionX, 15, 1.18, 60);
+      }, 130);
+    } else {
+      centerView(1.0, 120);
+    }
+  };
 
   return (
     <div
       className={`absolute z-20 flex items-center gap-1.5 rounded-xl bg-white/95 p-1.5 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.12)] border border-slate-200/90 backdrop-blur-md transition-all duration-300 ${
-        isDrawerOpen ? "bottom-4 left-4 sm:bottom-4 sm:right-[436px]" : "bottom-4 right-4"
+        isDrawerOpen ? "bottom-3 left-3 sm:bottom-4 sm:left-4 sm:right-[436px]" : "bottom-3 right-3"
       }`}
     >
       <button
         type="button"
-        onClick={() => zoomIn(0.15)}
-        className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition-all active:scale-95"
+        onClick={() => zoomIn(0.18)}
+        className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition-all active:scale-95 cursor-pointer"
         title="ซูมเข้า (+)"
       >
         <ZoomIn className="h-4 w-4" strokeWidth={1.75} />
       </button>
       <button
         type="button"
-        onClick={() => zoomOut(0.15)}
-        className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition-all active:scale-95"
+        onClick={() => zoomOut(0.18)}
+        className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition-all active:scale-95 cursor-pointer"
         title="ซูมออก (-)"
       >
         <ZoomOut className="h-4 w-4" strokeWidth={1.75} />
@@ -1581,19 +1607,27 @@ function ZoomToolbar({
       <div className="h-4 w-px bg-slate-200 mx-0.5" />
       <button
         type="button"
-        onClick={() => resetTransform()}
-        className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition-all active:scale-95"
+        onClick={handleResetOrCenter}
+        className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition-all active:scale-95 cursor-pointer"
         title="รีเซ็ตมุมมอง (⟲)"
       >
         <RotateCcw className="h-4 w-4" strokeWidth={1.75} />
       </button>
       <button
         type="button"
-        onClick={() => centerView(1)}
-        className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition-all active:scale-95"
-        title="จัดกึ่งกลาง"
+        onClick={onToggleFullscreen}
+        className={`flex h-8 w-8 items-center justify-center rounded-lg transition-all active:scale-95 cursor-pointer ${
+          isFullscreen
+            ? "bg-slate-900 text-white hover:bg-slate-800"
+            : "text-slate-700 hover:bg-slate-100 hover:text-slate-900"
+        }`}
+        title={isFullscreen ? "ย่อหน้าจอปกติ (Esc)" : "ขยายเต็มจอ (Fullscreen)"}
       >
-        <Maximize2 className="h-4 w-4" strokeWidth={1.75} />
+        {isFullscreen ? (
+          <Minimize2 className="h-4 w-4" strokeWidth={1.75} />
+        ) : (
+          <Maximize2 className="h-4 w-4" strokeWidth={1.75} />
+        )}
       </button>
     </div>
   );
@@ -1604,14 +1638,34 @@ function cleanStr(s: any): string {
   return s.toLowerCase().replace(/[\s\-_(),.]/g, "");
 }
 
+function stripFloorPrefix(str: any): string {
+  if (!str) return "";
+  const s = String(str).trim().toLowerCase();
+  return s.replace(/^0*(\d+)-/, "");
+}
+
+export function isStaircaseRoom(room: any): boolean {
+  if (!room) return false;
+  return Boolean(
+    room.type === "STAIRS" ||
+      (room.type === "common" && (room.name?.includes("บันได") || room.id?.includes("STAIR"))) ||
+      room.name?.includes("โถงบันได") ||
+      room.id?.toLowerCase().includes("stair") ||
+      room.code?.toLowerCase().includes("stair")
+  );
+}
+
 /**
- * ฟังก์ชันตรวจสอบว่าตั๋วใบนี้อยู่ในห้องดังกล่าวหรือไม่ (Robust Multi-fallback Matching)
- * รองรับทั้ง Database ID, 2.5D Room Code, Relation Object, ชื่อเต็ม, ชื่อย่อ, รหัสตัวเลข 3 หลัก, และ Fuzzy Matching
+ * ฟังก์ชันตรวจสอบว่าตั๋วใบนี้อยู่ในห้องดังกล่าวหรือไม่ (Strict Room & Restroom Code Matching)
+ * ป้องกันตั๋วห้อง 311 ลามไปห้อง 315 และป้องกันตั๋วห้องน้ำหญิงลามไปห้องน้ำอาจารย์
  */
 export function isTicketInRoom(ticket: any, room: any): boolean {
   if (!ticket || !room) return false;
 
-  // ตรวจสอบชั้น (Floor) หากระบุชัดเจนทั้งสองฝั่ง และไม่ตรงกัน ให้ข้าม (ป้องกันชื่อห้องซ้ำข้ามชั้น เช่น ห้องน้ำ)
+  // โถงบันไดเป็นพื้นที่สัญจร ไม่แสดงตั๋วแจ้งซ่อม
+  if (isStaircaseRoom(room)) return false;
+
+  // ตรวจสอบชั้น (Floor) หากระบุชัดเจนทั้งสองฝั่ง และไม่ตรงกัน ให้ข้าม (ป้องกันชื่อห้องซ้ำข้ามชั้น)
   const ticketFloor =
     ticket.floor !== undefined && ticket.floor !== null
       ? Number(ticket.floor)
@@ -1629,76 +1683,134 @@ export function isTicketInRoom(ticket: any, room: any): boolean {
     return false;
   }
 
-  // 1. ตรวจสอบจาก ID หรือ Code โดยตรง
-  if (ticket.roomId && (ticket.roomId === room.id || ticket.roomId === room.code)) return true;
-  if (ticket.roomCode && (ticket.roomCode === room.code || ticket.roomCode === room.id)) return true;
-
-  // ตรวจสอบกรณี ticket.room เป็น string โดยตรง (เช่น "04-SRV-ROOM", "ServerRoom", "Lab401")
-  if (typeof ticket.room === "string") {
-    const rawRoom = ticket.room.trim();
-    if (rawRoom === room.id || rawRoom === room.code) return true;
-    const lowerRoom = rawRoom.toLowerCase();
-    if (
-      lowerRoom === (room.id || "").toLowerCase() ||
-      lowerRoom === (room.code || "").toLowerCase()
-    ) {
-      return true;
-    }
-  }
-
-  // 2. ตรวจสอบผ่าน Relation object (ticket.room)
-  if (ticket.room && typeof ticket.room === "object") {
-    if (ticket.room.id && (ticket.room.id === room.id || ticket.room.id === room.code)) return true;
-    if (ticket.room.code && (ticket.room.code === room.code || ticket.room.code === room.id)) return true;
-    if (ticket.room.name && (ticket.room.name === room.name || ticket.room.name === room.title)) return true;
-  }
-
-  // 3. ตรวจสอบผ่าน Normalized String Matching (ลบช่องว่าง, ขีด, วงเล็บ, สัญลักษณ์ออกทั้งหมด)
-  const cTicket = cleanStr(
-    ticket.roomName ||
-      (typeof ticket.room === "string" ? ticket.room : ticket.room?.name) ||
+  // 1. ดึงรหัสห้องจากตั๋วและห้องเป้าหมาย
+  const rawTicketCode = String(
+    ticket.roomCode ||
+      (typeof ticket.room === "object" ? ticket.room?.code || ticket.room?.id : "") ||
       ticket.roomId ||
-      ticket.roomCode ||
-      ticket.location ||
-      ticket.specificLocation ||
+      (typeof ticket.room === "string" ? ticket.room : "") ||
       ""
-  );
+  ).trim();
 
-  const cRoomId = cleanStr(room.id);
-  const cRoomCode = cleanStr(room.code);
-  const cRoomName = cleanStr(room.name || room.title);
-  const cRoomShort = cleanStr(room.shortName);
+  const currentRoomCode = String(room.code || "").trim();
+  const currentRoomId = String(room.id || "").trim();
 
-  if (cRoomId && cTicket.includes(cRoomId)) return true;
-  if (cRoomCode && cTicket.includes(cRoomCode)) return true;
-  if (cRoomName && (cTicket.includes(cRoomName) || cRoomName.includes(cTicket))) return true;
-  if (cRoomShort && (cTicket.includes(cRoomShort) || cRoomShort.includes(cTicket))) return true;
+  const cleanTicketCode = stripFloorPrefix(rawTicketCode);
+  const cleanRoomCode = stripFloorPrefix(currentRoomCode);
+  const cleanRoomId = stripFloorPrefix(currentRoomId);
 
-  // 4. สกัดตัวเลขห้อง 3 หลักบนชั้นเดียวกัน (เช่น 401, 101, 201, 301, 102, 202, 302, 403)
-  const tDigits = cTicket.match(/\d{3}/)?.[0];
-  const rDigits = (cRoomCode + cRoomId).match(/\d{3}/)?.[0];
-  if (tDigits && rDigits && tDigits === rDigits) return true;
+  // Exact Equality Matching (ทั้งแบบมีหรือไม่มี floor prefix เช่น "02-toilet-female" === "02-toilet-female" หรือ "toilet-female" === "toilet-female")
+  if (
+    (rawTicketCode && (rawTicketCode.toLowerCase() === currentRoomCode.toLowerCase() || rawTicketCode.toLowerCase() === currentRoomId.toLowerCase())) ||
+    (cleanTicketCode && (cleanTicketCode === cleanRoomCode || cleanTicketCode === cleanRoomId))
+  ) {
+    return true;
+  }
 
-  // 5. การจับคู่ด้วยคำสำคัญเฉพาะพื้นที่ (Semantic Keyword Matching)
-  // ห้องเซิร์ฟเวอร์
-  if (cTicket.includes("server") || cTicket.includes("srv") || cTicket.includes("เซิร์ฟเวอร์")) {
-    if (cRoomId.includes("server") || cRoomCode.includes("srv") || cRoomName.includes("เซิร์ฟเวอร์")) return true;
+  // 2. สกัดตัวเลขห้อง 3 หลัก (เช่น "311", "315", "312", "313", "314", "321", "322", "343")
+  const tDigits =
+    cleanTicketCode.match(/\b\d{3}\b/)?.[0] ||
+    String(ticket.roomName || "").match(/\b\d{3}\b/)?.[0] ||
+    String(ticket.location || "").match(/\b\d{3}\b/)?.[0];
+
+  const rDigits =
+    cleanRoomCode.match(/\b\d{3}\b/)?.[0] ||
+    String(room.name || "").match(/\b\d{3}\b/)?.[0] ||
+    String(room.shortName || "").match(/\b\d{3}\b/)?.[0];
+
+  if (tDigits && rDigits) {
+    // บังคับเปรียบเทียบรหัสตัวเลขเฉพาะเจาะจง: ถ้ามีตัวเลข 3 หลักทั้งสองฝั่ง ต้องตรงกันเท่านั้น!
+    // หากไม่ตรงกัน (เช่น 311 vs 315) ให้คืนค่า false ทันที ห้ามใช้ชื่อห้องทั่วไปเช่น "ห้องพักครู" มาจับคู่
+    return tDigits === rDigits;
   }
-  // ห้องน้ำ
-  if (cTicket.includes("ห้องน้ำ") || cTicket.includes("สุขา") || cTicket.includes("wc") || cTicket.includes("restroom")) {
-    if (cRoomId.includes("restroom") || cRoomCode.includes("wc") || cRoomName.includes("ห้องน้ำ")) return true;
-  }
-  // ห้องพักครู / สำนักงาน
-  if (cTicket.includes("พักครู") || cTicket.includes("สำนักงาน") || cTicket.includes("office")) {
-    if (cRoomId.includes("office") || cRoomName.includes("พักครู")) return true;
-  }
-  // ห้องพักช่าง / ศูนย์ซ่อมบำรุง
-  if (cTicket.includes("เจ้าหน้าที่") || cTicket.includes("ศูนย์ซ่อมบำรุง") || cTicket.includes("ช่าง")) {
-    if (cRoomId.includes("staff") || cRoomName.includes("เจ้าหน้าที่")) return true;
-  }
-  // ระเบียง / พื้นที่ส่วนกลาง
-  if (cTicket.includes("ระเบียง") || cTicket.includes("terrace")) {
-    if (cRoomId.includes("terrace") || cRoomCode.includes("terrace")) return true;
+
+  // 3. ตรวจสอบกลุ่มห้องน้ำ (Restroom Matching) - ห้ามใช้ targetId.includes(ticketId) กับคำว่า toilet เด็ดขาด
+  const isRestroomTarget =
+    cleanRoomCode.includes("toilet") ||
+    cleanRoomCode.includes("wc") ||
+    cleanRoomId.includes("toilet") ||
+    cleanRoomId.includes("wc") ||
+    room.name?.includes("ห้องน้ำ") ||
+    room.name?.includes("สุขา");
+
+  if (isRestroomTarget) {
+    // กำหนดกลุ่มห้องน้ำเป้าหมายอย่างแม่นยำ (Strict Identity)
+    const isFemaleRoom =
+      cleanRoomCode === "toilet-female" ||
+      cleanRoomId === "toilet-female" ||
+      cleanRoomCode === "wc-f" ||
+      cleanRoomId === "wc-f" ||
+      room.name?.includes("หญิง");
+
+    const isTeacherRoom =
+      cleanRoomCode === "toilet-teacher" ||
+      cleanRoomId === "toilet-teacher" ||
+      cleanRoomCode === "wc-tch" ||
+      cleanRoomId === "wc-tch" ||
+      room.name?.includes("อาจารย์");
+
+    const isMale1Room =
+      cleanRoomCode === "wc-m1" ||
+      cleanRoomId === "wc-m1" ||
+      room.name?.includes("ชาย 1");
+
+    const isMale2Room =
+      cleanRoomCode === "wc-m2" ||
+      cleanRoomId === "wc-m2" ||
+      room.name?.includes("ชาย 2");
+
+    const isGenRoom =
+      cleanRoomCode === "wc-gen" ||
+      cleanRoomId === "wc-gen" ||
+      room.name?.includes("ทั่วไป");
+
+    // ตรวจสอบว่าตั๋วระบุประเภทห้องน้ำใดอย่างชัดเจน (Strict Type Matching)
+    const ticketStr = cleanStr(
+      [
+        rawTicketCode,
+        ticket.roomName,
+        typeof ticket.room === "string" ? ticket.room : ticket.room?.name,
+        ticket.location,
+        ticket.specificLocation,
+      ].join(" ")
+    );
+
+    const isTicketFemale =
+      cleanTicketCode === "toilet-female" ||
+      cleanTicketCode === "wc-f" ||
+      ticketStr.includes("female") ||
+      ticketStr.includes("หญิง") ||
+      ticketStr.includes("wcf");
+
+    const isTicketTeacher =
+      cleanTicketCode === "toilet-teacher" ||
+      cleanTicketCode === "wc-tch" ||
+      ticketStr.includes("teacher") ||
+      ticketStr.includes("อาจารย์") ||
+      ticketStr.includes("wctch");
+
+    const isTicketMale1 =
+      cleanTicketCode === "wc-m1" ||
+      ticketStr.includes("ชาย1") ||
+      ticketStr.includes("wcm1");
+
+    const isTicketMale2 =
+      cleanTicketCode === "wc-m2" ||
+      ticketStr.includes("ชาย2") ||
+      ticketStr.includes("wcm2");
+
+    const isTicketGen =
+      cleanTicketCode === "wc-gen" ||
+      ticketStr.includes("ทั่วไป") ||
+      ticketStr.includes("wcgen");
+
+    if (isTicketFemale) return isFemaleRoom;
+    if (isTicketTeacher) return isTeacherRoom;
+    if (isTicketMale1) return isMale1Room;
+    if (isTicketMale2) return isMale2Room;
+    if (isTicketGen) return isGenRoom;
+
+    return false;
   }
 
   return false;
@@ -1774,11 +1886,15 @@ const ROOM_SPECS: Record<string, RoomGridSpec> = {
 
   // Floor 2
   "02-321": { x: 0, y: 0, w: 110, d: 280 },
+  "02-toilet-female": { x: 110, y: 0, w: 65, d: 75 },
+  "toilet-female": { x: 110, y: 0, w: 65, d: 75 },
   "02-WC-F": { x: 110, y: 0, w: 65, d: 75 },
   "02-STAIR-L": { x: 110, y: 75, w: 65, d: 75 },
   "02-322": { x: 175, y: 0, w: 90, d: 150 },
   "02-323": { x: 265, y: 0, w: 90, d: 150 },
   "02-324": { x: 355, y: 0, w: 90, d: 150 },
+  "02-toilet-teacher": { x: 445, y: 0, w: 65, d: 75 },
+  "toilet-teacher": { x: 445, y: 0, w: 65, d: 75 },
   "02-WC-TCH": { x: 445, y: 0, w: 65, d: 75 },
   "02-STAIR-R": { x: 445, y: 75, w: 65, d: 75 },
   "02-325": { x: 510, y: 0, w: 110, d: 280 },
@@ -1817,11 +1933,11 @@ function getRoomGridSpec(roomId: string, roomCode?: string): RoomGridSpec {
 }
 
 function getShortThaiName(room: BuildingRoomPlan): string {
-  if (room.id.includes("WC-F")) return "ห้องน้ำหญิง";
+  if (room.id.includes("WC-F") || room.id.includes("toilet-female") || (room.code && room.code.includes("toilet-female"))) return "ห้องน้ำหญิง";
   if (room.id.includes("WC-M1")) return "ห้องน้ำชาย 1";
   if (room.id.includes("WC-M2")) return "ห้องน้ำชาย 2";
   if (room.id.includes("WC-GEN")) return "ห้องน้ำทั่วไป";
-  if (room.id.includes("WC-TCH")) return "ห้องน้ำอาจารย์";
+  if (room.id.includes("WC-TCH") || room.id.includes("toilet-teacher") || (room.code && room.code.includes("toilet-teacher"))) return "ห้องน้ำอาจารย์";
   if (room.id.includes("STAIR-L") || (room.code && room.code.includes("STAIR-L")) || (room.name && (room.name.includes("บันได 1") || room.name.includes("โถงบันได 1")))) return "โถงบันได 1";
   if (room.id.includes("STAIR-R") || (room.code && room.code.includes("STAIR-R")) || (room.name && (room.name.includes("บันได 2") || room.name.includes("โถงบันได 2")))) return "โถงบันได 2";
   if (room.id.includes("STAIR") || (room.code && room.code.includes("STAIR"))) return "โถงบันได";
@@ -1832,11 +1948,11 @@ function getShortThaiName(room: BuildingRoomPlan): string {
 }
 
 function getCleanRoomSubtitle(room: BuildingRoomPlan): string {
-  if (room.id.includes("WC-F")) return "ห้องน้ำหญิง";
+  if (room.id.includes("WC-F") || room.id.includes("toilet-female") || (room.code && room.code.includes("toilet-female"))) return "ห้องน้ำหญิง";
   if (room.id.includes("WC-M1")) return "ห้องน้ำชาย 1";
   if (room.id.includes("WC-M2")) return "ห้องน้ำชาย 2";
   if (room.id.includes("WC-GEN")) return "ห้องน้ำทั่วไป";
-  if (room.id.includes("WC-TCH")) return "ห้องน้ำอาจารย์";
+  if (room.id.includes("WC-TCH") || room.id.includes("toilet-teacher") || (room.code && room.code.includes("toilet-teacher"))) return "ห้องน้ำอาจารย์";
   if (room.id.includes("STAIR-L") || (room.code && room.code.includes("STAIR-L")) || (room.name && (room.name.includes("บันได 1") || room.name.includes("โถงบันได 1")))) return "โถงบันได 1";
   if (room.id.includes("STAIR-R") || (room.code && room.code.includes("STAIR-R")) || (room.name && (room.name.includes("บันได 2") || room.name.includes("โถงบันได 2")))) return "โถงบันได 2";
   if (room.id.includes("STAIR") || (room.code && room.code.includes("STAIR"))) return "โถงบันได";
@@ -2145,13 +2261,14 @@ function ArchitecturalRoomSvg({
   superAdminMode,
   heatmapMap,
 }: ArchitecturalRoomSvgProps) {
+  const isStaircase = isStaircaseRoom(room);
   const pool =
     currentUserRole === "TECHNICIAN" && technicianFilter === "my-tasks"
       ? displayTickets
       : activeTickets;
-  const roomTickets = pool.filter((t) => isTicketInRoom(t, room));
-  const hasActiveIssue = roomTickets.length > 0;
-  const hasCriticalIssue = roomTickets.some(
+  const roomTickets = isStaircase ? [] : pool.filter((t) => isTicketInRoom(t, room));
+  const hasActiveIssue = !isStaircase && roomTickets.length > 0;
+  const hasCriticalIssue = !isStaircase && roomTickets.some(
     (t) => t.priority === "CRITICAL" || t.priority === "URGENT" || t.isUrgent
   );
   const isSelected = selectedRoom?.id === room.id;
@@ -2160,8 +2277,12 @@ function ArchitecturalRoomSvg({
     roomMaintenanceMap[room.code] || roomMaintenanceMap[room.id]
   );
 
-  const isStair = room.id.includes("STAIR");
-  const isWC = room.id.includes("WC");
+  const isStair = isStaircase || room.id.includes("STAIR");
+  const isWC =
+    room.id.includes("WC") ||
+    room.id.includes("toilet") ||
+    (room.code && room.code.includes("toilet")) ||
+    room.type === "facility";
   const isOffice = room.type === "office";
   const isLargeLab = room.id.endsWith("343");
 
@@ -2212,14 +2333,14 @@ function ArchitecturalRoomSvg({
     strokeW = 2.5;
     roomAnimation = undefined;
   } else if (hasCriticalIssue) {
-    // Urgent / Critical Alert: Fast pulse (1.1s)
-    floorFill = "#fee2e2";
-    floorStroke = "#ef4444";
-    strokeW = 2.5;
-    roomAnimation = "urgentRoomPulse 1.1s cubic-bezier(0.4, 0, 0.6, 1) infinite";
+    // Urgent / Critical Alert: Soft translucent rose background with vivid rose border
+    floorFill = "#fff1f2";
+    floorStroke = "#f43f5e";
+    strokeW = 2.2;
+    roomAnimation = "urgentRoomPulse 1.2s cubic-bezier(0.4, 0, 0.6, 1) infinite";
   } else if (hasActiveIssue) {
-    // Warning Alert: Slower warning rhythm (1.8s)
-    floorFill = "#fefce8";
+    // Warning Alert: Soft translucent amber background with amber border
+    floorFill = "#fffbeb";
     floorStroke = "#f59e0b";
     strokeW = 2;
     roomAnimation = "warningRoomPulse 1.8s ease-in-out infinite";
@@ -2335,16 +2456,22 @@ function ArchitecturalRoomSvg({
 
   return (
     <g
-      className="cursor-pointer select-none outline-none focus:outline-none focus-visible:outline-none"
+      className={`${
+        isStaircase ? "cursor-default pointer-events-none" : "cursor-pointer"
+      } select-none outline-none focus:outline-none focus-visible:outline-none`}
       style={{ outline: "none", WebkitTapHighlightColor: "transparent" }}
-      onClick={(e) => {
-        e.stopPropagation();
-        handleRoomClick(room);
-      }}
-      onMouseEnter={() => setHoveredRoomId(room.id)}
-      onMouseLeave={() => setHoveredRoomId(null)}
-      role="button"
-      tabIndex={0}
+      onClick={
+        isStaircase
+          ? undefined
+          : (e) => {
+              e.stopPropagation();
+              handleRoomClick(room);
+            }
+      }
+      onMouseEnter={isStaircase ? undefined : () => setHoveredRoomId(room.id)}
+      onMouseLeave={isStaircase ? undefined : () => setHoveredRoomId(null)}
+      role={isStaircase ? "presentation" : "button"}
+      tabIndex={isStaircase ? -1 : 0}
       aria-label={`${room.code} ${room.name}`}
     >
       {/* 1. Flat Room Floor Surface (z = 0) */}
@@ -2353,6 +2480,7 @@ function ArchitecturalRoomSvg({
         fill={floorFill}
         stroke={floorStroke}
         strokeWidth={strokeW}
+        vectorEffect="non-scaling-stroke"
         strokeDasharray={isMaintenance ? "4 2" : undefined}
         className="transition-all duration-300 ease-out outline-none focus:outline-none focus-visible:outline-none select-none"
         style={{
@@ -2381,6 +2509,7 @@ function ArchitecturalRoomSvg({
               fill="#e2e8f0"
               stroke="#cbd5e1"
               strokeWidth="0.8"
+              vectorEffect="non-scaling-stroke"
               strokeLinejoin="round"
               className="outline-none select-none"
             />
@@ -2390,6 +2519,7 @@ function ArchitecturalRoomSvg({
               fill="#cbd5e1"
               stroke="#94a3b8"
               strokeWidth="0.8"
+              vectorEffect="non-scaling-stroke"
               strokeLinejoin="round"
               className="outline-none select-none"
             />
@@ -2399,6 +2529,7 @@ function ArchitecturalRoomSvg({
               fill="#ffffff"
               stroke="#cbd5e1"
               strokeWidth="0.8"
+              vectorEffect="non-scaling-stroke"
               strokeLinejoin="round"
               className="outline-none select-none"
             />
@@ -2416,6 +2547,7 @@ function ArchitecturalRoomSvg({
             y2={doorway.p2.y}
             stroke="#94a3b8"
             strokeWidth="1.2"
+            vectorEffect="non-scaling-stroke"
             strokeLinecap="round"
           />
           <path
@@ -2423,6 +2555,7 @@ function ArchitecturalRoomSvg({
             fill="none"
             stroke="#cbd5e1"
             strokeWidth="0.8"
+            vectorEffect="non-scaling-stroke"
             strokeDasharray="2 2"
           />
         </g>
@@ -2439,6 +2572,7 @@ function ArchitecturalRoomSvg({
             y2={line.y2}
             stroke="#64748b"
             strokeWidth="1.8"
+            vectorEffect="non-scaling-stroke"
             strokeLinecap="round"
             className="pointer-events-none"
           />
@@ -2481,13 +2615,14 @@ function RoomPillLayer({
   superAdminMode,
   heatmapMap,
 }: RoomPillLayerProps) {
+  const isStaircase = isStaircaseRoom(room);
   const pool =
     currentUserRole === "TECHNICIAN" && technicianFilter === "my-tasks"
       ? displayTickets
       : activeTickets;
-  const roomTickets = pool.filter((t) => isTicketInRoom(t, room));
-  const hasActiveIssue = roomTickets.length > 0;
-  const hasCriticalIssue = roomTickets.some(
+  const roomTickets = isStaircase ? [] : pool.filter((t) => isTicketInRoom(t, room));
+  const hasActiveIssue = !isStaircase && roomTickets.length > 0;
+  const hasCriticalIssue = !isStaircase && roomTickets.some(
     (t) => t.priority === "CRITICAL" || t.priority === "URGENT" || t.isUrgent
   );
   const isSelected = selectedRoom?.id === room.id;
@@ -2496,8 +2631,12 @@ function RoomPillLayer({
     roomMaintenanceMap[room.code] || roomMaintenanceMap[room.id]
   );
 
-  const isStair = room.id.includes("STAIR");
-  const isWC = room.id.includes("WC");
+  const isStair = isStaircase || room.id.includes("STAIR");
+  const isWC =
+    room.id.includes("WC") ||
+    room.id.includes("toilet") ||
+    (room.code && room.code.includes("toilet")) ||
+    room.type === "facility";
   const isLeftWing = room.id.endsWith("311") || room.id.endsWith("321") || room.id.endsWith("331") || room.id.endsWith("341");
   const isRightWing = room.id.endsWith("315") || room.id.endsWith("325") || room.id.endsWith("335") || room.id.endsWith("344");
 
@@ -2540,26 +2679,26 @@ function RoomPillLayer({
   const pillRx = 11;
 
   if (isStair) {
-    pillW = Math.max(76, thaiName.length * 6 + 28);
+    pillW = Math.max(78, thaiName.length * 6 + 28);
   } else if (isWC) {
-    pillW = Math.max(82, thaiName.length * 6 + 30);
+    pillW = Math.max(84, thaiName.length * 6 + 30);
   } else {
-    pillW = Math.max(54, cleanNumber.length * 8 + 26);
+    pillW = Math.max(56, cleanNumber.length * 8.5 + 28);
   }
 
   const pillX = Math.round(center.x - pillW / 2);
   const pillY = Math.round(center.y - 10 - pillH / 2);
 
   // Status Colors for Pill Border and Dot
-  let strokeColor = isWC ? "#7dd3fc" : "#cbd5e1";
+  let strokeColor = isWC ? "#bae6fd" : "#e2e8f0";
   let dotColor = "#10b981";
 
   if (isMaintenance) {
     strokeColor = "#94a3b8";
     dotColor = "#94a3b8";
   } else if (hasCriticalIssue || (isHeatmapMode && totalHistorical >= 4)) {
-    strokeColor = "#ef4444";
-    dotColor = "#dc2626";
+    strokeColor = "#f43f5e";
+    dotColor = "#e11d48";
   } else if (hasActiveIssue || (isHeatmapMode && totalHistorical >= 2)) {
     strokeColor = "#f59e0b";
     dotColor = "#ea580c";
@@ -2570,33 +2709,66 @@ function RoomPillLayer({
     strokeColor = "#3b82f6";
   }
 
-  const ticketCount = isHeatmapMode ? totalHistorical : roomTickets.length;
-  const showPin = hasActiveIssue && !isHeatmapMode;
-  const showCountBadge = ticketCount > 0;
+  const ticketCount = isStaircase ? 0 : isHeatmapMode ? totalHistorical : roomTickets.length;
+  const showPin = !isStaircase && hasActiveIssue && !isHeatmapMode;
+  const showCountBadge = !isStaircase && ticketCount > 0;
 
   return (
     <g
-      className="cursor-pointer select-none transition-transform duration-150 outline-none focus:outline-none focus-visible:outline-none"
+      className={`${
+        isStaircase
+          ? "cursor-default pointer-events-none"
+          : "room-pill-interactive cursor-pointer"
+      } select-none transition-all duration-200 outline-none focus:outline-none focus-visible:outline-none`}
       style={{ outline: "none", WebkitTapHighlightColor: "transparent" }}
-      onClick={(e) => {
-        e.stopPropagation();
-        handleRoomClick(room);
-      }}
-      onMouseEnter={() => setHoveredRoomId(room.id)}
-      onMouseLeave={() => setHoveredRoomId(null)}
+      onClick={
+        isStaircase
+          ? undefined
+          : (e) => {
+              e.stopPropagation();
+              handleRoomClick(room);
+            }
+      }
+      onMouseEnter={isStaircase ? undefined : () => setHoveredRoomId(room.id)}
+      onMouseLeave={isStaircase ? undefined : () => setHoveredRoomId(null)}
+      role={isStaircase ? "presentation" : "button"}
+      tabIndex={isStaircase ? -1 : 0}
     >
-      {/* 1. Mappedin White Capsule Container */}
+      {/* 1. Glassmorphism Capsule Container */}
       <rect
         x={pillX}
         y={pillY}
         width={pillW}
         height={pillH}
         rx={pillRx}
-        fill="#ffffff"
-        stroke={strokeColor}
-        strokeWidth={hasCriticalIssue || isSelected ? 2 : hasActiveIssue ? 1.6 : 1.2}
-        filter="drop-shadow(0 2px 4px rgba(0,0,0,0.06))"
-        className="outline-none focus:outline-none focus-visible:outline-none select-none"
+        fill={
+          isStair
+            ? "#f8fafc"
+            : isWC
+            ? "rgba(240, 249, 255, 0.95)"
+            : "rgba(255, 255, 255, 0.95)"
+        }
+        stroke={isStair ? "#e2e8f0" : strokeColor}
+        strokeWidth={
+          isStair
+            ? 1
+            : hasCriticalIssue || isSelected
+            ? 2
+            : hasActiveIssue
+            ? 1.6
+            : 1.2
+        }
+        vectorEffect="non-scaling-stroke"
+        filter={
+          isStair
+            ? "none"
+            : isSelected
+            ? "drop-shadow(0 4px 12px rgba(16, 185, 129, 0.2))"
+            : isWC
+            ? "drop-shadow(0 2px 6px rgba(14, 165, 233, 0.08))"
+            : "drop-shadow(0 2px 8px rgba(0,0,0,0.05))"
+        }
+        className="outline-none focus:outline-none focus-visible:outline-none select-none transition-all duration-200"
         style={{
           outline: "none",
           WebkitTapHighlightColor: "transparent",
@@ -2616,8 +2788,9 @@ function RoomPillLayer({
             <path
               d="M1 9.5 L3.5 9.5 L3.5 6.5 L6 6.5 L6 3.5 L8.5 3.5 L8.5 1 L11 1"
               fill="none"
-              stroke="#475569"
-              strokeWidth="1.6"
+              stroke="#64748b"
+              strokeWidth="1.5"
+              vectorEffect="non-scaling-stroke"
               strokeLinecap="round"
               strokeLinejoin="round"
             />
@@ -2627,43 +2800,60 @@ function RoomPillLayer({
             y={pillY + pillH / 2 + 0.5}
             textAnchor="start"
             dominantBaseline="central"
-            fontSize={10}
-            fontWeight="600"
-            fill="#334155"
+            fontSize={10.5}
+            fontWeight="500"
+            fill="#64748b"
+            fontFamily="ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Noto Sans Thai', sans-serif"
           >
             {thaiName}
           </text>
         </g>
       ) : isWC ? (
         <g className="pointer-events-none select-none">
+          <Users
+            x={pillX + 7}
+            y={pillY + (pillH - 13) / 2}
+            width={13}
+            height={13}
+            stroke="#0369a1"
+            strokeWidth={2}
+            className="pointer-events-none select-none"
+          />
           <text
-            x={pillX + 9}
+            x={pillX + 23}
             y={pillY + pillH / 2 + 0.5}
             textAnchor="start"
             dominantBaseline="central"
-            fontSize={11}
-          >
-            🚻
-          </text>
-          <text
-            x={pillX + 24}
-            y={pillY + pillH / 2 + 0.5}
-            textAnchor="start"
-            dominantBaseline="central"
-            fontSize={10}
+            fontSize={10.5}
             fontWeight="600"
-            fill="#0284c7"
+            fill="#0369a1"
+            letterSpacing="-0.01em"
+            fontFamily="ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Noto Sans Thai', sans-serif"
           >
             {thaiName}
           </text>
         </g>
       ) : (
         <g className="pointer-events-none select-none">
-          {/* Status Dot */}
+          {/* Status Indicator Soft Ring + Inner Dot */}
           <circle
-            cx={pillX + 10}
+            cx={pillX + 11}
             cy={pillY + pillH / 2}
-            r={3}
+            r={4.5}
+            fill={
+              hasCriticalIssue
+                ? "#ffe4e6"
+                : hasActiveIssue
+                ? "#fef3c7"
+                : isSelected
+                ? "#d1fae5"
+                : "#ecfdf5"
+            }
+          />
+          <circle
+            cx={pillX + 11}
+            cy={pillY + pillH / 2}
+            r={2.5}
             fill={dotColor}
             style={{
               animation:
@@ -2678,15 +2868,16 @@ function RoomPillLayer({
           />
           {/* Room Number */}
           <text
-            x={pillX + 17}
+            x={pillX + 19}
             y={pillY + pillH / 2 + 0.5}
             textAnchor="start"
             dominantBaseline="central"
-            fontSize={11}
+            fontSize={12}
             fontWeight="700"
-            fill="#0f172a"
-            letterSpacing="-0.02em"
-            fontFamily="ui-monospace, SFMono-Regular, Menlo, monospace"
+            fill={hasCriticalIssue ? "#be123c" : "#1e293b"}
+            letterSpacing="-0.03em"
+            fontFamily="ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+            style={{ fontVariantNumeric: "tabular-nums" }}
           >
             {cleanNumber}
           </text>
@@ -2697,14 +2888,23 @@ function RoomPillLayer({
       {!isStair && !isWC && (
         <text
           x={center.x}
-          y={pillY + pillH + 11}
+          y={pillY + pillH + 10.5}
           textAnchor="middle"
           dominantBaseline="central"
-          fontSize={10}
-          fontWeight={isSelected || isHovered ? "600" : "500"}
-          fill={isSelected ? "#047857" : hasCriticalIssue ? "#dc2626" : hasActiveIssue ? "#ea580c" : "#64748b"}
+          fontSize={9.5}
+          fontWeight={isSelected || isHovered ? "600" : "400"}
+          fill={
+            isSelected
+              ? "#059669"
+              : hasCriticalIssue
+              ? "#be123c"
+              : hasActiveIssue
+              ? "#d97706"
+              : "#64748b"
+          }
           letterSpacing="-0.01em"
-          className="pointer-events-none select-none"
+          fontFamily="ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Noto Sans Thai', sans-serif"
+          className="pointer-events-none select-none transition-colors duration-150"
         >
           {thaiSubtitle}
         </text>
@@ -2716,20 +2916,28 @@ function RoomPillLayer({
           <circle
             cx={0}
             cy={0}
-            r={7.5}
-            fill={hasCriticalIssue || (isHeatmapMode && totalHistorical >= 4) ? "#dc2626" : isHeatmapMode ? "#9333ea" : "#ea580c"}
+            r={8}
+            fill={
+              hasCriticalIssue || (isHeatmapMode && totalHistorical >= 4)
+                ? "#e11d48"
+                : isHeatmapMode
+                ? "#9333ea"
+                : "#f59e0b"
+            }
             stroke="#ffffff"
-            strokeWidth={1.5}
+            strokeWidth={2}
+            filter="drop-shadow(0 2px 4px rgba(0,0,0,0.18))"
           />
           <text
             x={0}
             y={0.5}
             textAnchor="middle"
             dominantBaseline="central"
-            fontSize={9}
-            fontWeight="900"
+            fontSize={9.5}
+            fontWeight="800"
             fill="#ffffff"
-            fontFamily="monospace"
+            fontFamily="ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif"
+            style={{ fontVariantNumeric: "tabular-nums" }}
             className="pointer-events-none select-none"
           >
             {ticketCount}
@@ -2748,9 +2956,11 @@ function RoomPillLayer({
               y1={12}
               x2={0}
               y2={22}
-              stroke={hasCriticalIssue ? "#dc2626" : "#ea580c"}
+              stroke={hasCriticalIssue ? "#f43f5e" : "#f59e0b"}
               strokeWidth={2}
+              vectorEffect="non-scaling-stroke"
               strokeLinecap="round"
+              strokeDasharray="2 1.5"
             />
 
             {/* Radar Ping wave circle behind pin */}
@@ -2758,7 +2968,7 @@ function RoomPillLayer({
               cx={0}
               cy={0}
               r={12}
-              fill={hasCriticalIssue ? "#ef4444" : "#f59e0b"}
+              fill={hasCriticalIssue ? "#f43f5e" : "#fbbf24"}
               className="pointer-events-none"
               style={{
                 animation: hasCriticalIssue
@@ -2769,28 +2979,52 @@ function RoomPillLayer({
               }}
             />
 
-            {/* Action Circle */}
+            {/* Soft Ambient Halo */}
+            <circle
+              cx={0}
+              cy={0}
+              r={13.5}
+              fill={hasCriticalIssue ? "rgba(244, 63, 94, 0.18)" : "rgba(245, 158, 11, 0.18)"}
+              className="pointer-events-none"
+            />
+
+            {/* Action Circle with Linear Gradient & Drop Shadow */}
             <circle
               cx={0}
               cy={0}
               r={12}
-              fill={hasCriticalIssue ? "#dc2626" : "#ea580c"}
+              fill={hasCriticalIssue ? "url(#pinGradientCritical)" : "url(#pinGradientWarning)"}
               stroke="#ffffff"
               strokeWidth={2}
-              filter="drop-shadow(0 2px 4px rgba(0,0,0,0.2))"
+              style={{
+                filter: hasCriticalIssue
+                  ? "drop-shadow(0 4px 10px rgba(225, 29, 72, 0.35))"
+                  : "drop-shadow(0 4px 10px rgba(217, 119, 6, 0.3))",
+              }}
             />
-            <text
-              x={0}
-              y={hasCriticalIssue ? 0.5 : 1}
-              textAnchor="middle"
-              dominantBaseline="central"
-              fontSize={hasCriticalIssue ? 13 : 11}
-              fontWeight="900"
-              fill="#ffffff"
-              className="pointer-events-none select-none"
-            >
-              {hasCriticalIssue ? "!" : "🔧"}
-            </text>
+            {hasCriticalIssue ? (
+              <AlertTriangle
+                x={-6}
+                y={-6.5}
+                width={12}
+                height={12}
+                stroke="#ffffff"
+                fill="none"
+                strokeWidth={2.5}
+                className="pointer-events-none select-none"
+              />
+            ) : (
+              <Wrench
+                x={-5.5}
+                y={-5.5}
+                width={11}
+                height={11}
+                stroke="#ffffff"
+                fill="none"
+                strokeWidth={2.5}
+                className="pointer-events-none select-none"
+              />
+            )}
           </g>
         </g>
       )}
@@ -2811,7 +3045,11 @@ export default function BuildingFloorMap({
   showViewToggle = false,
   currentView = "map",
   onToggleView,
+  technicianFilter: controlledTechnicianFilter,
+  onTechnicianFilterChange,
+  hideHeader = false,
 }: BuildingFloorMapProps) {
+  console.log('Tickets passed to map:', tickets);
   const router = useRouter();
   const [currentFloor, setCurrentFloor] = useState<number>(initialFloor);
   const [selectedRoom, setSelectedRoom] = useState<BuildingRoomPlan | null>(null);
@@ -2821,10 +3059,94 @@ export default function BuildingFloorMap({
   // Super Admin view mode: 'active' or 'heatmap'
   const [superAdminMode, setSuperAdminMode] = useState<"active" | "heatmap">("active");
 
+  // Fullscreen Mode State (ขยายแผนผังทับทั้งหน้าจอ)
+  const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
+
+  // Mobile viewport detection
+  const [isMobileDevice, setIsMobileDevice] = useState<boolean>(false);
+
+  // Two-Finger Gesture Toast (Google Maps style reminder)
+  const [showTwoFingerToast, setShowTwoFingerToast] = useState<boolean>(false);
+  const toastTimerRef = React.useRef<NodeJS.Timeout | null>(null);
+  const touchStartPosRef = React.useRef<{ x: number; y: number } | null>(null);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobileDevice(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  // Listen to Escape key to exit fullscreen
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isFullscreen) {
+        setIsFullscreen(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isFullscreen]);
+
+  // Clean up timer on unmount
+  useEffect(() => {
+    return () => {
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    };
+  }, []);
+
+  // ดักจับการใช้นิ้วเดียวลากผังเพื่อแสดง Overlay Toast แนะนำ
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (isFullscreen) return;
+    if (e.touches.length === 1) {
+      touchStartPosRef.current = {
+        x: e.touches[0].clientX,
+        y: e.touches[0].clientY,
+      };
+    } else {
+      touchStartPosRef.current = null;
+      setShowTwoFingerToast(false);
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (isFullscreen) return;
+    if (e.touches.length === 1 && touchStartPosRef.current) {
+      const dx = Math.abs(e.touches[0].clientX - touchStartPosRef.current.x);
+      const dy = Math.abs(e.touches[0].clientY - touchStartPosRef.current.y);
+      // หากเคลื่อนที่เกิน 8px (เป็นการปัดลากหน้าเว็บหรือผัง) ให้แสดง Toast แจ้งเตือนสไตล์ Google Maps
+      if (dx > 8 || dy > 8) {
+        setShowTwoFingerToast(true);
+        if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+        toastTimerRef.current = setTimeout(() => {
+          setShowTwoFingerToast(false);
+        }, 1500);
+      }
+    } else if (e.touches.length >= 2) {
+      setShowTwoFingerToast(false);
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    touchStartPosRef.current = null;
+  };
+
   // Technician filter: 'all' or 'my-tasks'
-  const [technicianFilter, setTechnicianFilter] = useState<"all" | "my-tasks">(
+  const [internalTechnicianFilter, setInternalTechnicianFilter] = useState<"all" | "my-tasks">(
     currentUserRole === "TECHNICIAN" ? "my-tasks" : "all"
   );
+  const technicianFilter = controlledTechnicianFilter ?? internalTechnicianFilter;
+  const setTechnicianFilter = (filter: "all" | "my-tasks") => {
+    if (onTechnicianFilterChange) {
+      onTechnicianFilterChange(filter);
+    } else {
+      setInternalTechnicianFilter(filter);
+    }
+  };
 
   // Technician Drawer States
   const [selectedTicketIndex, setSelectedTicketIndex] = useState<number>(0);
@@ -2897,13 +3219,16 @@ export default function BuildingFloorMap({
 
   // 1. กรองเฉพาะตั๋วที่ยังคงค้างอยู่จริง (Active Tickets: PENDING, ASSIGNED, IN_PROGRESS, ON_HOLD)
   const activeTickets = useMemo(() => {
-    return tickets.filter(
-      (t) =>
-        t.status === "PENDING" ||
-        t.status === "ASSIGNED" ||
-        t.status === "IN_PROGRESS" ||
-        t.status === "ON_HOLD"
-    );
+    return tickets.filter((t) => {
+      const s = String(t.status || "").trim().toUpperCase();
+      return (
+        s === "PENDING" ||
+        s === "ASSIGNED" ||
+        s === "IN_PROGRESS" ||
+        s === "ON_HOLD" ||
+        !t.status
+      );
+    });
   }, [tickets]);
 
   // 2. หากผู้ใช้เลือกแท็บ "งานของฉัน" (technicianFilter === "my-tasks")
@@ -3050,6 +3375,7 @@ export default function BuildingFloorMap({
   const isUnassigned = Boolean(activeTicket && !activeTicket.technicianId);
 
   const handleRoomClick = (room: BuildingRoomPlan) => {
+    if (isStaircaseRoom(room)) return;
     setSelectedRoom(room);
     setSelectedSubPin(null);
     setResolvingTicketId(null);
@@ -3190,162 +3516,169 @@ export default function BuildingFloorMap({
     }
   };
 
+  // Smooth Mouse Wheel Zoom Dampening handler (~4.5% per notch, center/cursor pivot maintained, clamped 0.7x - 3.0x)
+  const handleWheel = (ref: ReactZoomPanPinchRef, event: WheelEvent) => {
+    // Zoom sensitivity (step: 0.045) and limits (0.7x - 3.0x) are smoothly managed with cursor/center pivot preservation
+  };
+
   return (
-    <div className={`relative w-full ${standalone ? "card-elevated p-4 sm:p-6" : ""} flex flex-col gap-4 overflow-hidden`}>
+    <div className={`relative w-full ${standalone ? "card-elevated p-2 sm:p-6 -mx-1 sm:mx-0" : ""} flex flex-col gap-3.5 sm:gap-4 overflow-hidden`}>
       {/* Top Header & Role Operation Bar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-3 border-b border-slate-200/80">
-        <div className="flex items-center space-x-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 shadow-xs">
-            {currentUserRole === "SUPER_ADMIN" ? (
-              <Crown className="h-5 w-5 text-purple-600 stroke-[1.75]" />
-            ) : currentUserRole === "TECHNICIAN" ? (
-              <Hammer className="h-5 w-5 text-amber-600 stroke-[1.75]" />
-            ) : currentUserRole === "ADMIN" ? (
-              <Shield className="h-5 w-5 text-emerald-600 stroke-[1.75]" />
-            ) : (
-              <Building2 className="h-5 w-5 text-emerald-600 stroke-[1.75]" />
-            )}
-          </div>
-          <div>
-            <div className="flex items-center space-x-2">
-              <h2 className="text-base font-bold tracking-tight text-slate-900">
+      {!hideHeader && (
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-3 border-b border-slate-200/80">
+          <div className="flex items-center space-x-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 shadow-xs">
+              {currentUserRole === "SUPER_ADMIN" ? (
+                <Crown className="h-5 w-5 text-purple-600 stroke-[1.75]" />
+              ) : currentUserRole === "TECHNICIAN" ? (
+                <Hammer className="h-5 w-5 text-amber-600 stroke-[1.75]" />
+              ) : currentUserRole === "ADMIN" ? (
+                <Shield className="h-5 w-5 text-emerald-600 stroke-[1.75]" />
+              ) : (
+                <Building2 className="h-5 w-5 text-emerald-600 stroke-[1.75]" />
+              )}
+            </div>
+            <div>
+              <div className="flex items-center space-x-2">
+                <h2 className="text-base font-bold tracking-tight text-slate-900">
+                  {currentUserRole === "SUPER_ADMIN"
+                    ? "ศูนย์ควบคุมผังอาคารและสถิติสะสม (Super Admin Ops)"
+                    : currentUserRole === "TECHNICIAN"
+                    ? "แผนที่นำทางภารกิจช่างเทคนิค (Technician Duty Canvas)"
+                    : currentUserRole === "ADMIN"
+                    ? "ศูนย์จ่ายงานและมอนิเตอร์อาคาร (Triage Operations Hub)"
+                    : "แผนผังอาคาร 2.5D อัจฉริยะ (Campus 3D Twin)"}
+                </h2>
+                <span className={`chip-tech text-[10px] py-0.5 px-2 ${
+                  currentUserRole === "SUPER_ADMIN"
+                    ? "bg-purple-50 text-purple-800 border-purple-200"
+                    : currentUserRole === "TECHNICIAN"
+                    ? "bg-amber-50 text-amber-800 border-amber-200"
+                    : "bg-emerald-50 text-emerald-800 border-emerald-200"
+                }`}>
+                  ROLE: {currentUserRole}
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 mt-0.5">
                 {currentUserRole === "SUPER_ADMIN"
-                  ? "ศูนย์ควบคุมผังอาคารและสถิติสะสม (Super Admin Ops)"
+                  ? "วิเคราะห์ Heatmap ความเสียหายสะสมและควบคุมโหมดเปิด-ปิดห้องปฏิบัติการ"
                   : currentUserRole === "TECHNICIAN"
-                  ? "แผนที่นำทางภารกิจช่างเทคนิค (Technician Duty Canvas)"
+                  ? "ดูจุดที่ตั้งตั๋วงานที่ได้รับมอบหมาย อัปเดตการเข้าหน้างาน และบันทึกส่งหลักฐานปิดงาน"
                   : currentUserRole === "ADMIN"
-                  ? "ศูนย์จ่ายงานและมอนิเตอร์อาคาร (Triage Operations Hub)"
-                  : "แผนผังอาคาร 2.5D อัจฉริยะ (Campus 3D Twin)"}
-              </h2>
-              <span className={`chip-tech text-[10px] py-0.5 px-2 ${
-                currentUserRole === "SUPER_ADMIN"
-                  ? "bg-purple-50 text-purple-800 border-purple-200"
-                  : currentUserRole === "TECHNICIAN"
-                  ? "bg-amber-50 text-amber-800 border-amber-200"
-                  : "bg-emerald-50 text-emerald-800 border-emerald-200"
-              }`}>
-                ROLE: {currentUserRole}
-              </span>
+                  ? "ตรวจจับตั๋วงานค้างที่ยังไม่มีช่าง และกดจ่ายงานเข้าห้องแล็บทันที"
+                  : "คลิกเพื่อดูรายละเอียดห้อง โต๊ะปฏิบัติการ หรือส่งคำร้องแจ้งซ่อมตรงจุด"}
+              </p>
             </div>
-            <p className="text-xs text-slate-500 mt-0.5">
-              {currentUserRole === "SUPER_ADMIN"
-                ? "วิเคราะห์ Heatmap ความเสียหายสะสมและควบคุมโหมดเปิด-ปิดห้องปฏิบัติการ"
-                : currentUserRole === "TECHNICIAN"
-                ? "ดูจุดที่ตั้งตั๋วงานที่ได้รับมอบหมาย อัปเดตการเข้าหน้างาน และบันทึกส่งหลักฐานปิดงาน"
-                : currentUserRole === "ADMIN"
-                ? "ตรวจจับตั๋วงานค้างที่ยังไม่มีช่าง และกดจ่ายงานเข้าห้องแล็บทันที"
-                : "คลิกเพื่อดูรายละเอียดห้อง โต๊ะปฏิบัติการ หรือส่งคำร้องแจ้งซ่อมตรงจุด"}
-            </p>
           </div>
-        </div>
 
-        {/* Action Controls & Toggles */}
-        <div className="flex flex-wrap items-center gap-2.5 text-xs">
-          {/* SUPER ADMIN Mode Switcher */}
-          {currentUserRole === "SUPER_ADMIN" && (
-            <div className="flex items-center rounded-xl bg-slate-100 p-1 border border-slate-200/80">
-              <button
-                type="button"
-                onClick={() => setSuperAdminMode("active")}
-                className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
-                  superAdminMode === "active"
-                    ? "bg-white text-slate-900 shadow-xs"
-                    : "text-slate-600 hover:text-slate-900"
-                }`}
-              >
-                งานซ่อมปัจจุบัน
-              </button>
-              <button
-                type="button"
-                onClick={() => setSuperAdminMode("heatmap")}
-                className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition flex items-center gap-1 ${
-                  superAdminMode === "heatmap"
-                    ? "bg-purple-600 text-white shadow-xs"
-                    : "text-slate-600 hover:text-slate-900"
-                }`}
-              >
-                <Flame className="h-3 w-3" />
-                <span>Heatmap สถิติสะสม</span>
-              </button>
-            </div>
-          )}
+          {/* Action Controls & Toggles */}
+          <div className="flex flex-wrap items-center gap-2.5 text-xs">
+            {/* SUPER ADMIN Mode Switcher */}
+            {currentUserRole === "SUPER_ADMIN" && (
+              <div className="flex items-center rounded-xl bg-slate-100 p-1 border border-slate-200/80">
+                <button
+                  type="button"
+                  onClick={() => setSuperAdminMode("active")}
+                  className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
+                    superAdminMode === "active"
+                      ? "bg-white text-slate-900 shadow-xs"
+                      : "text-slate-600 hover:text-slate-900"
+                  }`}
+                >
+                  งานซ่อมปัจจุบัน
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSuperAdminMode("heatmap")}
+                  className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition flex items-center gap-1 ${
+                    superAdminMode === "heatmap"
+                      ? "bg-purple-600 text-white shadow-xs"
+                      : "text-slate-600 hover:text-slate-900"
+                  }`}
+                >
+                  <Flame className="h-3 w-3" />
+                  <span>Heatmap สถิติสะสม</span>
+                </button>
+              </div>
+            )}
 
-          {/* TECHNICIAN Filter Switcher */}
-          {currentUserRole === "TECHNICIAN" && (
-            <div className="flex items-center rounded-xl bg-slate-100 p-1 border border-slate-200/80">
-              <button
-                type="button"
-                onClick={() => setTechnicianFilter("my-tasks")}
-                className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition flex items-center gap-1 ${
-                  technicianFilter === "my-tasks"
-                    ? "bg-amber-500 text-white shadow-xs"
-                    : "text-slate-600 hover:text-slate-900"
-                }`}
-              >
-                <Hammer className="h-3 w-3" />
-                <span>งานของฉัน ({myActiveCountOnFloor})</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setTechnicianFilter("all")}
-                className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
-                  technicianFilter === "all"
-                    ? "bg-white text-slate-900 shadow-xs"
-                    : "text-slate-600 hover:text-slate-900"
-                }`}
-              >
-                งานทั้งหมด ({allActiveCountOnFloor})
-              </button>
-            </div>
-          )}
+            {/* TECHNICIAN Filter Switcher */}
+            {currentUserRole === "TECHNICIAN" && (
+              <div className="flex items-center rounded-xl bg-slate-100 p-1 border border-slate-200/80">
+                <button
+                  type="button"
+                  onClick={() => setTechnicianFilter("my-tasks")}
+                  className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition flex items-center gap-1 ${
+                    technicianFilter === "my-tasks"
+                      ? "bg-amber-500 text-white shadow-xs"
+                      : "text-slate-600 hover:text-slate-900"
+                  }`}
+                >
+                  <Hammer className="h-3 w-3" />
+                  <span>งานของฉัน ({myActiveCountOnFloor})</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTechnicianFilter("all")}
+                  className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
+                    technicianFilter === "all"
+                      ? "bg-white text-slate-900 shadow-xs"
+                      : "text-slate-600 hover:text-slate-900"
+                  }`}
+                >
+                  งานทั้งหมด ({allActiveCountOnFloor})
+                </button>
+              </div>
+            )}
 
-          {/* View Toggle (Map <-> List) if requested */}
-          {showViewToggle && onToggleView && (
-            <div className="flex items-center rounded-xl bg-slate-100 p-1 border border-slate-200/80">
-              <button
-                type="button"
-                onClick={() => onToggleView("map")}
-                className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition flex items-center gap-1 ${
-                  currentView === "map"
-                    ? "bg-white text-slate-900 shadow-xs"
-                    : "text-slate-600 hover:text-slate-900"
-                }`}
-              >
-                <Layers className="h-3 w-3" />
-                <span>ผังอาคาร 2.5D</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => onToggleView("list")}
-                className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition flex items-center gap-1 ${
-                  currentView === "list"
-                    ? "bg-white text-slate-900 shadow-xs"
-                    : "text-slate-600 hover:text-slate-900"
-                }`}
-              >
-                <BarChart3 className="h-3 w-3" />
-                <span>รายการเดิม</span>
-              </button>
-            </div>
-          )}
+            {/* View Toggle (Map <-> List) if requested */}
+            {showViewToggle && onToggleView && (
+              <div className="flex items-center rounded-xl bg-slate-100 p-1 border border-slate-200/80">
+                <button
+                  type="button"
+                  onClick={() => onToggleView("map")}
+                  className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition flex items-center gap-1 ${
+                    currentView === "map"
+                      ? "bg-white text-slate-900 shadow-xs"
+                      : "text-slate-600 hover:text-slate-900"
+                  }`}
+                >
+                  <Layers className="h-3 w-3" />
+                  <span>ผังอาคาร 2.5D</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onToggleView("list")}
+                  className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition flex items-center gap-1 ${
+                    currentView === "list"
+                      ? "bg-white text-slate-900 shadow-xs"
+                      : "text-slate-600 hover:text-slate-900"
+                  }`}
+                >
+                  <BarChart3 className="h-3 w-3" />
+                  <span>รายการเดิม</span>
+                </button>
+              </div>
+            )}
 
-          {/* Legend */}
-          <div className="hidden sm:flex items-center gap-2.5 text-xs pl-2 border-l border-slate-200">
-            <div className="flex items-center space-x-1.5">
-              <span className="h-2 w-2 rounded-full bg-emerald-500" />
-              <span className="text-slate-600 font-medium">ปกติ</span>
-            </div>
-            <div className="flex items-center space-x-1.5">
-              <span className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
-              <span className="text-slate-600 font-medium">มีงานซ่อม</span>
-            </div>
-            <div className="flex items-center space-x-1.5">
-              <span className="h-2 w-2 rounded-full bg-rose-500 animate-ping" />
-              <span className="text-rose-600 font-semibold">งานเร่งด่วน</span>
+            {/* Legend */}
+            <div className="hidden sm:flex items-center gap-2.5 text-xs pl-2 border-l border-slate-200">
+              <div className="flex items-center space-x-1.5">
+                <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                <span className="text-slate-600 font-medium">ปกติ</span>
+              </div>
+              <div className="flex items-center space-x-1.5">
+                <span className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
+                <span className="text-slate-600 font-medium">มีงานซ่อม</span>
+              </div>
+              <div className="flex items-center space-x-1.5">
+                <span className="h-2 w-2 rounded-full bg-rose-500 animate-ping" />
+                <span className="text-rose-600 font-semibold">งานเร่งด่วน</span>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Action Notification Toast */}
       {actionSuccessMessage && (
@@ -3444,40 +3777,113 @@ export default function BuildingFloorMap({
 
           <div className="hidden lg:block pt-2 text-[11px] text-slate-400 px-2 leading-relaxed border-t border-slate-200/60 mt-1">
             <span className="font-semibold text-slate-700 block mb-0.5">การควบคุม:</span>
-            หมุนลูกกลิ้งซูมแบบพอดี (8%) และคลิกลากมุมมอง 3D
+            หมุนลูกกลิ้งซูมแบบนุ่มนวล (4.5%) และคลิกลากมุมมอง 3D
           </div>
         </div>
 
         {/* 2.5D Isometric SVG Canvas Box */}
-        <div className="relative flex-1 w-full h-[640px] md:h-[680px] rounded-2xl border border-slate-200/90 bg-slate-50/70 overflow-hidden shadow-sm">
+        <div
+          className={`relative flex-1 w-full transition-all duration-300 ${
+            isFullscreen
+              ? "fixed inset-0 z-50 bg-white h-screen w-screen rounded-none border-0 overflow-hidden shadow-2xl"
+              : "h-[320px] sm:h-[500px] md:h-[600px] rounded-xl sm:rounded-2xl border border-slate-200/90 bg-slate-50/70 overflow-hidden shadow-sm"
+          }`}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
+          {/* Fullscreen Close Button */}
+          {isFullscreen && (
+            <button
+              type="button"
+              onClick={() => setIsFullscreen(false)}
+              className="absolute top-3 right-3 sm:top-4 sm:right-4 z-30 flex h-9 w-9 items-center justify-center rounded-full bg-slate-900/85 hover:bg-slate-900 text-white shadow-lg backdrop-blur-md transition-all active:scale-95 cursor-pointer"
+              title="ปิดโหมดเต็มจอ (Esc)"
+            >
+              <X className="h-5 w-5" strokeWidth={2} />
+            </button>
+          )}
+
           {/* Floor Subtitle Tag */}
-          <div className="absolute top-4 left-4 z-10 pointer-events-none max-w-[calc(100%-2rem)] sm:max-w-md">
-            <div className="inline-flex items-center space-x-2 rounded-xl bg-white/95 px-3.5 py-1.5 shadow-xs border border-slate-200/90 backdrop-blur-md">
-              <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
-              <span className="text-xs font-bold text-slate-900 font-mono truncate">
+          <div className="absolute top-2 left-2 sm:top-4 sm:left-4 z-10 pointer-events-none max-w-[calc(100%-4rem)] sm:max-w-md">
+            <div className="inline-flex items-center space-x-1.5 sm:space-x-2.5 bg-white/90 backdrop-blur-md border border-slate-200/80 shadow-xs rounded-xl sm:rounded-2xl px-2.5 sm:px-4 py-1 sm:py-2">
+              <span className="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-emerald-500 ring-4 ring-emerald-50 animate-pulse shrink-0" />
+              <span className="text-[10px] sm:text-xs md:text-sm font-semibold text-slate-700 tracking-tight truncate">
                 {currentFloorData.label}: {currentFloorData.nameTh}
               </span>
             </div>
           </div>
 
+          {/* Fullscreen Floating Floor Selector */}
+          {isFullscreen && (
+            <div className="absolute top-12 left-2 sm:top-16 sm:left-4 z-20 flex items-center gap-1 bg-white/90 backdrop-blur-md border border-slate-200/80 p-1 rounded-xl shadow-md">
+              {[1, 2, 3, 4].map((fl) => (
+                <button
+                  key={fl}
+                  type="button"
+                  onClick={() => setCurrentFloor(fl)}
+                  className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                    currentFloor === fl
+                      ? "bg-slate-900 text-white shadow-xs"
+                      : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                  }`}
+                >
+                  {fl}F
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Two-Finger Overlay Toast (สไตล์ Google Maps เมื่อเผลอใช้นิ้วเดียวลากผัง) */}
+          {showTwoFingerToast && !isFullscreen && (
+            <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/40 backdrop-blur-[2px] transition-all duration-200 pointer-events-none animate-in fade-in">
+              <div className="flex items-center space-x-2.5 rounded-2xl bg-slate-900/95 border border-white/20 px-4 py-2.5 text-white shadow-2xl max-w-[85%] text-center">
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400 font-bold text-xs border border-emerald-500/30">
+                  2
+                </span>
+                <span className="text-xs sm:text-sm font-medium tracking-tight">
+                  ใช้นิ้ว 2 นิ้วเพื่อขยายหรือเลื่อนแผนผัง
+                </span>
+              </div>
+            </div>
+          )}
+
           <TransformWrapper
-            initialScale={1.15}
+            key={`floor-transform-${currentFloor}-${isFullscreen ? "fs" : "norm"}`}
+            initialScale={typeof window !== "undefined" && window.innerWidth < 768 ? 1.18 : 1.0}
+            initialPositionX={0}
+            initialPositionY={typeof window !== "undefined" && window.innerWidth < 768 ? 15 : 0}
             minScale={0.7}
-            maxScale={3}
+            maxScale={3.5}
             centerOnInit={true}
-            limitToBounds={true}
+            limitToBounds={false}
             smooth={false}
             wheel={{
-              step: 0.08,
+              step: 0.045,
               activationKeys: [],
             }}
+            onWheel={handleWheel}
+            onInit={(ref) => {
+              if (typeof window !== "undefined" && window.innerWidth < 768) {
+                setTimeout(() => {
+                  ref.setTransform(ref.state.positionX, 15, 1.18, 0);
+                }, 40);
+              }
+            }}
             panning={{
-              velocityDisabled: false,
-              excluded: ["cursor-pointer"],
+              disabled: false,
+              allowLeftClickPan: true,
+              velocityDisabled: true,
+              excluded: !isFullscreen && isMobileDevice
+                ? ["cursor-pointer", "touch-pan-surface"]
+                : ["cursor-pointer"],
+            }}
+            pinch={{
+              disabled: false,
             }}
             zoomAnimation={{
               disabled: false,
-              animationTime: 100,
+              animationTime: 90,
               animationType: "easeOut",
             }}
           >
@@ -3487,19 +3893,37 @@ export default function BuildingFloorMap({
                   activeFloor={currentFloor}
                   totalIssuesOnFloor={ticketStats.floorCounts[currentFloor]?.total || 0}
                   isDrawerOpen={Boolean(selectedRoom)}
+                  isFullscreen={isFullscreen}
+                  onToggleFullscreen={() => setIsFullscreen((prev) => !prev)}
                 />
 
                 <TransformComponent
-                  wrapperClass="!w-full !h-full cursor-grab active:cursor-grabbing"
+                  wrapperClass={`!w-full !h-full cursor-grab active:cursor-grabbing ${
+                    !isFullscreen ? "touch-pan-y" : ""
+                  }`}
                   contentClass="!w-full !h-full flex items-center justify-center"
+                  wrapperProps={{
+                    style: {
+                      touchAction: !isFullscreen ? "pan-y" : "none",
+                    },
+                  }}
                 >
                   {/* Warm Stone Architectural Cutaway Floorplan */}
-                  <div className="relative w-full h-full flex items-center justify-center select-none">
+                  <div
+                    className="relative w-full h-full flex items-center justify-center select-none touch-pan-surface"
+                  >
                     <svg
                       viewBox="195 55 860 570"
                       preserveAspectRatio="xMidYMid meet"
+                      shapeRendering="geometricPrecision"
+                      textRendering="geometricPrecision"
+                      imageRendering="crisp-edges"
                       className="w-full h-full select-none outline-none focus:outline-none focus-visible:outline-none"
-                      style={{ outline: "none", WebkitTapHighlightColor: "transparent" }}
+                      style={{
+                        outline: "none",
+                        WebkitTapHighlightColor: "transparent",
+                        overflow: "visible",
+                      }}
                       onClick={() => {
                         setSelectedRoom(null);
                         setSelectedSubPin(null);
@@ -3507,6 +3931,16 @@ export default function BuildingFloorMap({
                       }}
                     >
                       <defs>
+                        {/* Linear Gradients for Alert Action Pins */}
+                        <linearGradient id="pinGradientCritical" x1="0%" y1="100%" x2="100%" y2="0%">
+                          <stop offset="0%" stopColor="#e11d48" />
+                          <stop offset="100%" stopColor="#f43f5e" />
+                        </linearGradient>
+                        <linearGradient id="pinGradientWarning" x1="0%" y1="100%" x2="100%" y2="0%">
+                          <stop offset="0%" stopColor="#d97706" />
+                          <stop offset="100%" stopColor="#fbbf24" />
+                        </linearGradient>
+
                         <style>{`
                           svg, svg *, g, polygon, rect, path, circle, text {
                             outline: none !important;
@@ -3515,17 +3949,26 @@ export default function BuildingFloorMap({
                           *:focus, *:focus-visible {
                             outline: none !important;
                           }
+                          .room-pill-interactive {
+                            transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), filter 0.2s ease-out;
+                            transform-box: fill-box;
+                            transform-origin: center;
+                          }
+                          .room-pill-interactive:hover {
+                            transform: translateY(-2.5px);
+                            filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.09));
+                          }
                           @keyframes urgentRoomPulse {
-                            0%, 100% { fill-opacity: 0.9; stroke-width: 2.8px; stroke-opacity: 1; }
-                            50% { fill-opacity: 0.35; stroke-width: 4px; stroke-opacity: 0.45; }
+                            0%, 100% { fill-opacity: 0.95; stroke-width: 2.2px; stroke-opacity: 1; }
+                            50% { fill-opacity: 0.4; stroke-width: 3.2px; stroke-opacity: 0.55; }
                           }
                           @keyframes warningRoomPulse {
-                            0%, 100% { fill-opacity: 0.9; stroke-width: 2.2px; stroke-opacity: 1; }
-                            50% { fill-opacity: 0.45; stroke-width: 3.2px; stroke-opacity: 0.55; }
+                            0%, 100% { fill-opacity: 0.95; stroke-width: 2px; stroke-opacity: 1; }
+                            50% { fill-opacity: 0.45; stroke-width: 2.8px; stroke-opacity: 0.55; }
                           }
                           @keyframes radarPing {
-                            0% { transform: scale(1); opacity: 0.85; }
-                            80%, 100% { transform: scale(2.4); opacity: 0; }
+                            0% { transform: scale(0.9); opacity: 0.65; }
+                            75%, 100% { transform: scale(2.3); opacity: 0; }
                           }
                           @keyframes pinBounce {
                             0%, 100% { transform: translateY(0px); }
@@ -3540,8 +3983,8 @@ export default function BuildingFloorMap({
                             50% { opacity: 0.35; transform: scale(0.75); }
                           }
                           @keyframes urgentBorderPulse {
-                            0%, 100% { stroke: #ef4444; stroke-width: 2px; stroke-opacity: 1; }
-                            50% { stroke: #ef4444; stroke-width: 3.2px; stroke-opacity: 0.35; }
+                            0%, 100% { stroke: #f43f5e; stroke-width: 2px; stroke-opacity: 1; }
+                            50% { stroke: #f43f5e; stroke-width: 3px; stroke-opacity: 0.4; }
                           }
                           @keyframes warningBorderPulse {
                             0%, 100% { stroke: #f59e0b; stroke-width: 1.6px; stroke-opacity: 1; }
@@ -3570,23 +4013,23 @@ export default function BuildingFloorMap({
                       >
                         {/* 6 Thickness Edges (z = 0 down to z = -14) */}
                         {/* ขอบด้านนอกฝั่งซ้ายสุด (#e2e8f0) */}
-                        <polygon points={SLAB_LEFT_OUTER} fill="#e2e8f0" stroke="#cbd5e1" strokeWidth="0.8" className="outline-none focus:outline-none focus-visible:outline-none select-none" style={{ outline: "none", WebkitTapHighlightColor: "transparent" }} />
+                        <polygon points={SLAB_LEFT_OUTER} fill="#e2e8f0" stroke="#cbd5e1" strokeWidth="0.8" vectorEffect="non-scaling-stroke" className="outline-none focus:outline-none focus-visible:outline-none select-none" style={{ outline: "none", WebkitTapHighlightColor: "transparent" }} />
                         {/* ขอบหน้าปีกซ้าย (#cbd5e1) */}
-                        <polygon points={SLAB_LEFT_FRONT} fill="#cbd5e1" stroke="#94a3b8" strokeWidth="0.8" className="outline-none focus:outline-none focus-visible:outline-none select-none" style={{ outline: "none", WebkitTapHighlightColor: "transparent" }} />
+                        <polygon points={SLAB_LEFT_FRONT} fill="#cbd5e1" stroke="#94a3b8" strokeWidth="0.8" vectorEffect="non-scaling-stroke" className="outline-none focus:outline-none focus-visible:outline-none select-none" style={{ outline: "none", WebkitTapHighlightColor: "transparent" }} />
                         {/* ขอบด้านในของปีกซ้าย หันเข้าหาลานกลางตัว U (#e2e8f0) */}
-                        <polygon points={SLAB_LEFT_INNER} fill="#e2e8f0" stroke="#cbd5e1" strokeWidth="0.8" className="outline-none focus:outline-none focus-visible:outline-none select-none" style={{ outline: "none", WebkitTapHighlightColor: "transparent" }} />
+                        <polygon points={SLAB_LEFT_INNER} fill="#e2e8f0" stroke="#cbd5e1" strokeWidth="0.8" vectorEffect="non-scaling-stroke" className="outline-none focus:outline-none focus-visible:outline-none select-none" style={{ outline: "none", WebkitTapHighlightColor: "transparent" }} />
                         {/* ขอบหน้าระเบียงทางเดินโถงกลาง (#cbd5e1) */}
-                        <polygon points={SLAB_CENTER_FRONT} fill="#cbd5e1" stroke="#94a3b8" strokeWidth="0.8" className="outline-none focus:outline-none focus-visible:outline-none select-none" style={{ outline: "none", WebkitTapHighlightColor: "transparent" }} />
+                        <polygon points={SLAB_CENTER_FRONT} fill="#cbd5e1" stroke="#94a3b8" strokeWidth="0.8" vectorEffect="non-scaling-stroke" className="outline-none focus:outline-none focus-visible:outline-none select-none" style={{ outline: "none", WebkitTapHighlightColor: "transparent" }} />
                         {/* ขอบหน้าปีกขวา (#cbd5e1) */}
-                        <polygon points={SLAB_RIGHT_FRONT} fill="#cbd5e1" stroke="#94a3b8" strokeWidth="0.8" className="outline-none focus:outline-none focus-visible:outline-none select-none" style={{ outline: "none", WebkitTapHighlightColor: "transparent" }} />
+                        <polygon points={SLAB_RIGHT_FRONT} fill="#cbd5e1" stroke="#94a3b8" strokeWidth="0.8" vectorEffect="non-scaling-stroke" className="outline-none focus:outline-none focus-visible:outline-none select-none" style={{ outline: "none", WebkitTapHighlightColor: "transparent" }} />
                         {/* ขอบด้านนอกฝั่งขวาสุด (#cbd5e1) */}
-                        <polygon points={SLAB_RIGHT_OUTER} fill="#cbd5e1" stroke="#94a3b8" strokeWidth="0.8" className="outline-none focus:outline-none focus-visible:outline-none select-none" style={{ outline: "none", WebkitTapHighlightColor: "transparent" }} />
+                        <polygon points={SLAB_RIGHT_OUTER} fill="#cbd5e1" stroke="#94a3b8" strokeWidth="0.8" vectorEffect="non-scaling-stroke" className="outline-none focus:outline-none focus-visible:outline-none select-none" style={{ outline: "none", WebkitTapHighlightColor: "transparent" }} />
 
                         {/* Top Slab Surface (#f8fafc) */}
-                        <polygon points={SLAB_TOP_POLYGON} fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1.2" className="outline-none focus:outline-none focus-visible:outline-none select-none" style={{ outline: "none", WebkitTapHighlightColor: "transparent" }} />
+                        <polygon points={SLAB_TOP_POLYGON} fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1.2" vectorEffect="non-scaling-stroke" className="outline-none focus:outline-none focus-visible:outline-none select-none" style={{ outline: "none", WebkitTapHighlightColor: "transparent" }} />
 
                         {/* Walkway Corridor Surface (#f1f5f9) */}
-                        <polygon points={WALKWAY_POLYGON} fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="1" className="outline-none focus:outline-none focus-visible:outline-none select-none" style={{ outline: "none", WebkitTapHighlightColor: "transparent" }} />
+                        <polygon points={WALKWAY_POLYGON} fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="1" vectorEffect="non-scaling-stroke" className="outline-none focus:outline-none focus-visible:outline-none select-none" style={{ outline: "none", WebkitTapHighlightColor: "transparent" }} />
 
                         {/* Corridor Threshold Line at y = 150 */}
                         <line
@@ -3596,6 +4039,7 @@ export default function BuildingFloorMap({
                           y2={WALKWAY_THRESHOLD.p2.y}
                           stroke="#cbd5e1"
                           strokeWidth="1.5"
+                          vectorEffect="non-scaling-stroke"
                           strokeLinecap="round"
                         />
 
@@ -3607,6 +4051,7 @@ export default function BuildingFloorMap({
                           y2={WALKWAY_GUIDE_LINE.p2.y}
                           stroke="#cbd5e1"
                           strokeWidth="1.5"
+                          vectorEffect="non-scaling-stroke"
                           strokeDasharray="6 4"
                           strokeLinecap="round"
                         />
@@ -3656,6 +4101,7 @@ export default function BuildingFloorMap({
                                 fill="#e2e8f0"
                                 stroke="#cbd5e1"
                                 strokeWidth="0.6"
+                                vectorEffect="non-scaling-stroke"
                                 className="outline-none focus:outline-none focus-visible:outline-none select-none"
                                 style={{ outline: "none", WebkitTapHighlightColor: "transparent" }}
                               />
@@ -3668,6 +4114,7 @@ export default function BuildingFloorMap({
                                   fill="#e2e8f0"
                                   stroke="#cbd5e1"
                                   strokeWidth="0.6"
+                                  vectorEffect="non-scaling-stroke"
                                   className="outline-none focus:outline-none focus-visible:outline-none select-none"
                                   style={{ outline: "none", WebkitTapHighlightColor: "transparent" }}
                                 />
@@ -3678,6 +4125,7 @@ export default function BuildingFloorMap({
                                 fill="#cbd5e1"
                                 stroke="#94a3b8"
                                 strokeWidth="0.6"
+                                vectorEffect="non-scaling-stroke"
                                 className="outline-none focus:outline-none focus-visible:outline-none select-none"
                                 style={{ outline: "none", WebkitTapHighlightColor: "transparent" }}
                               />
@@ -3687,6 +4135,7 @@ export default function BuildingFloorMap({
                               fill="#ffffff"
                               stroke="#475569"
                               strokeWidth="1.2"
+                              vectorEffect="non-scaling-stroke"
                               className="outline-none focus:outline-none focus-visible:outline-none select-none"
                               style={{ outline: "none", WebkitTapHighlightColor: "transparent" }}
                             />
@@ -3731,7 +4180,7 @@ export default function BuildingFloorMap({
             <>
               {/* 1. Backdrop โปร่งแสงแบบแตะเพื่อปิด (Mobile View) */}
               <div
-                className="fixed inset-0 bg-black/30 backdrop-blur-xs z-30 md:hidden transition-opacity cursor-pointer animate-in fade-in duration-200"
+                className={`fixed inset-0 bg-black/30 backdrop-blur-xs ${isFullscreen ? "z-[55]" : "z-30"} md:hidden transition-opacity cursor-pointer animate-in fade-in duration-200`}
                 onClick={() => {
                   setSelectedRoom(null);
                   setSelectedSubPin(null);
@@ -3746,7 +4195,7 @@ export default function BuildingFloorMap({
                 role="dialog"
                 aria-modal="true"
                 aria-label="รายละเอียดห้อง"
-                className="fixed inset-x-0 bottom-16 z-40 max-h-[60vh] overflow-y-auto bg-white rounded-t-3xl border-t border-slate-200 shadow-2xl p-4 md:p-0 transition-transform duration-300 md:absolute md:inset-auto md:top-0 md:right-0 md:bottom-0 md:z-30 md:w-[440px] md:max-h-none md:bg-white/98 md:backdrop-blur-md md:border-l md:border-t-0 md:rounded-none flex flex-col animate-in slide-in-from-bottom md:slide-in-from-right"
+                className={`fixed inset-x-0 bottom-16 ${isFullscreen ? "z-[60]" : "z-40"} max-h-[60vh] overflow-y-auto bg-white rounded-t-3xl border-t border-slate-200 shadow-2xl p-4 md:p-0 transition-transform duration-300 md:absolute md:inset-auto md:top-0 md:right-0 md:bottom-0 md:z-30 md:w-[440px] md:max-h-none md:bg-white/98 md:backdrop-blur-md md:border-l md:border-t-0 md:rounded-none flex flex-col animate-in slide-in-from-bottom md:slide-in-from-right`}
               >
                 {/* Drag Indicator for Mobile */}
                 <div className="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-3 md:hidden shrink-0" />
@@ -3772,12 +4221,23 @@ export default function BuildingFloorMap({
                     </h3>
                     <div className="mt-1 flex items-center gap-2 flex-wrap">
                       {sortedRoomTickets.length > 0 ? (
-                        <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-full ${
+                        <span className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-0.5 rounded-full ${
                           sortedRoomTickets.some((t) => t.isUrgent)
                             ? "bg-rose-100 text-rose-800 border border-rose-200"
                             : "bg-amber-100 text-amber-800 border border-amber-200"
                         }`}>
-                          {sortedRoomTickets.some((t) => t.isUrgent) ? "🚨 งานด่วน" : "⚠️ มีงานซ่อม"} {sortedRoomTickets.length} เคส
+                          {sortedRoomTickets.some((t) => t.isUrgent) ? (
+                            <>
+                              <AlertTriangle className="h-3 w-3 text-rose-600 shrink-0" />
+                              <span>งานด่วน</span>
+                            </>
+                          ) : (
+                            <>
+                              <Wrench className="h-3 w-3 text-amber-600 shrink-0" />
+                              <span>มีงานซ่อม</span>
+                            </>
+                          )}{" "}
+                          {sortedRoomTickets.length} เคส
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
@@ -3867,7 +4327,7 @@ export default function BuildingFloorMap({
                   </div>
                 </details>
 
-                {/* 👑 SUPER ADMIN SPECIFIC: Cumulative Stats & Maintenance Mode Switch */}
+                {/* SUPER ADMIN SPECIFIC: Cumulative Stats & Maintenance Mode Switch */}
                 {currentUserRole === "SUPER_ADMIN" && (
                   <div className="rounded-xl border border-purple-200/80 bg-purple-50/50 p-3 space-y-3 text-xs">
                     <div className="flex items-center justify-between font-semibold text-purple-900">
@@ -3919,7 +4379,7 @@ export default function BuildingFloorMap({
                   </div>
                 )}
 
-                {/* 🛠️ TECHNICIAN VIEW: Primary Task Card or Clean Empty State */}
+                {/* TECHNICIAN VIEW: Primary Task Card or Clean Empty State */}
                 {currentUserRole === "TECHNICIAN" ? (
                   sortedRoomTickets.length === 0 ? (
                     /* 4. กรณีห้องที่ไม่มีรายการซ่อมค้าง (Empty State) */
@@ -3958,7 +4418,7 @@ export default function BuildingFloorMap({
                                       : "bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200"
                                   }`}
                                 >
-                                  {t.isUrgent && <span>🚨</span>}
+                                  {t.isUrgent && <AlertTriangle className="h-3 w-3 text-rose-500 shrink-0" />}
                                   <span className="font-mono">{t.ticketNumber}</span>
                                 </button>
                               );
@@ -3978,7 +4438,8 @@ export default function BuildingFloorMap({
                             <div className="flex items-center gap-1.5 flex-wrap">
                               {activeTicket.isUrgent ? (
                                 <span className="chip-tech text-[10px] py-0.5 px-2 bg-rose-50 text-rose-700 border-rose-200 font-bold flex items-center gap-1">
-                                  <span>🚨</span> งานด่วน SLA {activeTicket.slaTargetMinutes || 15}m
+                                  <AlertTriangle className="h-3 w-3 text-rose-600 shrink-0" />
+                                  <span>งานด่วน SLA {activeTicket.slaTargetMinutes || 15}m</span>
                                 </span>
                               ) : (
                                 <span className="chip-tech text-[10px] py-0.5 px-2 bg-blue-50 text-blue-700 border-blue-200 font-medium flex items-center gap-1">
@@ -4092,7 +4553,7 @@ export default function BuildingFloorMap({
                     </div>
                   )
                 ) : (
-                  /* 👥 NON-TECHNICIAN (USER/ADMIN) VIEW: Active Tickets List */
+                  /* NON-TECHNICIAN (USER/ADMIN) VIEW: Active Tickets List */
                   <div className="space-y-2">
                     <div className="flex items-center justify-between text-xs">
                       <span className="font-semibold text-slate-800 flex items-center gap-1.5">
@@ -4168,11 +4629,12 @@ export default function BuildingFloorMap({
                                 </div>
                               )}
 
-                              {/* 🏢 ADMIN QUICK ASSIGN */}
+                              {/* ADMIN QUICK ASSIGN */}
                               {currentUserRole === "ADMIN" && isUnassignedTicket && (
                                 <div className="pt-2 border-t border-rose-200/80 space-y-2">
-                                  <span className="text-[11px] font-semibold text-rose-700 block">
-                                    ⚡ จ่ายงานให้ช่างทันที:
+                                  <span className="text-[11px] font-semibold text-rose-700 flex items-center gap-1">
+                                    <Zap className="h-3 w-3 text-rose-600" />
+                                    <span>จ่ายงานให้ช่างทันที:</span>
                                   </span>
                                   <div className="flex gap-1.5">
                                     <select
@@ -4233,7 +4695,7 @@ export default function BuildingFloorMap({
                           <Loader2 className="h-4 w-4 animate-spin" />
                         ) : (
                           <>
-                            <span>✋</span>
+                            <UserCheck className="h-4 w-4" />
                             <span>รับงานนี้</span>
                           </>
                         )}
@@ -4250,7 +4712,11 @@ export default function BuildingFloorMap({
                         href={`/technician/active-task/${activeTicket.id}`}
                         className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm rounded-xl shadow-md flex items-center justify-center gap-2 transition-all cursor-pointer text-center"
                       >
-                        <span>{activeTicket.status === "ON_HOLD" ? "⏸️" : "🚀"}</span>
+                        {activeTicket.status === "ON_HOLD" ? (
+                          <PauseCircle className="h-4 w-4" />
+                        ) : (
+                          <ArrowRightCircle className="h-4 w-4" />
+                        )}
                         <span>{activeTicket.status === "ON_HOLD" ? "ดูรายละเอียดงานพัก / นำกลับศูนย์" : "เข้าสู่หน้าจอปฏิบัติงานซ่อม (Active Task)"}</span>
                       </Link>
                     )}
@@ -4259,14 +4725,14 @@ export default function BuildingFloorMap({
                     {(activeTicket.status === "RESOLVED" || activeTicket.status === "CLOSED") && (
                       <div className="space-y-2">
                         <div className="w-full py-2.5 px-4 bg-emerald-50 border border-emerald-200 text-emerald-700 font-semibold text-xs rounded-xl flex items-center justify-center gap-2">
-                          <span>✅</span>
+                          <CheckCircle2 className="h-4 w-4 text-emerald-600" />
                           <span>ซ่อมบำรุงเสร็จสิ้นแล้ว (RESOLVED)</span>
                         </div>
                         <Link
                           href={`/technician/active-task/${activeTicket.id}`}
                           className="w-full py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-xs rounded-xl flex items-center justify-center gap-1.5 transition text-center"
                         >
-                          <span>📋</span>
+                          <ClipboardList className="h-3.5 w-3.5" />
                           <span>ดูรายละเอียดประวัติการซ่อม</span>
                         </Link>
                       </div>

@@ -27,7 +27,7 @@ export default async function AdminFloorPlanPage() {
     activeTicketsRaw = await prisma.ticket.findMany({
       where: {
         status: {
-          in: ["PENDING", "IN_PROGRESS"],
+          in: ["PENDING", "ASSIGNED", "IN_PROGRESS", "ON_HOLD"],
         },
       },
       select: {
@@ -78,7 +78,7 @@ export default async function AdminFloorPlanPage() {
   const totalInProgress = tickets.filter((t) => t.status === "IN_PROGRESS").length;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-18 pb-[72px] sm:pb-8">
       {/* 1. Header Banner */}
       <div className="card-elevated p-6 flex flex-col md:flex-row md:items-center justify-between gap-5 relative overflow-hidden">
         {/* Subtle radial emerald background glow */}

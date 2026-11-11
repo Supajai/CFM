@@ -5,10 +5,10 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
-  Home,
-  PlusCircle,
+  LayoutDashboard,
+  Plus,
   ClipboardList,
-  User as UserIcon,
+  User,
   LogOut,
   X,
   ExternalLink,
@@ -73,7 +73,12 @@ export default function MobileBottomNav({ currentUser }: MobileBottomNavProps) {
         return <span className="bg-amber-50 text-amber-700 text-[10px] font-medium px-2 py-0.5 rounded-md border border-amber-200">ช่างเทคนิค</span>;
       case "USER":
       default:
-        return <span className="bg-emerald-50 text-emerald-800 text-[10px] font-medium px-2 py-0.5 rounded-md border border-emerald-200">นักศึกษา/บุคลากร</span>;
+        return (
+          <span className="bg-emerald-50 text-emerald-800 text-[10px] font-medium px-2 py-0.5 rounded-md border border-emerald-200 inline-flex items-center">
+            <GraduationCap className="w-3.5 h-3.5 text-emerald-600 inline mr-1" strokeWidth={1.75} />
+            นักศึกษา/บุคลากร
+          </span>
+        );
     }
   };
 
@@ -95,7 +100,7 @@ export default function MobileBottomNav({ currentUser }: MobileBottomNavProps) {
             }`}
           >
             <div className={`p-1 rounded-lg transition-transform ${isHomeActive ? "bg-emerald-50 text-emerald-600 scale-110" : ""}`}>
-              <Home className="h-4 w-4" />
+              <LayoutDashboard className="h-4 w-4" strokeWidth={1.5} />
             </div>
             <span className="text-[10px] mt-0.5">หน้าหลัก</span>
           </Link>
@@ -112,7 +117,7 @@ export default function MobileBottomNav({ currentUser }: MobileBottomNavProps) {
                   : "bg-gradient-to-r from-emerald-600 to-teal-700 text-white hover:from-emerald-500 hover:to-teal-600"
               }`}
             >
-              <PlusCircle className="h-5 w-5" />
+              <Plus className="h-5 w-5 text-white" strokeWidth={2.5} />
             </div>
             <span className={`text-[10px] mt-0.5 font-bold ${isReportActive ? "text-emerald-700" : "text-slate-600"}`}>
               แจ้งซ่อม
@@ -129,7 +134,7 @@ export default function MobileBottomNav({ currentUser }: MobileBottomNavProps) {
             }`}
           >
             <div className={`p-1 rounded-lg transition-transform ${isHistoryActive ? "bg-emerald-50 text-emerald-600 scale-110" : ""}`}>
-              <ClipboardList className="h-4 w-4" />
+              <ClipboardList className="h-4 w-4" strokeWidth={1.5} />
             </div>
             <span className="text-[10px] mt-0.5">ประวัติงาน</span>
           </Link>
@@ -139,10 +144,10 @@ export default function MobileBottomNav({ currentUser }: MobileBottomNavProps) {
             <button
               type="button"
               onClick={() => setShowProfileSheet(true)}
-              className="flex flex-col items-center justify-center py-1 px-3 rounded-md text-zinc-500 font-medium hover:text-zinc-900 transition-colors"
+              className="flex flex-col items-center justify-center py-1 px-3 rounded-xl text-slate-500 font-medium hover:text-slate-900 transition-colors"
             >
-              <div className="flex h-6 w-6 items-center justify-center rounded-md bg-zinc-100 text-zinc-800 text-[11px] font-semibold border border-zinc-200">
-                {currentUser.name.charAt(0)}
+              <div className="p-1 rounded-lg">
+                <User className="h-4 w-4" strokeWidth={1.5} />
               </div>
               <span className="text-[10px] mt-0.5 truncate max-w-[56px]">
                 {currentUser.name.split(" ")[0]}
@@ -151,14 +156,14 @@ export default function MobileBottomNav({ currentUser }: MobileBottomNavProps) {
           ) : (
             <Link
               href="/login"
-              className={`flex flex-col items-center justify-center py-1 px-3 rounded-md transition-colors ${
+              className={`flex flex-col items-center justify-center py-1 px-3 rounded-xl transition-colors ${
                 pathname === "/login"
                   ? "text-emerald-800 font-semibold"
-                  : "text-zinc-500 font-medium hover:text-zinc-900"
+                  : "text-slate-500 font-medium hover:text-slate-900"
               }`}
             >
               <div className="p-1">
-                <UserIcon className="h-4 w-4" />
+                <User className="h-4 w-4" strokeWidth={1.5} />
               </div>
               <span className="text-[10px] mt-0.5">เข้าสู่ระบบ</span>
             </Link>

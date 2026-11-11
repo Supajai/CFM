@@ -57,24 +57,38 @@ export default function ReportForm({ currentUser }: ReportFormProps) {
   const searchParams = useSearchParams();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // 1. อ่านค่า Query Parameters (URL Prefill / QR Code เช่น /report?floor=3&room=Lab301)
+  // 1. อ่านค่า Query Parameters (URL Prefill / QR Code เช่น /report?floor=3&room=03-335)
   const floorParam = searchParams.get("floor");
-  const roomParam = searchParams.get("room");
+  const rawRoom = searchParams.get("roomCode") || searchParams.get("room") || searchParams.get("roomId") || "";
   const specificPointParam = searchParams.get("specificPoint");
 
+  // ทำความสะอาดรหัสห้องโดยตัด Prefix ชั้นออกเสมอ (เช่น "03-335" -> "335")
+  const targetRoomCode = rawRoom.replace(/^0[1-4]-/, "").trim();
+
   // ตรวจหาห้องเริ่มต้นจาก Param
-  const prefilledRoom = roomParam ? findDepartmentRoom(roomParam) : undefined;
+  const prefilledRoom = rawRoom ? findDepartmentRoom(rawRoom) : undefined;
   const initialFloor = prefilledRoom ? prefilledRoom.floor : floorParam ? parseInt(floorParam, 10) || 1 : 1;
-  const initialRoomName = prefilledRoom ? prefilledRoom.name : getRoomsByFloor(initialFloor)[0]?.name || "";
+  const initialFloorRooms = getRoomsByFloor(initialFloor);
+
+  // ค้นหาห้องจากรายการห้องของชั้นที่เลือก
+  const matchedRoom = initialFloorRooms.find((r: any) => 
+    String(r.code).replace(/^0[1-4]-/, "") === targetRoomCode ||
+    String(r.id).replace(/^0[1-4]-/, "") === targetRoomCode ||
+    (prefilledRoom && (r.code === prefilledRoom.code || r.id === prefilledRoom.id))
+  ) || prefilledRoom || initialFloorRooms[0];
+
+  const initialRoomCode = matchedRoom ? matchedRoom.code || matchedRoom.id : (targetRoomCode || "311");
+  const initialRoomName = matchedRoom ? matchedRoom.name : (rawRoom || "ห้องพักครู 311");
 
   // ฟอร์มสเตท
   const [floor, setFloor] = useState<number>(initialFloor);
+  const [selectedRoomCode, setSelectedRoomCode] = useState<string>(initialRoomCode);
   const [room, setRoom] = useState<string>(initialRoomName);
   const [specificPoint, setSpecificPoint] = useState<string>(specificPointParam || "");
   const [category, setCategory] = useState<Category>(Category.PC_HARDWARE);
   const [description, setDescription] = useState<string>("");
   const [isUrgent, setIsUrgent] = useState<boolean>(false);
-  const [hasQrPrefill, setHasQrPrefill] = useState<boolean>(Boolean(prefilledRoom || roomParam || specificPointParam));
+  const [hasQrPrefill, setHasQrPrefill] = useState<boolean>(Boolean(matchedRoom || prefilledRoom || rawRoom || specificPointParam));
 
   // พิกัด GPS
   const [coords, setCoords] = useState<{
@@ -125,9 +139,46 @@ export default function ReportForm({ currentUser }: ReportFormProps) {
     setFloor(newFloor);
     const rooms = getRoomsByFloor(newFloor);
     if (rooms.length > 0) {
+      setSelectedRoomCode(rooms[0].code || rooms[0].id);
       setRoom(rooms[0].name);
     }
   };
+
+  const handleRoomChange = (codeOrId: string) => {
+    setSelectedRoomCode(codeOrId);
+    const found = currentFloorRooms.find((r) => r.code === codeOrId || r.id === codeOrId);
+    if (found) {
+      setRoom(found.name);
+    }
+  };
+
+  // ซิงก์ค่าห้องเมื่อ Query Parameters เปลี่ยนแปลง
+  useEffect(() => {
+    const rawR = searchParams.get("roomCode") || searchParams.get("room") || searchParams.get("roomId");
+    const floorP = searchParams.get("floor");
+    const specificP = searchParams.get("specificPoint");
+    if (rawR || floorP) {
+      const cleanTarget = (rawR || "").replace(/^0[1-4]-/, "").trim();
+      const pRoom = rawR ? findDepartmentRoom(rawR) : undefined;
+      const targetFloor = pRoom ? pRoom.floor : floorP ? parseInt(floorP, 10) || 1 : 1;
+      setFloor(targetFloor);
+
+      const floorRooms = getRoomsByFloor(targetFloor);
+      const mRoom = floorRooms.find((r: any) => 
+        String(r.code).replace(/^0[1-4]-/, "") === cleanTarget ||
+        String(r.id).replace(/^0[1-4]-/, "") === cleanTarget ||
+        (pRoom && (r.code === pRoom.code || r.id === pRoom.id))
+      ) || pRoom;
+
+      if (mRoom) {
+        setSelectedRoomCode(mRoom.code || mRoom.id);
+        setRoom(mRoom.name);
+      }
+      if (specificP) {
+        setSpecificPoint(specificP);
+      }
+    }
+  }, [searchParams]);
 
   // ดึง Geolocation จากเบราว์เซอร์อัตโนมัติ
   useEffect(() => {
@@ -234,7 +285,7 @@ export default function ReportForm({ currentUser }: ReportFormProps) {
         category,
         building: DEPARTMENT_BUILDING_NAME,
         floor,
-        room,
+        room: selectedRoomCode, // ส่งรหัสห้องตรงกับผัง 2.5D เช่น "311", "312", "313"
         roomName: room,
         specificPoint: specificPoint.trim() || undefined,
         specificLocation: specificPoint.trim() ? `${room} • ${specificPoint.trim()}` : room,
@@ -397,13 +448,13 @@ export default function ReportForm({ currentUser }: ReportFormProps) {
             </label>
             <div className="relative">
               <select
-                value={room}
-                onChange={(e) => setRoom(e.target.value)}
+                value={selectedRoomCode}
+                onChange={(e) => handleRoomChange(e.target.value)}
                 className="w-full h-10 appearance-none rounded-xl border border-slate-200 bg-white/90 px-3 py-1 pr-8 text-xs font-medium text-slate-900 shadow-sm transition focus:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 truncate"
               >
                 {currentFloorRooms.map((r) => (
-                  <option key={r.id} value={r.name}>
-                    {r.name} {r.description ? `— ${r.description}` : ""}
+                  <option key={r.id} value={r.code || r.id}>
+                    [{r.code || r.id}] {r.name} {r.description ? `— ${r.description}` : ""}
                   </option>
                 ))}
               </select>

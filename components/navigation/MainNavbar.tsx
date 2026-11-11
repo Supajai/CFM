@@ -15,6 +15,7 @@ import {
   Building,
   Hammer,
   GraduationCap,
+  Layers,
 } from "lucide-react";
 import { logoutAction } from "@/actions/auth";
 import { SessionPayload } from "@/lib/auth";
@@ -81,7 +82,7 @@ export default function MainNavbar({ currentUser }: MainNavbarProps) {
       default:
         return (
           <span className="flex items-center space-x-1 rounded-md bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-800 border border-emerald-200">
-            <GraduationCap className="h-3 w-3 text-emerald-800" />
+            <GraduationCap className="w-3.5 h-3.5 text-emerald-600 inline mr-1" strokeWidth={1.75} />
             <span>นักศึกษา/บุคลากร</span>
           </span>
         );
@@ -99,7 +100,8 @@ export default function MainNavbar({ currentUser }: MainNavbarProps) {
           <div>
             <span className="text-sm font-bold tracking-tight text-slate-900 flex items-center space-x-1.5">
               <span>CampusOps</span>
-              <span className="rounded-md bg-emerald-50 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-800 border border-emerald-200 font-mono">
+              <span className="inline-flex items-center rounded-md bg-emerald-50 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-800 border border-emerald-200 font-mono">
+                <Layers className="w-3.5 h-3.5 text-emerald-600 inline mr-1" strokeWidth={1.75} />
                 แผนกเทคโนโลยีคอมพิวเตอร์
               </span>
             </span>

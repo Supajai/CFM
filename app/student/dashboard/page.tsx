@@ -184,7 +184,7 @@ export default async function StudentDashboardPage() {
     <div className="min-h-screen bg-transparent text-slate-900 flex flex-col font-sans">
       <MainNavbar currentUser={session} />
 
-      <main className="flex-1 mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8 py-8 space-y-6 pb-28">
+      <main className="flex-1 mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 pb-18 pb-[72px] sm:pb-8 space-y-6">
         {/* 1. Header: Student Profile Card */}
         <div className="card-elevated p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5 relative overflow-hidden">
           <div className="flex items-center space-x-4">
@@ -194,7 +194,8 @@ export default async function StudentDashboardPage() {
             <div className="space-y-1">
               <div className="flex items-center space-x-2">
                 <h1 className="text-xl font-bold tracking-tight text-slate-900">{user.name}</h1>
-                <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-800 border border-emerald-200/80 shadow-2xs">
+                <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-800 border border-emerald-200/80 shadow-2xs">
+                  <GraduationCap className="w-3.5 h-3.5 text-emerald-600 inline mr-1" strokeWidth={1.75} />
                   นักศึกษา / บุคลากร
                 </span>
               </div>

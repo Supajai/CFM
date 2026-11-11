@@ -46,7 +46,7 @@ export async function getDepartmentRoomsAction() {
       for (const r of defaultRooms) {
         await prisma.departmentRoom.create({
           data: {
-            code: r.id,
+            code: r.code || r.id,
             name: r.name,
             floor: r.floor,
             type: r.type.toUpperCase(),
